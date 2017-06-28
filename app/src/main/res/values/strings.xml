@@ -2,4 +2,7 @@
     <string name="app_name">悦动音符</string>
     <string name="search_title">搜索</string>
     <string name="music_search_hint">歌曲/歌手</string>
+    <string name="my_icon_image">我的头像</string>
+    <string name="ranking_item_title">排行榜</string>
+    <string name="popular_song_item">热歌</string>
 </resources>

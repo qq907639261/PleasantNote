@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/ranking_item_title">
+        <menu>
+            <item
+                android:id="@+id/menu_popular_song"
+                android:title="@string/popular_song_item"/>
+        </menu>
+    </item>
+</menu>

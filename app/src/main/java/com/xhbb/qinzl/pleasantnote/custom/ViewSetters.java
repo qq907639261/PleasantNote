@@ -10,10 +10,10 @@ import android.support.v7.widget.Toolbar;
  * Created by qinzl on 2017/6/28.
  */
 
-public class ViewAttributes {
+public class ViewSetters {
 
     @BindingAdapter({"android:actionBarSetted"})
-    public static void setActionBar(Toolbar toolbar, boolean actionBarSetted) {
+    public static void setToolbar(Toolbar toolbar, boolean actionBarSetted) {
         if (actionBarSetted) {
             Context context = toolbar.getContext();
             if (context instanceof ContextWrapper) {
