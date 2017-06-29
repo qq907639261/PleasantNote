@@ -1,11 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item android:title="@string/ranking_item_title">
         <menu>
-            <item
-                android:id="@+id/menu_popular_song"
-                android:title="@string/popular_song_item"/>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/menu_popular_song"
+                    android:icon="@drawable/ic_nav_popular_song"
+                    android:title="@string/popular_song_ranking_item"/>
+                <item
+                    android:id="@+id/menu_western_countries"
+                    android:icon="@drawable/ic_nav_western_countries"
+                    android:title="@string/western_countries_ranking_item"/>
+                <item
+                    android:id="@+id/menu_mainland"
+                    android:icon="@drawable/ic_nav_mainland"
+                    android:title="@string/mainland_ranking_item"/>
+                <item
+                    android:id="@+id/menu_hong_kong_and_taiwan"
+                    android:icon="@drawable/ic_nav_hong_kong_and_taiwan"
+                    android:title="@string/hong_kong_and_taiwan_ranking_item"/>
+                <item
+                    android:id="@+id/menu_korea"
+                    android:icon="@drawable/ic_nav_korea"
+                    android:title="@string/korea_ranking_item"/>
+                <item
+                    android:id="@+id/menu_japan"
+                    android:icon="@drawable/ic_nav_japan"
+                    android:title="@string/japan_ranking_item"/>
+                <item
+                    android:id="@+id/menu_ballad"
+                    android:icon="@drawable/ic_nav_ballad"
+                    android:title="@string/ballad_ranking_item"/>
+                <item
+                    android:id="@+id/menu_rocking"
+                    android:icon="@drawable/ic_nav_rocking"
+                    android:title="@string/rocking_ranking_item"/>
+                <item
+                    android:id="@+id/menu_sales"
+                    android:icon="@drawable/ic_nav_sales"
+                    android:title="@string/sales_ranking_item"/>
+            </group>
         </menu>
     </item>
 </menu>

@@ -1,8 +1,20 @@
 <resources>
     <string name="app_name">悦动音符</string>
+
+    <string name="ranking_item_title">悦动音符榜</string>
+    <string name="popular_song_ranking_item">热歌榜</string>
+    <string name="western_countries_ranking_item">欧美榜</string>
+    <string name="mainland_ranking_item">大陆榜</string>
+    <string name="hong_kong_and_taiwan_ranking_item">港台榜</string>
+    <string name="korea_ranking_item">韩国榜</string>
+    <string name="japan_ranking_item">日本榜</string>
+    <string name="ballad_ranking_item">民谣榜</string>
+    <string name="rocking_ranking_item">摇滚榜</string>
+    <string name="sales_ranking_item">销量榜</string>
+
     <string name="search_title">搜索</string>
     <string name="music_search_hint">歌曲/歌手</string>
-    <string name="my_icon_image">我的头像</string>
-    <string name="ranking_item_title">排行榜</string>
-    <string name="popular_song_item">热歌</string>
+    <string name="my_icon_accessibility">我的头像</string>
+    <string name="open_drawer_accessibility">打开导航抽屉</string>
+    <string name="close_drawer_accessibility">关闭导航抽屉</string>
 </resources>
