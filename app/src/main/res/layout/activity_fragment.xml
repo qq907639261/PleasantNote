@@ -7,6 +7,10 @@
         <variable
             name="drawerLayout"
             type="android.support.v4.widget.DrawerLayout"/>
+
+        <variable
+            name="bottomFragmentHeight"
+            type="float"/>
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -31,15 +35,13 @@
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginBottom="?actionBarSize"
+            android:paddingBottom="@{bottomFragmentHeight}"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
         <FrameLayout
             android:id="@+id/bottom_fragment_container"
             android:layout_width="match_parent"
-            android:layout_height="?actionBarSize"
-            android:background="?colorPrimary"
-            android:theme="@style/AppTheme.AppBarOverlay"
+            android:layout_height="wrap_content"
             app:layout_behavior="@string/bottom_sheet_behavior"/>
     </android.support.design.widget.CoordinatorLayout>
 </layout>

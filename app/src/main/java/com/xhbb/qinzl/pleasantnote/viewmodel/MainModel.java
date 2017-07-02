@@ -18,7 +18,7 @@ public class MainModel {
         mListener = listener;
     }
 
-    public boolean onNavigationItemSelected(MenuItem item, DrawerLayout drawerLayout,
+    public boolean onItemSelected(MenuItem item, DrawerLayout drawerLayout,
                                             NavigationView navigationView) {
         int rankingId;
         switch (item.getItemId()) {

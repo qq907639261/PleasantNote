@@ -20,6 +20,7 @@
 
         <include
             layout="@layout/activity_fragment"
+            app:bottomFragmentHeight="@{@dimen/bottomPlayFragmentHeight}"
             app:drawerLayout="@{drawerLayout}"/>
 
         <!--suppress AndroidUnknownAttribute -->
@@ -30,7 +31,7 @@
             android:layout_gravity="start"
             android:checkedItem="@{@id/menu_popular_song}"
             android:fitsSystemWindows="true"
-            android:onNavigationItemSelected="@{(item)->mainModel.onNavigationItemSelected(item,drawerLayout,navigationView)}"
+            android:onItemSelected="@{(item)->mainModel.onItemSelected(item,drawerLayout,navigationView)}"
             app:headerLayout="@layout/drawer_main"
             app:menu="@menu/drawer_ranking"/>
     </android.support.v4.widget.DrawerLayout>

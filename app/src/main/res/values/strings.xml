@@ -17,4 +17,8 @@
     <string name="my_icon_accessibility">我的头像</string>
     <string name="open_drawer_accessibility">打开导航抽屉</string>
     <string name="close_drawer_accessibility">关闭导航抽屉</string>
+    <string name="music_image_accessibility">音乐图片</string>
+    <string name="skip_previous_accessibility">上一首歌曲</string>
+    <string name="play_or_pause_accessibility">播放/暂停</string>
+    <string name="skip_next_accessibility">下一首歌曲</string>
 </resources>

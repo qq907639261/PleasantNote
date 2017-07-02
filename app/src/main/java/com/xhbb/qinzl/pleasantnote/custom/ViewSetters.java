@@ -40,10 +40,10 @@ public class ViewSetters {
         }
     }
 
-    @BindingAdapter({"android:onNavigationItemSelected"})
+    @BindingAdapter({"android:onItemSelected"})
     public static void setOnNavigationViewListener(
             NavigationView navigationView,
-            NavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener) {
-        navigationView.setNavigationItemSelectedListener(onNavigationItemSelectedListener);
+            NavigationView.OnNavigationItemSelectedListener listener) {
+        navigationView.setNavigationItemSelectedListener(listener);
     }
 }

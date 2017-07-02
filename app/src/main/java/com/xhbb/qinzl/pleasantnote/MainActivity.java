@@ -26,6 +26,12 @@ public class MainActivity extends AppCompatActivity
 
         MainModel mainModel = new MainModel(this);
 
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
+                    .commit();
+        }
+
         mBinding.setMainModel(mainModel);
     }
 
@@ -50,6 +56,7 @@ public class MainActivity extends AppCompatActivity
     public void onBackPressed() {
         DrawerLayout drawerLayout = mBinding.drawerLayout;
         NavigationView navigationView = mBinding.navigationView;
+
         if (drawerLayout.isDrawerOpen(navigationView)) {
             drawerLayout.closeDrawer(navigationView);
         } else {
