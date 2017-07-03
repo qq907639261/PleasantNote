@@ -9,4 +9,16 @@
         app:actionViewClass="android.widget.SearchView"
         app:showAsAction="always"
         tools:icon="@android:drawable/ic_menu_search"/>
+
+    <item
+        android:id="@+id/menu_my_favorited"
+        android:title="@string/my_favorited_menu"/>
+
+    <item
+        android:id="@+id/menu_recently_played"
+        android:title="@string/recently_played_menu"/>
+
+    <item
+        android:id="@+id/menu_local_song"
+        android:title="@string/local_song_menu"/>
 </menu>

@@ -8,23 +8,25 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.SearchView;
 import android.widget.Toast;
 
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
-import com.xhbb.qinzl.pleasantnote.viewmodel.MainModel;
+import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
 
 public class MainActivity extends AppCompatActivity
-        implements MainModel.OnMainModelListener {
+        implements ActivityMain.OnMainModelListener {
 
     private ActivityMainBinding mBinding;
+    private SearchView mSearchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        MainModel mainModel = new MainModel(this);
+        ActivityMain activityMain = new ActivityMain(this);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -33,7 +35,7 @@ public class MainActivity extends AppCompatActivity
                     .commit();
         }
 
-        mBinding.setMainModel(mainModel);
+        mBinding.setActivityMain(activityMain);
     }
 
     @Override
@@ -70,14 +72,38 @@ public class MainActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.main, menu);
 
         SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.menu_search).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        mSearchView = (SearchView) menu.findItem(R.id.menu_search).getActionView();
+        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_my_favorited:
+
+                return true;
+            case R.id.menu_recently_played:
+
+                return true;
+            case R.id.menu_local_song:
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     public void onNavigationItemSelected(int rankingId) {
         searchMusic(String.valueOf(rankingId));
+    }
+
+    @Override
+    public void onDrawerOpened() {
+        if (mSearchView.hasFocus()) {
+            mSearchView.clearFocus();
+        }
     }
 }

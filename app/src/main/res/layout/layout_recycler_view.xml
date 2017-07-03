@@ -6,8 +6,8 @@
         <import type="android.view.View"/>
 
         <variable
-            name="recyclerViewModel"
-            type="com.xhbb.qinzl.pleasantnote.viewmodel.RecyclerViewModel"/>
+            name="layoutRecyclerView"
+            type="com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView"/>
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -31,13 +31,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:visibility="@{recyclerViewModel.autoRefreshing ? View.VISIBLE : View.GONE}"/>
+                    android:visibility="@{layoutRecyclerView.autoRefreshing ? View.VISIBLE : View.GONE}"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="@{recyclerViewModel.errorText}"
+                    android:text="@{layoutRecyclerView.errorText}"
                     android:textAppearance="@android:style/TextAppearance.Large"
                     android:textColor="@color/errorText"
                     tools:text="刷新失败"/>

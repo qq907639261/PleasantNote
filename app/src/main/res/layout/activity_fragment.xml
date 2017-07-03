@@ -5,6 +5,10 @@
     <data>
 
         <variable
+            name="activityFragment"
+            type="com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityFragment"/>
+
+        <variable
             name="drawerLayout"
             type="android.support.v4.widget.DrawerLayout"/>
 
@@ -28,6 +32,7 @@
                 android:layout_height="wrap_content"
                 android:actionBarSetted="@{true}"
                 android:drawerLayout="@{drawerLayout}"
+                android:onDrawerOpened="@{()->activityFragment.onDrawerOpened()}"
                 app:layout_scrollFlags="scroll"/>
         </android.support.design.widget.AppBarLayout>
 

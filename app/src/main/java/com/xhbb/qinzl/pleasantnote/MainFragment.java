@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
-import com.xhbb.qinzl.pleasantnote.viewmodel.RecyclerViewModel;
+import com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView;
 
 public class MainFragment extends Fragment {
 
@@ -22,9 +22,9 @@ public class MainFragment extends Fragment {
         LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(inflater,
                 R.layout.layout_recycler_view, container, false);
 
-        RecyclerViewModel recyclerViewModel = new RecyclerViewModel();
+        LayoutRecyclerView layoutRecyclerView = new LayoutRecyclerView();
 
-        binding.setRecyclerViewModel(recyclerViewModel);
+        binding.setLayoutRecyclerView(layoutRecyclerView);
         return binding.getRoot();
     }
 }

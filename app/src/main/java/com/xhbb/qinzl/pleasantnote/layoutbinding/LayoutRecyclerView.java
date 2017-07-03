@@ -1,4 +1,4 @@
-package com.xhbb.qinzl.pleasantnote.viewmodel;
+package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
@@ -9,12 +9,12 @@ import com.xhbb.qinzl.pleasantnote.BR;
  * Created by qinzl on 2017/7/3.
  */
 
-public class RecyclerViewModel extends BaseObservable {
+public class LayoutRecyclerView extends BaseObservable {
 
     private boolean mAutoRefreshing;
     private String mErrorText;
 
-    public RecyclerViewModel() {
+    public LayoutRecyclerView() {
         mAutoRefreshing = true;
     }
 

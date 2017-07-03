@@ -1,4 +1,4 @@
-package com.xhbb.qinzl.pleasantnote.viewmodel;
+package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
@@ -10,40 +10,46 @@ import com.xhbb.qinzl.pleasantnote.R;
  * Created by qinzl on 2017/6/29.
  */
 
-public class MainModel {
+public class ActivityMain implements ActivityFragment.OnActivityFragmentListener {
 
     private OnMainModelListener mListener;
+    private ActivityFragment mActivityFragment;
 
-    public MainModel(OnMainModelListener listener) {
+    public ActivityMain(OnMainModelListener listener) {
         mListener = listener;
+        mActivityFragment = new ActivityFragment(this);
+    }
+
+    public ActivityFragment getActivityFragment() {
+        return mActivityFragment;
     }
 
     public boolean onItemSelected(MenuItem item, DrawerLayout drawerLayout,
-                                            NavigationView navigationView) {
+                                  NavigationView navigationView) {
         int rankingId;
         switch (item.getItemId()) {
-            case R.id.menu_western_countries:
+            case R.id.nav_western_countries:
                 rankingId = 3;
                 break;
-            case R.id.menu_mainland:
+            case R.id.nav_mainland:
                 rankingId = 5;
                 break;
-            case R.id.menu_hong_kong_and_taiwan:
+            case R.id.nav_hong_kong_and_taiwan:
                 rankingId = 6;
                 break;
-            case R.id.menu_korea:
+            case R.id.nav_korea:
                 rankingId = 16;
                 break;
-            case R.id.menu_japan:
+            case R.id.nav_japan:
                 rankingId = 17;
                 break;
-            case R.id.menu_ballad:
+            case R.id.nav_ballad:
                 rankingId = 18;
                 break;
-            case R.id.menu_rocking:
+            case R.id.nav_rocking:
                 rankingId = 19;
                 break;
-            case R.id.menu_sales:
+            case R.id.nav_sales:
                 rankingId = 23;
                 break;
             default:
@@ -55,8 +61,14 @@ public class MainModel {
         return true;
     }
 
+    @Override
+    public void onDrawerOpened() {
+        mListener.onDrawerOpened();
+    }
+
     public interface OnMainModelListener {
 
         void onNavigationItemSelected(int rankingId);
+        void onDrawerOpened();
     }
 }
