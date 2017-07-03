@@ -15,7 +15,6 @@
         android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
         tools:openDrawer="start">
 
         <include
@@ -30,9 +29,8 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:checkedItem="@{@id/menu_popular_song}"
-            android:fitsSystemWindows="true"
             android:onItemSelected="@{(item)->mainModel.onItemSelected(item,drawerLayout,navigationView)}"
-            app:headerLayout="@layout/drawer_main"
+            app:headerLayout="@layout/drawer_header"
             app:menu="@menu/drawer_ranking"/>
     </android.support.v4.widget.DrawerLayout>
 </layout>

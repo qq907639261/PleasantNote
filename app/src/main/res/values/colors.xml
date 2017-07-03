@@ -4,5 +4,6 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
 
-    <color name="appBarContent">#ffffff</color>
+    <color name="appBarContent">@android:color/white</color>
+    <color name="errorText">@android:color/holo_red_light</color>
 </resources>

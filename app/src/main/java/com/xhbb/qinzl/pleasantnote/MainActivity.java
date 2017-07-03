@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, MainFragment.newInstance())
                     .replace(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
                     .commit();
         }

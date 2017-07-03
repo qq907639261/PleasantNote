@@ -15,7 +15,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:contentDescription="@string/my_icon_accessibility"
-            android:src="@drawable/my_icon"/>
+            android:src="@drawable/my_icon_default"/>
 
         <TextView
             android:layout_width="wrap_content"
