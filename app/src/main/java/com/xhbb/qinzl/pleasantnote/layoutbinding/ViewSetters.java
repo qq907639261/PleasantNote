@@ -1,4 +1,4 @@
-package com.xhbb.qinzl.pleasantnote.custom;
+package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.content.Context;
 import android.content.ContextWrapper;
