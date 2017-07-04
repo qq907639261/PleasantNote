@@ -7,9 +7,15 @@ package com.xhbb.qinzl.pleasantnote.layoutbinding;
 public class ActivityFragment {
 
     private OnActivityFragmentListener mListener;
+    private float mBottomFragmentHeight;
 
-    ActivityFragment(OnActivityFragmentListener listener) {
+    ActivityFragment(float bottomFragmentHeight, OnActivityFragmentListener listener) {
+        mBottomFragmentHeight = bottomFragmentHeight;
         mListener = listener;
+    }
+
+    public float getBottomFragmentHeight() {
+        return mBottomFragmentHeight;
     }
 
     public void onDrawerOpened() {

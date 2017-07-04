@@ -1,5 +1,6 @@
 package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
+import android.content.Context;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.view.MenuItem;
@@ -12,12 +13,14 @@ import com.xhbb.qinzl.pleasantnote.R;
 
 public class ActivityMain implements ActivityFragment.OnActivityFragmentListener {
 
-    private OnMainModelListener mListener;
+    private OnActivityMainListener mListener;
     private ActivityFragment mActivityFragment;
 
-    public ActivityMain(OnMainModelListener listener) {
+    public ActivityMain(Context context, OnActivityMainListener listener) {
         mListener = listener;
-        mActivityFragment = new ActivityFragment(this);
+
+        float bottomFragmentHeight = context.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
+        mActivityFragment = new ActivityFragment(bottomFragmentHeight, this);
     }
 
     public ActivityFragment getActivityFragment() {
@@ -66,7 +69,7 @@ public class ActivityMain implements ActivityFragment.OnActivityFragmentListener
         mListener.onDrawerOpened();
     }
 
-    public interface OnMainModelListener {
+    public interface OnActivityMainListener {
 
         void onNavigationItemSelected(int rankingId);
         void onDrawerOpened();

@@ -16,7 +16,7 @@ import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
 
 public class MainActivity extends AppCompatActivity
-        implements ActivityMain.OnMainModelListener {
+        implements ActivityMain.OnActivityMainListener {
 
     private ActivityMainBinding mBinding;
     private SearchView mSearchView;
@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        ActivityMain activityMain = new ActivityMain(this);
+        ActivityMain activityMain = new ActivityMain(this, this);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()

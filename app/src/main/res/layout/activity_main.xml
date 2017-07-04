@@ -20,7 +20,6 @@
         <include
             layout="@layout/activity_fragment"
             app:activityFragment="@{activityMain.activityFragment}"
-            app:bottomFragmentHeight="@{@dimen/bottomPlayFragmentHeight}"
             app:drawerLayout="@{drawerLayout}"/>
 
         <!--suppress AndroidUnknownAttribute -->
