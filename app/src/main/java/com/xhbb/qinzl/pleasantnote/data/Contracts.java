@@ -16,13 +16,13 @@ public interface Contracts {
 
     interface MusicContract extends BaseColumns {
 
-        String TABLE_NAME = "music";
-        Uri CONTENT_URI = Uri.parse(CONTENT_AUTHORITY + TABLE_NAME);
+        String TABLE = "music";
+        Uri CONTENT_URI = Uri.parse(CONTENT_AUTHORITY + TABLE);
 
         String _NAME = "name";
         String _SECONDS = "seconds";
         String _CODE = "code";
-        String _SINGER_NAME = "singer_name";
+        String _SINGER = "singer";
         String _SINGER_CODE = "singer_code";
         String _BIG_PICTURE = "big_picture";
         String _SMALL_PICTURE = "small_picture";
