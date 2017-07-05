@@ -42,7 +42,7 @@ public abstract class RecyclerViewAdapter extends
         return mCursor == null ? 0 : mCursor.getCount();
     }
 
-    class BindingHolder extends RecyclerView.ViewHolder {
+    protected class BindingHolder extends RecyclerView.ViewHolder {
 
         private ViewDataBinding mBinding;
 

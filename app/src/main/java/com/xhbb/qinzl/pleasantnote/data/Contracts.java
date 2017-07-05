@@ -17,7 +17,7 @@ public interface Contracts {
     interface MusicContract extends BaseColumns {
 
         String TABLE = "music";
-        Uri CONTENT_URI = Uri.parse(CONTENT_AUTHORITY + TABLE);
+        Uri URI = Uri.parse(CONTENT_AUTHORITY + TABLE);
 
         String _NAME = "name";
         String _SECONDS = "seconds";
