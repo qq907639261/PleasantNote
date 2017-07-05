@@ -14,10 +14,6 @@ public class LayoutRecyclerView extends BaseObservable {
     private boolean mAutoRefreshing;
     private String mErrorText;
 
-    public LayoutRecyclerView() {
-        mAutoRefreshing = true;
-    }
-
     @Bindable
     public boolean isAutoRefreshing() {
         return mAutoRefreshing;

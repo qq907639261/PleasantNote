@@ -13,7 +13,10 @@
     <string name="sales_ranking_nav">销量榜</string>
 
     <string name="search_menu">搜索</string>
-    <string name="music_search_hint">歌曲/歌手</string>
+    <string name="local_song_menu">本地歌曲</string>
+    <string name="my_favorited_menu">我的收藏</string>
+    <string name="recently_played_menu">最近播放</string>
+
     <string name="my_icon_accessibility">我的头像</string>
     <string name="open_drawer_accessibility">打开导航抽屉</string>
     <string name="close_drawer_accessibility">关闭导航抽屉</string>
@@ -21,7 +24,7 @@
     <string name="skip_previous_accessibility">上一首歌曲</string>
     <string name="play_or_pause_accessibility">播放/暂停</string>
     <string name="skip_next_accessibility">下一首歌曲</string>
-    <string name="local_song_menu">本地歌曲</string>
-    <string name="my_favorited_menu">我的收藏</string>
-    <string name="recently_played_menu">最近播放</string>
+
+    <string name="music_search_hint">歌曲/歌手</string>
+    <string name="networking_failed_text">连网失败，请检查网络！</string>
 </resources>

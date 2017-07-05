@@ -26,8 +26,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        ActivityMain activityMain = new ActivityMain(this, this);
-
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, MainFragment.newInstance())
@@ -35,7 +33,7 @@ public class MainActivity extends AppCompatActivity
                     .commit();
         }
 
-        mBinding.setActivityMain(activityMain);
+        mBinding.setActivityMain(new ActivityMain(this, this));
     }
 
     @Override
@@ -44,15 +42,11 @@ public class MainActivity extends AppCompatActivity
         switch (intent.getAction()) {
             case Intent.ACTION_SEARCH:
                 String query = intent.getStringExtra(SearchManager.QUERY);
-                searchMusic(query);
+                getMainFragment().refreshData(query);
                 invalidateOptionsMenu();
                 break;
             default:
         }
-    }
-
-    private void searchMusic(String query) {
-        Toast.makeText(this, query, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -82,13 +76,13 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_my_favorited:
-
+                Toast.makeText(this, "menu_my_favorited", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.menu_recently_played:
-
+                Toast.makeText(this, "menu_recently_played", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.menu_local_song:
-
+                Toast.makeText(this, "menu_local_song", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -96,8 +90,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onNavigationItemSelected(int rankingId) {
-        searchMusic(String.valueOf(rankingId));
+    public void onDrawerItemSelected(int rankingId) {
+        getMainFragment().refreshData(rankingId);
+    }
+
+    private MainFragment getMainFragment() {
+        return (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
     }
 
     @Override

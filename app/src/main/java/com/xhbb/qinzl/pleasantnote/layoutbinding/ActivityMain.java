@@ -1,6 +1,7 @@
 package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.view.MenuItem;
@@ -13,13 +14,15 @@ import com.xhbb.qinzl.pleasantnote.R;
 
 public class ActivityMain implements ActivityFragment.OnActivityFragmentListener {
 
+    private Context mContext;
     private OnActivityMainListener mListener;
     private ActivityFragment mActivityFragment;
 
     public ActivityMain(Context context, OnActivityMainListener listener) {
+        mContext = context;
         mListener = listener;
 
-        float bottomFragmentHeight = context.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
+        float bottomFragmentHeight = mContext.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
         mActivityFragment = new ActivityFragment(bottomFragmentHeight, this);
     }
 
@@ -27,38 +30,39 @@ public class ActivityMain implements ActivityFragment.OnActivityFragmentListener
         return mActivityFragment;
     }
 
-    public boolean onItemSelected(MenuItem item, DrawerLayout drawerLayout,
-                                  NavigationView navigationView) {
+    public boolean onDrawerItemSelected(MenuItem item, DrawerLayout drawerLayout,
+                                        NavigationView navigationView) {
+        Resources resources = mContext.getResources();
         int rankingId;
         switch (item.getItemId()) {
             case R.id.nav_western_countries:
-                rankingId = 3;
+                rankingId = resources.getInteger(R.integer.ranking_id_western_countries);
                 break;
             case R.id.nav_mainland:
-                rankingId = 5;
+                rankingId = resources.getInteger(R.integer.ranking_id_mainland);
                 break;
             case R.id.nav_hong_kong_and_taiwan:
-                rankingId = 6;
+                rankingId = resources.getInteger(R.integer.ranking_id_hong_kong_and_taiwan);
                 break;
             case R.id.nav_korea:
-                rankingId = 16;
+                rankingId = resources.getInteger(R.integer.ranking_id_korea);
                 break;
             case R.id.nav_japan:
-                rankingId = 17;
+                rankingId = resources.getInteger(R.integer.ranking_id_japan);
                 break;
             case R.id.nav_ballad:
-                rankingId = 18;
+                rankingId = resources.getInteger(R.integer.ranking_id_ballad);
                 break;
             case R.id.nav_rocking:
-                rankingId = 19;
+                rankingId = resources.getInteger(R.integer.ranking_id_rocking);
                 break;
             case R.id.nav_sales:
-                rankingId = 23;
+                rankingId = resources.getInteger(R.integer.ranking_id_sales);
                 break;
             default:
-                rankingId = 26;
+                rankingId = resources.getInteger(R.integer.ranking_id_default);
         }
-        mListener.onNavigationItemSelected(rankingId);
+        mListener.onDrawerItemSelected(rankingId);
 
         drawerLayout.closeDrawer(navigationView);
         return true;
@@ -71,7 +75,7 @@ public class ActivityMain implements ActivityFragment.OnActivityFragmentListener
 
     public interface OnActivityMainListener {
 
-        void onNavigationItemSelected(int rankingId);
+        void onDrawerItemSelected(int rankingId);
         void onDrawerOpened();
     }
 }

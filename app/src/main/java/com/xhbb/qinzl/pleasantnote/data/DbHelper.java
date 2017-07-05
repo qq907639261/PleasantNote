@@ -26,7 +26,10 @@ class DbHelper extends SQLiteOpenHelper {
                     MusicContract._BIG_PICTURE + " TEXT," +
                     MusicContract._SMALL_PICTURE + " TEXT," +
                     MusicContract._PLAY_URL + " TEXT," +
-                    MusicContract._DOWNLOAD_URL + " TEXT)";
+                    MusicContract._DOWNLOAD_URL + " TEXT," +
+                    MusicContract._RANKING_ID + " INTEGER," +
+                    MusicContract._QUERY + " TEXT" +
+                    ")";
 
     DbHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);

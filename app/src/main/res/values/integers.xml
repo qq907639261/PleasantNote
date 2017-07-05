@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="ranking_id_western_countries">3</integer>
+    <integer name="ranking_id_mainland">5</integer>
+    <integer name="ranking_id_hong_kong_and_taiwan">6</integer>
+    <integer name="ranking_id_korea">16</integer>
+    <integer name="ranking_id_japan">17</integer>
+    <integer name="ranking_id_ballad">18</integer>
+    <integer name="ranking_id_rocking">19</integer>
+    <integer name="ranking_id_sales">23</integer>
+    <integer name="ranking_id_default">26</integer>
+</resources>

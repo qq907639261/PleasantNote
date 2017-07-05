@@ -29,7 +29,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:checkedItem="@{@id/nav_popular_song}"
-            android:onItemSelected="@{(item)->activityMain.onItemSelected(item,drawerLayout,navigationView)}"
+            android:onItemSelected="@{(item)->activityMain.onDrawerItemSelected(item,drawerLayout,navigationView)}"
             app:headerLayout="@layout/drawer_header"
             app:menu="@menu/drawer_ranking"/>
     </android.support.v4.widget.DrawerLayout>

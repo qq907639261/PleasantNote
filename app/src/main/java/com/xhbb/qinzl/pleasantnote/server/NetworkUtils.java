@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class NetworkUtils {
 
-    public static void addRankingRequest(final Context context, int rankingId,
+    public static void addRankingRequest(Context context, int rankingId,
                                          Response.Listener<String> listener,
                                          Response.ErrorListener errorListener) {
         String url = Uri.parse("http://ali-qqmusic.showapi.com/top")
@@ -30,6 +30,23 @@ public class NetworkUtils {
                 .appendQueryParameter("topid", String.valueOf(rankingId))
                 .build().toString();
 
+        addRequest(context, url, listener, errorListener);
+    }
+
+    public static void addQueryRequest(Context context, String query, int pages,
+                                       Response.Listener<String> listener,
+                                       Response.ErrorListener errorListener) {
+        String url = Uri.parse("http://ali-qqmusic.showapi.com/search")
+                .buildUpon()
+                .appendQueryParameter("keyword", query)
+                .appendQueryParameter("page", String.valueOf(pages))
+                .build().toString();
+
+        addRequest(context, url, listener, errorListener);
+    }
+
+    private static void addRequest(final Context context, String url, Response.Listener<String> listener,
+                                   Response.ErrorListener errorListener) {
         StringRequest request = new StringRequest(Request.Method.GET, url, listener, errorListener) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {

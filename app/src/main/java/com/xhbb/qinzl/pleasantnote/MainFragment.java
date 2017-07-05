@@ -12,15 +12,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
-import com.xhbb.qinzl.pleasantnote.data.Contracts;
+import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView;
+import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
 public class MainFragment extends Fragment
-        implements LoaderManager.LoaderCallbacks<Cursor> {
+        implements LoaderManager.LoaderCallbacks<Cursor>,
+        Response.Listener<String>, Response.ErrorListener {
 
     private MusicAdapter mMusicAdapter;
+    private int mRankingId;
+    private String mQuery;
+    private LayoutRecyclerView mLayoutRecyclerView;
+    private int mRefreshState;
+    private boolean mHasData;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -29,32 +39,89 @@ public class MainFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(inflater,
-                R.layout.layout_recycler_view, container, false);
+        LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(
+                inflater, R.layout.layout_recycler_view, container, false);
 
-        mMusicAdapter = new MusicAdapter(getContext(), R.layout.item_music_list);
+        mLayoutRecyclerView = new LayoutRecyclerView();
+        mMusicAdapter = new MusicAdapter(getContext(), R.layout.item_music_master);
 
-        LayoutRecyclerView layoutRecyclerView = new LayoutRecyclerView();
-
+        initData();
         getLoaderManager().initLoader(0, null, this);
 
-        binding.setLayoutRecyclerView(layoutRecyclerView);
+        binding.setLayoutRecyclerView(mLayoutRecyclerView);
         return binding.getRoot();
+    }
+
+    private void initData() {
+        Context context = getContext();
+        mRankingId = context.getResources().getInteger(R.integer.ranking_id_default);
+        NetworkUtils.addRankingRequest(context, mRankingId, this, this);
+    }
+
+    public void refreshData(int rankingId) {
+        mRankingId = rankingId;
+        mQuery = null;
+
+        NetworkUtils.addRankingRequest(getContext(), mRankingId, this, this);
+        getLoaderManager().restartLoader(0, null, this);
+    }
+
+    public void refreshData(String query) {
+        mQuery = query;
+        mRankingId = -1;
+
+        NetworkUtils.addQueryRequest(getContext(), query, 1, this, this);
+        getLoaderManager().restartLoader(0, null, this);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(getContext(), Contracts.MusicContract.URI, null, null, null, null);
+        mHasData = false;
+        mLayoutRecyclerView.setErrorText(null);
+        mLayoutRecyclerView.setAutoRefreshing(true);
+        mRefreshState = RefreshState.AUTO_REFRESHING;
+
+        String selection;
+        String[] selectionArgs;
+        if (mQuery != null) {
+            selection = MusicContract._QUERY + "=?";
+            selectionArgs = new String[]{mQuery};
+        } else {
+            selection = MusicContract._RANKING_ID + "=?";
+            selectionArgs = new String[]{String.valueOf(mRankingId)};
+        }
+
+        return new CursorLoader(getContext(), MusicContract.URI, null, selection, selectionArgs, null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
+
+        if (cursor.getCount() > 0) {
+            mHasData = true;
+            mLayoutRecyclerView.setAutoRefreshing(false);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mMusicAdapter.swapCursor(null);
+    }
+
+    @Override
+    public void onErrorResponse(VolleyError error) {
+        mLayoutRecyclerView.setAutoRefreshing(false);
+        mRefreshState = RefreshState.NO_REFRESHING;
+
+        if (!mHasData) {
+            mLayoutRecyclerView.setErrorText(getString(R.string.networking_failed_text));
+        }
+    }
+
+    @Override
+    public void onResponse(String response) {
+
     }
 
     private class MusicAdapter extends RecyclerViewAdapter {
