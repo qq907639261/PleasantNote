@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">悦动音符</string>
 
+    <string name="format_music_duration" formatted="true" translatable="false">%1$d′%2$s″</string>
+
     <string name="ranking_nav_label">悦动音符榜</string>
     <string name="popular_song_ranking_nav">热歌榜</string>
     <string name="western_countries_ranking_nav">欧美榜</string>

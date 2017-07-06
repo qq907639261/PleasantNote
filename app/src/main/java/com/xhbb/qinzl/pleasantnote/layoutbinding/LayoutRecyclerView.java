@@ -2,6 +2,7 @@ package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
+import android.support.v7.widget.RecyclerView;
 
 import com.xhbb.qinzl.pleasantnote.BR;
 
@@ -13,6 +14,22 @@ public class LayoutRecyclerView extends BaseObservable {
 
     private boolean mAutoRefreshing;
     private String mErrorText;
+    private RecyclerView.Adapter mRecyclerViewAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+
+    public LayoutRecyclerView(RecyclerView.Adapter recyclerViewAdapter,
+                              RecyclerView.LayoutManager layoutManager) {
+        mRecyclerViewAdapter = recyclerViewAdapter;
+        mLayoutManager = layoutManager;
+    }
+
+    public RecyclerView.Adapter getRecyclerViewAdapter() {
+        return mRecyclerViewAdapter;
+    }
+
+    public RecyclerView.LayoutManager getLayoutManager() {
+        return mLayoutManager;
+    }
 
     @Bindable
     public boolean isAutoRefreshing() {

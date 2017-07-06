@@ -1,6 +1,5 @@
 package com.xhbb.qinzl.pleasantnote.common;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
@@ -16,13 +15,11 @@ import android.view.ViewGroup;
 public abstract class RecyclerViewAdapter extends
         RecyclerView.Adapter<RecyclerViewAdapter.BindingHolder> {
 
-    protected Context mContext;
     protected Cursor mCursor;
 
     private int mDefaultLayoutRes;
 
-    public RecyclerViewAdapter(Context context, int defaultLayoutRes) {
-        mContext = context;
+    public RecyclerViewAdapter(int defaultLayoutRes) {
         mDefaultLayoutRes = defaultLayoutRes;
     }
 
@@ -33,8 +30,8 @@ public abstract class RecyclerViewAdapter extends
 
     @Override
     public BindingHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View inflate = LayoutInflater.from(mContext).inflate(mDefaultLayoutRes, parent, false);
-        return new BindingHolder(inflate);
+        View view = LayoutInflater.from(parent.getContext()).inflate(mDefaultLayoutRes, parent, false);
+        return new BindingHolder(view);
     }
 
     @Override

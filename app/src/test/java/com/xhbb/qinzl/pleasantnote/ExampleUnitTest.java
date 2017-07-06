@@ -2,7 +2,7 @@ package com.xhbb.qinzl.pleasantnote;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -13,6 +13,8 @@ public class ExampleUnitTest {
 
     @Test
     public void addition_isCorrect() throws Exception {
-        assertEquals(4, 2 + 2);
+        double num = (double) 479 / 60;
+        assertEquals(7, 479 / 60);
+        assertEquals(59, 479 % 60);
     }
 }

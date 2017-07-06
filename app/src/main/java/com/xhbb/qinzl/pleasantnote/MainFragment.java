@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.LinearLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +22,9 @@ import com.xhbb.qinzl.pleasantnote.common.Enums.ErrorState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
+import com.xhbb.qinzl.pleasantnote.layoutbinding.ItemMusicMaster;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView;
+import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
@@ -46,18 +49,19 @@ public class MainFragment extends Fragment
         LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(
                 inflater, R.layout.layout_recycler_view, container, false);
 
-        mCurrentPage = 1;
-        mLayoutRecyclerView = new LayoutRecyclerView();
-        mMusicAdapter = new MusicAdapter(getContext(), R.layout.item_music_master);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
 
-        initData();
+        mMusicAdapter = new MusicAdapter(R.layout.item_music_master);
+        mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager);
+
+        addDefaultNetworkRequest();
         getLoaderManager().initLoader(0, null, this);
 
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
         return binding.getRoot();
     }
 
-    private void initData() {
+    private void addDefaultNetworkRequest() {
         Context context = getContext();
         mRankingId = context.getResources().getInteger(R.integer.ranking_id_default);
         NetworkUtils.addRankingRequest(context, mRankingId, this, this);
@@ -83,10 +87,11 @@ public class MainFragment extends Fragment
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Context context = getContext();
         boolean networkAvailable = NetworkUtils.isNetworkAvailable(context);
-        mErrorState = networkAvailable ? ErrorState.NO_ERROR : ErrorState.NETWORK_ERROR;
 
+        mErrorState = networkAvailable ? ErrorState.NO_ERROR : ErrorState.NETWORK_ERROR;
         mLayoutRecyclerView.setErrorText(null);
         mLayoutRecyclerView.setAutoRefreshing(true);
+        mCurrentPage = 1;
 
         String selection;
         String[] selectionArgs;
@@ -153,13 +158,35 @@ public class MainFragment extends Fragment
 
     private class MusicAdapter extends RecyclerViewAdapter {
 
-        MusicAdapter(Context context, int defaultLayoutRes) {
-            super(context, defaultLayoutRes);
+        MusicAdapter(int defaultLayoutRes) {
+            super(defaultLayoutRes);
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return super.getItemViewType(position);
+        }
+
+        @Override
+        public BindingHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            return super.onCreateViewHolder(parent, viewType);
         }
 
         @Override
         public void onBindViewHolder(BindingHolder holder, int position) {
+            mCursor.moveToPosition(position);
 
+            Music music = new Music(mCursor);
+            String picture = music.getSmallPicture();
+            String musicName = music.getName();
+            String singer = music.getSinger();
+            int seconds = music.getSeconds();
+
+            ItemMusicMaster itemMusicMaster = new ItemMusicMaster(getContext(),
+                    picture, musicName, singer, seconds);
+
+            holder.getBinding().setVariable(BR.itemMusicMaster, itemMusicMaster);
+            holder.getBinding().executePendingBindings();
         }
     }
 }
