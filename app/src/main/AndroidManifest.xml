@@ -28,7 +28,7 @@
         </activity>
 
         <provider
-            android:name=".data.MainProvider"
+            android:name=".data.MyProvider"
             android:authorities="com.xhbb.qinzl.pleasantnote"
             android:enabled="true"
             android:exported="false"/>

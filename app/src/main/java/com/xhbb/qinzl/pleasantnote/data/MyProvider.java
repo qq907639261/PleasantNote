@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
-public class MainProvider extends ContentProvider {
+public class MyProvider extends ContentProvider {
 
     private DbHelper mDbHelper;
 

@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.xhbb.qinzl.pleasantnote.async.MainTasks;
 import com.xhbb.qinzl.pleasantnote.common.Enums.ErrorState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
@@ -33,6 +34,7 @@ public class MainFragment extends Fragment
     private String mQuery;
     private LayoutRecyclerView mLayoutRecyclerView;
     private int mErrorState;
+    private int mCurrentPage;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -44,6 +46,7 @@ public class MainFragment extends Fragment
         LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(
                 inflater, R.layout.layout_recycler_view, container, false);
 
+        mCurrentPage = 1;
         mLayoutRecyclerView = new LayoutRecyclerView();
         mMusicAdapter = new MusicAdapter(getContext(), R.layout.item_music_master);
 
@@ -134,17 +137,17 @@ public class MainFragment extends Fragment
     public void onResponse(String response) {
         mErrorState = ErrorState.NO_ERROR;
 
-        ContentValues[] musicValueses;
         if (mQuery != null) {
-            musicValueses = JsonUtils.getMusicValueses(response, mQuery);
+            ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mQuery);
+            if (musicValueses != null) {
+                boolean firstPage = mCurrentPage == 1;
+                MainTasks.updateMusicData(getContext(), musicValueses, firstPage);
+            } else {
+                Toast.makeText(getContext(), R.string.scrolled_to_end_tips, Toast.LENGTH_SHORT).show();
+            }
         } else {
-            musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
-        }
-
-        if (musicValueses == null) {
-            Toast.makeText(getContext(), R.string.already_to_end_toast, Toast.LENGTH_SHORT).show();
-        } else {
-
+            ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
+            MainTasks.updateMusicData(getContext(), musicValueses, mRankingId);
         }
     }
 
