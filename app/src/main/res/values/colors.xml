@@ -6,4 +6,5 @@
 
     <color name="appBarContent">@android:color/white</color>
     <color name="errorText">@android:color/holo_red_light</color>
+    <color name="dividingLine">#ebebeb</color>
 </resources>

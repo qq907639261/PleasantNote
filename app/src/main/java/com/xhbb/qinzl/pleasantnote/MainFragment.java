@@ -13,7 +13,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -22,7 +21,7 @@ import com.xhbb.qinzl.pleasantnote.common.Enums.ErrorState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
-import com.xhbb.qinzl.pleasantnote.layoutbinding.ItemMusicMaster;
+import com.xhbb.qinzl.pleasantnote.layoutbinding.ItemMusic;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
@@ -38,6 +37,7 @@ public class MainFragment extends Fragment
     private LayoutRecyclerView mLayoutRecyclerView;
     private int mErrorState;
     private int mCurrentPage;
+    private boolean mScrolledToEnd;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -51,7 +51,7 @@ public class MainFragment extends Fragment
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
 
-        mMusicAdapter = new MusicAdapter(R.layout.item_music_master);
+        mMusicAdapter = new MusicAdapter(R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager);
 
         addDefaultNetworkRequest();
@@ -92,6 +92,7 @@ public class MainFragment extends Fragment
         mLayoutRecyclerView.setErrorText(null);
         mLayoutRecyclerView.setAutoRefreshing(true);
         mCurrentPage = 1;
+        mScrolledToEnd = false;
 
         String selection;
         String[] selectionArgs;
@@ -148,9 +149,11 @@ public class MainFragment extends Fragment
                 boolean firstPage = mCurrentPage == 1;
                 MainTasks.updateMusicData(getContext(), musicValueses, firstPage);
             } else {
-                Toast.makeText(getContext(), R.string.scrolled_to_end_tips, Toast.LENGTH_SHORT).show();
+                mScrolledToEnd = true;
+                mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
             }
         } else {
+            mScrolledToEnd = true;
             ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
             MainTasks.updateMusicData(getContext(), musicValueses, mRankingId);
         }
@@ -158,17 +161,28 @@ public class MainFragment extends Fragment
 
     private class MusicAdapter extends RecyclerViewAdapter {
 
+        private static final int TYPE_DEFAULT_ITEM = 0;
+        private static final int TYPE_LAST_ITEM = 1;
+
         MusicAdapter(int defaultLayoutRes) {
             super(defaultLayoutRes);
         }
 
         @Override
         public int getItemViewType(int position) {
-            return super.getItemViewType(position);
+            if (position == getItemCount() - 1) {
+                return TYPE_LAST_ITEM;
+            }
+            return TYPE_DEFAULT_ITEM;
         }
 
         @Override
         public BindingHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            if (viewType == TYPE_LAST_ITEM) {
+                setLayoutRes(R.layout.item_music_last);
+            } else {
+                setLayoutRes(R.layout.item_music);
+            }
             return super.onCreateViewHolder(parent, viewType);
         }
 
@@ -182,10 +196,13 @@ public class MainFragment extends Fragment
             String singer = music.getSinger();
             int seconds = music.getSeconds();
 
-            ItemMusicMaster itemMusicMaster = new ItemMusicMaster(getContext(),
+            ItemMusic itemMusic = new ItemMusic(getContext(),
                     picture, musicName, singer, seconds);
 
-            holder.getBinding().setVariable(BR.itemMusicMaster, itemMusicMaster);
+            holder.getBinding().setVariable(BR.itemMusic, itemMusic);
+            if (position == getItemCount() - 1) {
+                holder.getBinding().setVariable(BR.scrolledToEnd, mScrolledToEnd);
+            }
             holder.getBinding().executePendingBindings();
         }
     }

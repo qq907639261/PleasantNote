@@ -8,7 +8,7 @@ import com.xhbb.qinzl.pleasantnote.R;
  * Created by qinzl on 2017/7/6.
  */
 
-public class ItemMusicMaster {
+public class ItemMusic {
 
     private Context mContext;
     private String mImageUrl;
@@ -16,7 +16,7 @@ public class ItemMusicMaster {
     private String mSinger;
     private int mSeconds;
 
-    public ItemMusicMaster(Context context, String imageUrl, String music, String singer, int seconds) {
+    public ItemMusic(Context context, String imageUrl, String music, String singer, int seconds) {
         mContext = context;
         mImageUrl = imageUrl;
         mMusic = music;

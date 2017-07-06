@@ -16,11 +16,10 @@ public abstract class RecyclerViewAdapter extends
         RecyclerView.Adapter<RecyclerViewAdapter.BindingHolder> {
 
     protected Cursor mCursor;
+    private int mLayoutRes;
 
-    private int mDefaultLayoutRes;
-
-    public RecyclerViewAdapter(int defaultLayoutRes) {
-        mDefaultLayoutRes = defaultLayoutRes;
+    public RecyclerViewAdapter(int layoutRes) {
+        mLayoutRes = layoutRes;
     }
 
     public void swapCursor(Cursor cursor) {
@@ -28,9 +27,13 @@ public abstract class RecyclerViewAdapter extends
         notifyDataSetChanged();
     }
 
+    protected void setLayoutRes(int layoutRes) {
+        mLayoutRes = layoutRes;
+    }
+
     @Override
     public BindingHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(mDefaultLayoutRes, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(mLayoutRes, parent, false);
         return new BindingHolder(view);
     }
 
