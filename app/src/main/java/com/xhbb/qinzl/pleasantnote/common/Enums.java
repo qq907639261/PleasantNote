@@ -6,11 +6,9 @@ package com.xhbb.qinzl.pleasantnote.common;
 
 public interface Enums {
 
-    interface RefreshState {
+    interface ErrorState {
 
-        int AUTO_REFRESHING = 1;
-        int SWIPE_REFRESHING = 2;
-        int SCROLL_REFRESHING = 3;
-        int NO_REFRESHING = 4;
+        int NO_ERROR = 0;
+        int NETWORK_ERROR = 1;
     }
 }

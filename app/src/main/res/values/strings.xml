@@ -26,5 +26,6 @@
     <string name="skip_next_accessibility">下一首歌曲</string>
 
     <string name="music_search_hint">歌曲/歌手</string>
-    <string name="networking_failed_text">连网失败，请检查网络！</string>
+    <string name="network_error_text">连网失败，请检查网络！</string>
+    <string name="already_to_end_toast">已经到底啦。</string>
 </resources>

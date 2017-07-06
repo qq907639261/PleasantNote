@@ -1,5 +1,6 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
@@ -11,14 +12,16 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
+import com.xhbb.qinzl.pleasantnote.common.Enums.ErrorState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView;
+import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
 public class MainFragment extends Fragment
@@ -29,8 +32,7 @@ public class MainFragment extends Fragment
     private int mRankingId;
     private String mQuery;
     private LayoutRecyclerView mLayoutRecyclerView;
-    private int mRefreshState;
-    private boolean mHasData;
+    private int mErrorState;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -68,7 +70,7 @@ public class MainFragment extends Fragment
 
     public void refreshData(String query) {
         mQuery = query;
-        mRankingId = -1;
+        mRankingId = 0;
 
         NetworkUtils.addQueryRequest(getContext(), query, 1, this, this);
         getLoaderManager().restartLoader(0, null, this);
@@ -76,10 +78,12 @@ public class MainFragment extends Fragment
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        mHasData = false;
+        Context context = getContext();
+        boolean networkAvailable = NetworkUtils.isNetworkAvailable(context);
+        mErrorState = networkAvailable ? ErrorState.NO_ERROR : ErrorState.NETWORK_ERROR;
+
         mLayoutRecyclerView.setErrorText(null);
         mLayoutRecyclerView.setAutoRefreshing(true);
-        mRefreshState = RefreshState.AUTO_REFRESHING;
 
         String selection;
         String[] selectionArgs;
@@ -91,7 +95,7 @@ public class MainFragment extends Fragment
             selectionArgs = new String[]{String.valueOf(mRankingId)};
         }
 
-        return new CursorLoader(getContext(), MusicContract.URI, null, selection, selectionArgs, null);
+        return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
     }
 
     @Override
@@ -99,8 +103,19 @@ public class MainFragment extends Fragment
         mMusicAdapter.swapCursor(cursor);
 
         if (cursor.getCount() > 0) {
-            mHasData = true;
             mLayoutRecyclerView.setAutoRefreshing(false);
+            return;
+        }
+
+        if (mErrorState != ErrorState.NO_ERROR) {
+            mLayoutRecyclerView.setAutoRefreshing(false);
+
+            switch (mErrorState) {
+                case ErrorState.NETWORK_ERROR:
+                    mLayoutRecyclerView.setErrorText(getString(R.string.network_error_text));
+                    break;
+                default:
+            }
         }
     }
 
@@ -111,17 +126,26 @@ public class MainFragment extends Fragment
 
     @Override
     public void onErrorResponse(VolleyError error) {
-        mLayoutRecyclerView.setAutoRefreshing(false);
-        mRefreshState = RefreshState.NO_REFRESHING;
-
-        if (!mHasData) {
-            mLayoutRecyclerView.setErrorText(getString(R.string.networking_failed_text));
-        }
+        mErrorState = ErrorState.NETWORK_ERROR;
+        getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
     public void onResponse(String response) {
+        mErrorState = ErrorState.NO_ERROR;
 
+        ContentValues[] musicValueses;
+        if (mQuery != null) {
+            musicValueses = JsonUtils.getMusicValueses(response, mQuery);
+        } else {
+            musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
+        }
+
+        if (musicValueses == null) {
+            Toast.makeText(getContext(), R.string.already_to_end_toast, Toast.LENGTH_SHORT).show();
+        } else {
+
+        }
     }
 
     private class MusicAdapter extends RecyclerViewAdapter {
