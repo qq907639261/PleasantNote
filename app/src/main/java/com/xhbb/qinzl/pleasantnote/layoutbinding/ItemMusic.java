@@ -10,18 +10,26 @@ import com.xhbb.qinzl.pleasantnote.R;
 
 public class ItemMusic {
 
-    private Context mContext;
     private String mImageUrl;
     private String mMusic;
     private String mSinger;
-    private int mSeconds;
+    private String mDuration;
 
-    public ItemMusic(Context context, String imageUrl, String music, String singer, int seconds) {
-        mContext = context;
+    public ItemMusic(Context context, String imageUrl, String music, String singer,
+                     int totalSeconds) {
         mImageUrl = imageUrl;
         mMusic = music;
         mSinger = singer;
-        mSeconds = seconds;
+
+        if (totalSeconds != 0) {
+            setDuration(context, totalSeconds);
+        }
+    }
+
+    private void setDuration(Context context, int totalSeconds) {
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        mDuration = context.getString(R.string.format_music_duration, minutes, seconds);
     }
 
     public String getImageUrl() {
@@ -37,12 +45,6 @@ public class ItemMusic {
     }
 
     public String getDuration() {
-        if (mSeconds == 0) {
-            return null;
-        }
-
-        int minutes = mSeconds / 60;
-        int seconds = mSeconds % 60;
-        return mContext.getString(R.string.format_music_duration, minutes, seconds);
+        return mDuration;
     }
 }

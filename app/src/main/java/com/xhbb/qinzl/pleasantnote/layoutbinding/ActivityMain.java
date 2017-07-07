@@ -14,15 +14,13 @@ import com.xhbb.qinzl.pleasantnote.R;
 
 public class ActivityMain implements ActivityFragment.OnActivityFragmentListener {
 
-    private Context mContext;
     private OnActivityMainListener mListener;
     private ActivityFragment mActivityFragment;
 
     public ActivityMain(Context context, OnActivityMainListener listener) {
-        mContext = context;
         mListener = listener;
 
-        float bottomFragmentHeight = mContext.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
+        float bottomFragmentHeight = context.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
         mActivityFragment = new ActivityFragment(bottomFragmentHeight, this);
     }
 
@@ -32,7 +30,7 @@ public class ActivityMain implements ActivityFragment.OnActivityFragmentListener
 
     public boolean onDrawerItemSelected(MenuItem item, DrawerLayout drawerLayout,
                                         NavigationView navigationView) {
-        Resources resources = mContext.getResources();
+        Resources resources = drawerLayout.getResources();
         int rankingId;
         switch (item.getItemId()) {
             case R.id.nav_western_countries:
