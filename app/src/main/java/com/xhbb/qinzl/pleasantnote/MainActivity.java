@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity
         switch (intent.getAction()) {
             case Intent.ACTION_SEARCH:
                 String query = intent.getStringExtra(SearchManager.QUERY);
-                getMainFragment().refreshData(query);
+                getMainFragment().autoRefreshData(query);
                 invalidateOptionsMenu();
                 break;
             default:
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDrawerItemSelected(int rankingId) {
-        getMainFragment().refreshData(rankingId);
+        getMainFragment().autoRefreshData(rankingId);
     }
 
     private MainFragment getMainFragment() {

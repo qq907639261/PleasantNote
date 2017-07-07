@@ -18,8 +18,8 @@ public abstract class RecyclerViewAdapter extends
     protected Cursor mCursor;
     private int mLayoutRes;
 
-    public RecyclerViewAdapter(int layoutRes) {
-        mLayoutRes = layoutRes;
+    public RecyclerViewAdapter(int defaultLayoutRes) {
+        mLayoutRes = defaultLayoutRes;
     }
 
     public void swapCursor(Cursor cursor) {

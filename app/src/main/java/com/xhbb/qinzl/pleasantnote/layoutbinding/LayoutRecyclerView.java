@@ -13,14 +13,18 @@ import com.xhbb.qinzl.pleasantnote.BR;
 public class LayoutRecyclerView extends BaseObservable {
 
     private boolean mAutoRefreshing;
+    private boolean mSwipeRefreshing;
     private String mErrorText;
     private RecyclerView.Adapter mRecyclerViewAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+    private OnLayoutRecyclerViewListener mListener;
 
     public LayoutRecyclerView(RecyclerView.Adapter recyclerViewAdapter,
-                              RecyclerView.LayoutManager layoutManager) {
+                              RecyclerView.LayoutManager layoutManager,
+                              OnLayoutRecyclerViewListener listener) {
         mRecyclerViewAdapter = recyclerViewAdapter;
         mLayoutManager = layoutManager;
+        mListener = listener;
     }
 
     public RecyclerView.Adapter getRecyclerViewAdapter() {
@@ -29,6 +33,16 @@ public class LayoutRecyclerView extends BaseObservable {
 
     public RecyclerView.LayoutManager getLayoutManager() {
         return mLayoutManager;
+    }
+
+    @Bindable
+    public boolean isSwipeRefreshing() {
+        return mSwipeRefreshing;
+    }
+
+    public void setSwipeRefreshing(boolean swipeRefreshing) {
+        mSwipeRefreshing = swipeRefreshing;
+        notifyPropertyChanged(BR.swipeRefreshing);
     }
 
     @Bindable
@@ -49,5 +63,14 @@ public class LayoutRecyclerView extends BaseObservable {
     public void setErrorText(String errorText) {
         mErrorText = errorText;
         notifyPropertyChanged(BR.errorText);
+    }
+
+    public void onSwipeRefresh() {
+        mListener.onSwipeRefresh();
+    }
+
+    public interface OnLayoutRecyclerViewListener {
+
+        void onSwipeRefresh();
     }
 }

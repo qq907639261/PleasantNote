@@ -14,9 +14,8 @@ public class MainSingleton {
 
     @SuppressLint("StaticFieldLeak")
     private static MainSingleton sMainSingleton;
-    @SuppressLint("StaticFieldLeak")
-    private static Context sContext;
 
+    private Context mContext;
     private RequestQueue mRequestQueue;
 
     public static MainSingleton getInstance(Context context) {
@@ -27,12 +26,12 @@ public class MainSingleton {
     }
 
     private MainSingleton(Context context) {
-        sContext = context.getApplicationContext();
+        mContext = context.getApplicationContext();
     }
 
     public RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
-            mRequestQueue = Volley.newRequestQueue(sContext);
+            mRequestQueue = Volley.newRequestQueue(mContext);
         }
         return mRequestQueue;
     }

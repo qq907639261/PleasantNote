@@ -1,8 +1,6 @@
 package com.xhbb.qinzl.pleasantnote.server;
 
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 
 import com.android.volley.AuthFailureError;
@@ -21,6 +19,8 @@ import java.util.Map;
  */
 
 public class NetworkUtils {
+
+    private static final String TAG = "NetworkUtils";
 
     public static void addRankingRequest(Context context, int rankingId,
                                          Response.Listener<String> listener,
@@ -45,7 +45,12 @@ public class NetworkUtils {
         addRequest(context, url, listener, errorListener);
     }
 
-    private static void addRequest(final Context context, String url, Response.Listener<String> listener,
+    public static void cancelAllRequest(Context context) {
+        MainSingleton.getInstance(context).getRequestQueue().cancelAll(TAG);
+    }
+
+    private static void addRequest(final Context context, String url,
+                                   Response.Listener<String> listener,
                                    Response.ErrorListener errorListener) {
         StringRequest request = new StringRequest(Request.Method.GET, url, listener, errorListener) {
             @Override
@@ -55,15 +60,9 @@ public class NetworkUtils {
                 return headers;
             }
         };
+        request.setTag(TAG);
 
         RequestQueue queue = MainSingleton.getInstance(context).getRequestQueue();
         queue.add(request);
-    }
-
-    public static boolean isNetworkAvailable(Context context) {
-        ConnectivityManager connectivityManager =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isAvailable();
     }
 }

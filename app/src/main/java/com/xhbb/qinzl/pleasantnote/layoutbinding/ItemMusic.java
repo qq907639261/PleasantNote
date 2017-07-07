@@ -43,12 +43,6 @@ public class ItemMusic {
 
         int minutes = mSeconds / 60;
         int seconds = mSeconds % 60;
-
-        String formattedSeconds = String.valueOf(seconds);
-        if (seconds < 10) {
-            formattedSeconds = "0" + seconds;
-        }
-
-        return mContext.getString(R.string.format_music_duration, minutes, formattedSeconds);
+        return mContext.getString(R.string.format_music_duration, minutes, seconds);
     }
 }

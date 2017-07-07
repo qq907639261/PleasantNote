@@ -6,9 +6,18 @@ package com.xhbb.qinzl.pleasantnote.common;
 
 public interface Enums {
 
-    interface ErrorState {
+    interface VolleyState {
 
-        int NO_ERROR = 0;
-        int NETWORK_ERROR = 1;
+        int NOTHING = 0;
+        int ERROR = 1;
+        int RESPONSE = 2;
+    }
+
+    interface RefreshState {
+
+        int NOTHING = 0;
+        int AUTO = 1;
+        int SWIPE = 2;
+        int SCROLL = 3;
     }
 }

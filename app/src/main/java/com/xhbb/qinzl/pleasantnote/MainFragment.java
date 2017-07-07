@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -17,7 +18,8 @@ import android.view.ViewGroup;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MainTasks;
-import com.xhbb.qinzl.pleasantnote.common.Enums.ErrorState;
+import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
+import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
@@ -29,15 +31,17 @@ import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
 public class MainFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor>,
-        Response.Listener<String>, Response.ErrorListener {
+        Response.Listener<String>, Response.ErrorListener,
+        LayoutRecyclerView.OnLayoutRecyclerViewListener {
 
     private MusicAdapter mMusicAdapter;
     private int mRankingId;
     private String mQuery;
     private LayoutRecyclerView mLayoutRecyclerView;
-    private int mErrorState;
+    private int mVolleyState;
     private int mCurrentPage;
     private boolean mScrolledToEnd;
+    private int mRefreshState;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -52,47 +56,49 @@ public class MainFragment extends Fragment
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
 
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
-        mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager);
+        mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager, this);
+        mRankingId = getResources().getInteger(R.integer.ranking_id_default);
 
-        addDefaultNetworkRequest();
         getLoaderManager().initLoader(0, null, this);
 
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
         return binding.getRoot();
     }
 
-    private void addDefaultNetworkRequest() {
-        Context context = getContext();
-        mRankingId = context.getResources().getInteger(R.integer.ranking_id_default);
-        NetworkUtils.addRankingRequest(context, mRankingId, this, this);
-    }
-
-    public void refreshData(int rankingId) {
+    public void autoRefreshData(int rankingId) {
+        cancelAllRequestIfRefreshing();
         mRankingId = rankingId;
         mQuery = null;
-
-        NetworkUtils.addRankingRequest(getContext(), mRankingId, this, this);
         getLoaderManager().restartLoader(0, null, this);
     }
 
-    public void refreshData(String query) {
+    public void autoRefreshData(String query) {
+        cancelAllRequestIfRefreshing();
         mQuery = query;
         mRankingId = 0;
-
-        NetworkUtils.addQueryRequest(getContext(), query, 1, this, this);
         getLoaderManager().restartLoader(0, null, this);
+    }
+
+    private void cancelAllRequestIfRefreshing() {
+        if (mRefreshState != RefreshState.NOTHING) {
+            mRefreshState = RefreshState.AUTO;
+            NetworkUtils.cancelAllRequest(getContext());
+        }
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Context context = getContext();
-        boolean networkAvailable = NetworkUtils.isNetworkAvailable(context);
-
-        mErrorState = networkAvailable ? ErrorState.NO_ERROR : ErrorState.NETWORK_ERROR;
-        mLayoutRecyclerView.setErrorText(null);
-        mLayoutRecyclerView.setAutoRefreshing(true);
         mCurrentPage = 1;
         mScrolledToEnd = false;
+
+        if (mRefreshState != RefreshState.SWIPE) {
+            mRefreshState = RefreshState.AUTO;
+            mLayoutRecyclerView.setErrorText(null);
+            mLayoutRecyclerView.setAutoRefreshing(true);
+        }
+
+        Context context = getContext();
+        addNetworkRequest(context);
 
         String selection;
         String[] selectionArgs;
@@ -111,21 +117,32 @@ public class MainFragment extends Fragment
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
 
-        if (cursor.getCount() > 0) {
-            mLayoutRecyclerView.setAutoRefreshing(false);
+        if (cursor.getCount() > 0 && mRefreshState == RefreshState.AUTO) {
+            refreshFinished();
             return;
         }
 
-        if (mErrorState != ErrorState.NO_ERROR) {
-            mLayoutRecyclerView.setAutoRefreshing(false);
-
-            switch (mErrorState) {
-                case ErrorState.NETWORK_ERROR:
+        if (mVolleyState == VolleyState.RESPONSE || mVolleyState == VolleyState.ERROR) {
+            if (mVolleyState == VolleyState.ERROR) {
+                if (mRefreshState == RefreshState.AUTO) {
                     mLayoutRecyclerView.setErrorText(getString(R.string.network_error_text));
-                    break;
-                default:
+                } else {
+                    mScrolledToEnd = true;
+                    mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
+                }
+            } else if (mRefreshState == RefreshState.SWIPE) {
+                mLayoutRecyclerView.setErrorText(null);
             }
+
+            mLayoutRecyclerView.setSwipeRefreshing(false);
+            refreshFinished();
         }
+    }
+
+    private void refreshFinished() {
+        mLayoutRecyclerView.setAutoRefreshing(false);
+        mVolleyState = VolleyState.NOTHING;
+        mRefreshState = RefreshState.NOTHING;
     }
 
     @Override
@@ -133,30 +150,48 @@ public class MainFragment extends Fragment
         mMusicAdapter.swapCursor(null);
     }
 
+    private void addNetworkRequest(Context context) {
+        if (mQuery != null) {
+            NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, this, this);
+        } else {
+            NetworkUtils.addRankingRequest(context, mRankingId, this, this);
+        }
+    }
+
     @Override
     public void onErrorResponse(VolleyError error) {
-        mErrorState = ErrorState.NETWORK_ERROR;
+        mVolleyState = VolleyState.ERROR;
         getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
     public void onResponse(String response) {
-        mErrorState = ErrorState.NO_ERROR;
+        mVolleyState = VolleyState.RESPONSE;
 
         if (mQuery != null) {
             ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mQuery);
             if (musicValueses != null) {
+                if (musicValueses.length < 20) {
+                    mScrolledToEnd = true;
+                }
+
                 boolean firstPage = mCurrentPage == 1;
                 MainTasks.updateMusicData(getContext(), musicValueses, firstPage);
             } else {
                 mScrolledToEnd = true;
-                mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
+                getLoaderManager().initLoader(0, null, this);
             }
         } else {
             mScrolledToEnd = true;
             ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
             MainTasks.updateMusicData(getContext(), musicValueses, mRankingId);
         }
+    }
+
+    @Override
+    public void onSwipeRefresh() {
+        mRefreshState = RefreshState.SWIPE;
+        getLoaderManager().restartLoader(0, null, this);
     }
 
     private class MusicAdapter extends RecyclerViewAdapter {
@@ -189,21 +224,22 @@ public class MainFragment extends Fragment
         @Override
         public void onBindViewHolder(BindingHolder holder, int position) {
             mCursor.moveToPosition(position);
-
             Music music = new Music(mCursor);
+
             String picture = music.getSmallPicture();
             String musicName = music.getName();
             String singer = music.getSinger();
             int seconds = music.getSeconds();
 
-            ItemMusic itemMusic = new ItemMusic(getContext(),
-                    picture, musicName, singer, seconds);
+            ItemMusic itemMusic = new ItemMusic(getContext(), picture, musicName, singer, seconds);
+            ViewDataBinding binding = holder.getBinding();
 
-            holder.getBinding().setVariable(BR.itemMusic, itemMusic);
+            binding.setVariable(BR.itemMusic, itemMusic);
             if (position == getItemCount() - 1) {
-                holder.getBinding().setVariable(BR.scrolledToEnd, mScrolledToEnd);
+                binding.setVariable(BR.scrolledToEnd, mScrolledToEnd);
             }
-            holder.getBinding().executePendingBindings();
+
+            binding.executePendingBindings();
         }
     }
 }
