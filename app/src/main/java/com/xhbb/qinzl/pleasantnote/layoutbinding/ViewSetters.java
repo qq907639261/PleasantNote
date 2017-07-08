@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.SearchView;
 
 import com.xhbb.qinzl.pleasantnote.R;
 import com.xhbb.qinzl.pleasantnote.common.GlideApp;
@@ -58,15 +59,8 @@ public class ViewSetters {
         }
     }
 
-    @BindingAdapter({"android:onItemSelected"})
-    public static void setOnNavigationViewListener(
-            NavigationView navigationView,
-            NavigationView.OnNavigationItemSelectedListener listener) {
-        navigationView.setNavigationItemSelectedListener(listener);
-    }
-
     @BindingAdapter(value = {"android:url", "android:placeholder"}, requireAll = false)
-    public static void loadImage(ImageView imageView, String url, Drawable placeholder) {
+    public static void setImageView(ImageView imageView, String url, Drawable placeholder) {
         Context context = imageView.getContext();
         if (placeholder == null) {
             placeholder = ActivityCompat.getDrawable(context, R.drawable.empty_image);
@@ -78,14 +72,54 @@ public class ViewSetters {
                 .into(imageView);
     }
 
+    @BindingAdapter({"android:onItemSelected"})
+    public static void setNavigationView(
+            NavigationView navigationView,
+            NavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener) {
+
+        if (onNavigationItemSelectedListener != null) {
+            navigationView.setNavigationItemSelectedListener(onNavigationItemSelectedListener);
+        }
+    }
+
     @BindingAdapter({"android:onRefresh"})
-    public static void setOnRefreshListener(SwipeRefreshLayout swipeRefreshLayout,
-                                            SwipeRefreshLayout.OnRefreshListener listener) {
-        swipeRefreshLayout.setOnRefreshListener(listener);
+    public static void setSwipeRefreshLayout(
+            SwipeRefreshLayout swipeRefreshLayout,
+            SwipeRefreshLayout.OnRefreshListener onRefreshListener) {
+
+        if (onRefreshListener != null) {
+            swipeRefreshLayout.setOnRefreshListener(onRefreshListener);
+        }
+    }
+
+    @BindingAdapter({"android:onQueryTextSubmit"})
+    public static void setSearchView(
+            SearchView searchView,
+            final OnQueryTextSubmitListener onQueryTextSubmitListener) {
+
+        if (onQueryTextSubmitListener != null) {
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String s) {
+                    onQueryTextSubmitListener.onQueryTextSubmit(s);
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String s) {
+                    return false;
+                }
+            });
+        }
     }
 
     public interface OnDrawerOpenedListener {
 
         void onDrawerOpened();
+    }
+
+    public interface OnQueryTextSubmitListener {
+
+        void onQueryTextSubmit(String s);
     }
 }

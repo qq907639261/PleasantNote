@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--suppress AndroidUnknownAttribute -->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="@layout/layout_main">
+
+    <data>
+
+        <import type="android.view.View"/>
+
+        <variable
+            name="layoutAppBar"
+            type="com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutAppBar"/>
+
+        <variable
+            name="drawerLayout"
+            type="android.support.v4.widget.DrawerLayout"/>
+
+        <variable
+            name="viewPager"
+            type="android.support.v4.view.ViewPager"/>
+    </data>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:actionBarSetted="@{true}"
+            android:drawerLayout="@{drawerLayout}"
+            android:onDrawerOpened="@{()->layoutAppBar.onDrawerOpened(searchView)}"
+            android:title="@string/app_name"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+            <SearchView
+                android:id="@+id/searchView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:onQueryTextSubmit="@{(s)->layoutAppBar.onQueryTextSubmit(searchView,s)}"
+                android:queryHint="@string/music_search_hint"/>
+        </android.support.v7.widget.Toolbar>
+
+        <android.support.design.widget.TabLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:setupWithViewPager="@{viewPager}"
+            android:visibility="@{layoutAppBar.tabLayoutVisibility}"
+            app:tabMode="scrollable"/>
+    </android.support.design.widget.AppBarLayout>
+</layout>

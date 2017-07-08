@@ -5,8 +5,8 @@
     <data>
 
         <variable
-            name="activityFragment"
-            type="com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityFragment"/>
+            name="layoutMain"
+            type="com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutMain"/>
 
         <variable
             name="drawerLayout"
@@ -17,26 +17,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.design.widget.AppBarLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/AppTheme.AppBarOverlay">
+        <include
+            layout="@layout/layout_app_bar"
+            app:drawerLayout="@{drawerLayout}"
+            app:layoutAppBar="@{layoutMain.layoutAppBar}"
+            app:viewPager="@{viewPager}"/>
 
-            <!--suppress AndroidUnknownAttribute -->
-            <android.support.v7.widget.Toolbar
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:actionBarSetted="@{true}"
-                android:drawerLayout="@{drawerLayout}"
-                android:onDrawerOpened="@{()->activityFragment.onDrawerOpened()}"
-                app:layout_scrollFlags="scroll"/>
-        </android.support.design.widget.AppBarLayout>
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="@{layoutMain.bottomFragmentHeight}"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingBottom="@{activityFragment.bottomFragmentHeight}"
+            android:paddingBottom="@{layoutMain.bottomFragmentHeight}"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
         <FrameLayout

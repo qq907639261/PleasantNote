@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="@string/main_nav_label">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_my_favorited"
+                    android:icon="@drawable/ic_favorited"
+                    android:title="@string/my_favorited_nav"/>
+
+                <item
+                    android:id="@+id/nav_recently_played"
+                    android:icon="@drawable/ic_history_play"
+                    android:title="@string/recently_played_nav"/>
+
+                <item
+                    android:id="@+id/nav_local_song"
+                    android:icon="@drawable/ic_local_play"
+                    android:title="@string/local_song_nav"/>
+            </group>
+        </menu>
+    </item>
+</menu>

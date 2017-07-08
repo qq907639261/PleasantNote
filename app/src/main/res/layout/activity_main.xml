@@ -10,7 +10,6 @@
             type="com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain"/>
     </data>
 
-    <!--suppress AndroidUnknownAttribute -->
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
@@ -18,9 +17,9 @@
         tools:openDrawer="start">
 
         <include
-            layout="@layout/activity_fragment"
-            app:activityFragment="@{activityMain.activityFragment}"
-            app:drawerLayout="@{drawerLayout}"/>
+            layout="@layout/layout_main"
+            app:drawerLayout="@{drawerLayout}"
+            app:layoutMain="@{activityMain.layoutMain}"/>
 
         <!--suppress AndroidUnknownAttribute -->
         <android.support.design.widget.NavigationView
@@ -28,9 +27,9 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:checkedItem="@{@id/nav_popular_song}"
+            android:checkedItem="@{@id/nav_my_favorited}"
             android:onItemSelected="@{(item)->activityMain.onDrawerItemSelected(item,drawerLayout,navigationView)}"
             app:headerLayout="@layout/drawer_header"
-            app:menu="@menu/drawer_ranking"/>
+            app:menu="@menu/drawer_main"/>
     </android.support.v4.widget.DrawerLayout>
 </layout>

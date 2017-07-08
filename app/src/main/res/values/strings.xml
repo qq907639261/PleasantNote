@@ -3,21 +3,20 @@
 
     <string name="format_music_duration" translatable="false">%1$d′%2$02d″</string>
 
-    <string name="ranking_nav_label">悦动音符榜</string>
-    <string name="popular_song_ranking_nav">热歌榜</string>
-    <string name="western_countries_ranking_nav">欧美榜</string>
-    <string name="mainland_ranking_nav">大陆榜</string>
-    <string name="hong_kong_and_taiwan_ranking_nav">港台榜</string>
-    <string name="korea_ranking_nav">韩国榜</string>
-    <string name="japan_ranking_nav">日本榜</string>
-    <string name="ballad_ranking_nav">民谣榜</string>
-    <string name="rocking_ranking_nav">摇滚榜</string>
-    <string name="sales_ranking_nav">销量榜</string>
+    <string name="popular_song_tab">热歌</string>
+    <string name="western_countries_tab">欧美</string>
+    <string name="mainland_tab">大陆</string>
+    <string name="hong_kong_and_taiwan_tab">港台</string>
+    <string name="korea_tab">韩国</string>
+    <string name="japan_tab">日本</string>
+    <string name="ballad_tab">民谣</string>
+    <string name="rocking_tab">摇滚</string>
+    <string name="sales_tab">销量</string>
 
-    <string name="search_menu">搜索</string>
-    <string name="local_song_menu">本地歌曲</string>
-    <string name="my_favorited_menu">我的收藏</string>
-    <string name="recently_played_menu">最近播放</string>
+    <string name="main_nav_label">悦动音符</string>
+    <string name="local_song_nav">本地歌曲</string>
+    <string name="my_favorited_nav">我的收藏</string>
+    <string name="recently_played_nav">最近播放</string>
 
     <string name="my_icon_accessibility">我的头像</string>
     <string name="open_drawer_accessibility">打开导航抽屉</string>
@@ -27,7 +26,11 @@
     <string name="play_or_pause_accessibility">播放/暂停</string>
     <string name="skip_next_accessibility">下一首歌曲</string>
 
+    <string name="search_menu">搜索</string>
     <string name="music_search_hint">歌曲/歌手</string>
     <string name="network_error_text">连网失败，请检查网络！</string>
     <string name="scrolled_to_end_text">已经到底啦</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -18,8 +18,7 @@ import android.view.ViewGroup;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MainTasks;
-import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
-import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
+import com.xhbb.qinzl.pleasantnote.common.Enums;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
@@ -29,22 +28,26 @@ import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
-public class MainFragment extends Fragment
+public class MusicRankingFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor>,
         Response.Listener<String>, Response.ErrorListener,
         LayoutRecyclerView.OnLayoutRecyclerViewListener {
 
+    private static final String ARG_RANKING_ID = "ARG_RANKING_ID";
+
     private MusicAdapter mMusicAdapter;
     private int mRankingId;
-    private String mQuery;
     private LayoutRecyclerView mLayoutRecyclerView;
     private int mVolleyState;
-    private int mCurrentPage;
-    private boolean mScrolledToEnd;
     private int mRefreshState;
 
-    public static MainFragment newInstance() {
-        return new MainFragment();
+    public static MusicRankingFragment newInstance(int rankingId) {
+        Bundle args = new Bundle();
+        args.putInt(ARG_RANKING_ID, rankingId);
+
+        MusicRankingFragment fragment = new MusicRankingFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -57,7 +60,7 @@ public class MainFragment extends Fragment
 
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager, this);
-        mRankingId = getResources().getInteger(R.integer.ranking_id_default);
+        mRankingId = getArguments().getInt(ARG_RANKING_ID);
 
         getLoaderManager().initLoader(0, null, this);
 
@@ -65,50 +68,19 @@ public class MainFragment extends Fragment
         return binding.getRoot();
     }
 
-    public void autoRefreshData(int rankingId) {
-        cancelAllRequestIfRefreshing();
-        mRankingId = rankingId;
-        mQuery = null;
-        getLoaderManager().restartLoader(0, null, this);
-    }
-
-    public void autoRefreshData(String query) {
-        cancelAllRequestIfRefreshing();
-        mQuery = query;
-        mRankingId = 0;
-        getLoaderManager().restartLoader(0, null, this);
-    }
-
-    private void cancelAllRequestIfRefreshing() {
-        if (mRefreshState != RefreshState.NOTHING) {
-            mRefreshState = RefreshState.AUTO;
-            NetworkUtils.cancelAllRequest(getContext());
-        }
-    }
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        mCurrentPage = 1;
-        mScrolledToEnd = false;
-
-        if (mRefreshState != RefreshState.SWIPE) {
-            mRefreshState = RefreshState.AUTO;
+        if (mRefreshState != Enums.RefreshState.SWIPE) {
+            mRefreshState = Enums.RefreshState.AUTO;
             mLayoutRecyclerView.setErrorText(null);
             mLayoutRecyclerView.setAutoRefreshing(true);
         }
 
         Context context = getContext();
-        addNetworkRequest(context);
+        NetworkUtils.addRankingRequest(context, mRankingId, this, this);
 
-        String selection;
-        String[] selectionArgs;
-        if (mQuery != null) {
-            selection = MusicContract._QUERY + "=?";
-            selectionArgs = new String[]{mQuery};
-        } else {
-            selection = MusicContract._RANKING_ID + "=?";
-            selectionArgs = new String[]{String.valueOf(mRankingId)};
-        }
+        String selection = MusicContract._RANKING_ID + "=?";
+        String[] selectionArgs = new String[]{String.valueOf(mRankingId)};
 
         return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
     }
@@ -117,20 +89,19 @@ public class MainFragment extends Fragment
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
 
-        if (cursor.getCount() > 0 && mRefreshState == RefreshState.AUTO) {
+        if (cursor.getCount() > 0 && mRefreshState == Enums.RefreshState.AUTO) {
             refreshFinished();
             return;
         }
 
-        if (mVolleyState == VolleyState.RESPONSE || mVolleyState == VolleyState.ERROR) {
-            if (mVolleyState == VolleyState.ERROR) {
-                if (mRefreshState == RefreshState.AUTO) {
+        if (mVolleyState == Enums.VolleyState.RESPONSE || mVolleyState == Enums.VolleyState.ERROR) {
+            if (mVolleyState == Enums.VolleyState.ERROR) {
+                if (mRefreshState == Enums.RefreshState.AUTO) {
                     mLayoutRecyclerView.setErrorText(getString(R.string.network_error_text));
                 } else {
-                    mScrolledToEnd = true;
-                    mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
+                    // TODO: 2017/7/8
                 }
-            } else if (mRefreshState == RefreshState.SWIPE) {
+            } else if (mRefreshState == Enums.RefreshState.SWIPE) {
                 mLayoutRecyclerView.setErrorText(null);
             }
 
@@ -141,8 +112,8 @@ public class MainFragment extends Fragment
 
     private void refreshFinished() {
         mLayoutRecyclerView.setAutoRefreshing(false);
-        mVolleyState = VolleyState.NOTHING;
-        mRefreshState = RefreshState.NOTHING;
+        mVolleyState = Enums.VolleyState.NOTHING;
+        mRefreshState = Enums.RefreshState.NOTHING;
     }
 
     @Override
@@ -150,47 +121,23 @@ public class MainFragment extends Fragment
         mMusicAdapter.swapCursor(null);
     }
 
-    private void addNetworkRequest(Context context) {
-        if (mQuery != null) {
-            NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, this, this);
-        } else {
-            NetworkUtils.addRankingRequest(context, mRankingId, this, this);
-        }
-    }
-
     @Override
     public void onErrorResponse(VolleyError error) {
-        mVolleyState = VolleyState.ERROR;
+        mVolleyState = Enums.VolleyState.ERROR;
         getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
     public void onResponse(String response) {
-        mVolleyState = VolleyState.RESPONSE;
+        mVolleyState = Enums.VolleyState.RESPONSE;
 
-        if (mQuery != null) {
-            ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mQuery);
-            if (musicValueses != null) {
-                if (musicValueses.length < 20) {
-                    mScrolledToEnd = true;
-                }
-
-                boolean firstPage = mCurrentPage == 1;
-                MainTasks.updateMusicData(getContext(), musicValueses, firstPage);
-            } else {
-                mScrolledToEnd = true;
-                getLoaderManager().initLoader(0, null, this);
-            }
-        } else {
-            mScrolledToEnd = true;
-            ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
-            MainTasks.updateMusicData(getContext(), musicValueses, mRankingId);
-        }
+        ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
+        MainTasks.updateMusicData(getContext(), musicValueses, mRankingId);
     }
 
     @Override
     public void onSwipeRefresh() {
-        mRefreshState = RefreshState.SWIPE;
+        mRefreshState = Enums.RefreshState.SWIPE;
         getLoaderManager().restartLoader(0, null, this);
     }
 
@@ -236,7 +183,7 @@ public class MainFragment extends Fragment
 
             binding.setVariable(BR.itemMusic, itemMusic);
             if (position == getItemCount() - 1) {
-                binding.setVariable(BR.scrolledToEnd, mScrolledToEnd);
+                binding.setVariable(BR.scrolledToEnd, true);
             }
 
             binding.executePendingBindings();
