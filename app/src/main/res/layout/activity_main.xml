@@ -27,7 +27,6 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:checkedItem="@{@id/nav_my_favorited}"
             android:onItemSelected="@{(item)->activityMain.onDrawerItemSelected(item,drawerLayout,navigationView)}"
             app:headerLayout="@layout/drawer_header"
             app:menu="@menu/drawer_main"/>

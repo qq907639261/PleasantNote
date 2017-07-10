@@ -5,8 +5,6 @@
 
     <data>
 
-        <import type="android.view.View"/>
-
         <variable
             name="layoutRecyclerView"
             type="com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView"/>
@@ -20,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:onRefresh="@{()->layoutRecyclerView.onSwipeRefresh()}"
-            android:refreshing="@{layoutRecyclerView.swipeRefreshing}">
+            android:refreshing="@{layoutRecyclerView.refreshing}">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -32,21 +30,14 @@
                     android:adapter="@{layoutRecyclerView.recyclerViewAdapter}"
                     app:layoutManager="@{layoutRecyclerView.layoutManager}"/>
 
-                <ProgressBar
-                    style="?android:attr/progressBarStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:visibility="@{layoutRecyclerView.autoRefreshing ? View.VISIBLE : View.GONE}"/>
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="@{layoutRecyclerView.errorText}"
+                    android:text="@{layoutRecyclerView.tipsText}"
                     android:textAppearance="@android:style/TextAppearance.Large"
-                    android:textColor="@color/errorText"
-                    tools:text="刷新失败"/>
+                    android:textColor="@color/tipsText"
+                    tools:text="快上音乐！"/>
             </FrameLayout>
         </android.support.v4.widget.SwipeRefreshLayout>
     </android.support.design.widget.CoordinatorLayout>

@@ -11,7 +11,7 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 
 public class JsonUtils {
 
-    public static ContentValues[] getMusicValueses(String json, int rankingId) {
+    public static ContentValues[] getMusicValueses(String json, int rankingCode) {
         MusicByRankingJson music = new Gson().fromJson(json, MusicByRankingJson.class);
         MusicByRankingJson.ShowApiResBody.PageBean.Song[] songs =
                 music.showapi_res_body.pagebean.songlist;
@@ -19,7 +19,7 @@ public class JsonUtils {
         ContentValues[] musicValueses = new ContentValues[songs.length];
         for (int i = 0; i < songs.length; i++) {
             musicValueses[i] = new ContentValues();
-            musicValueses[i].put(MusicContract._RANKING_CODE, rankingId);
+            musicValueses[i].put(MusicContract._RANKING_CODE, rankingCode);
             musicValueses[i].put(MusicContract._NAME, songs[i].songname);
             musicValueses[i].put(MusicContract._SECONDS, songs[i].seconds);
             musicValueses[i].put(MusicContract._CODE, songs[i].songid);

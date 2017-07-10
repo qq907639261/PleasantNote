@@ -61,7 +61,7 @@ public class MusicQueryFragment extends Fragment
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
 
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
-        mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager, this);
+        mLayoutRecyclerView = new LayoutRecyclerView(getContext(), mMusicAdapter, layoutManager, this);
         mQuery = getArguments().getString(ARG_QUERY);
 
         getLoaderManager().initLoader(0, null, this);
@@ -88,11 +88,10 @@ public class MusicQueryFragment extends Fragment
         mCurrentPage = 1;
         mScrolledToEnd = false;
 
-        if (mRefreshState != Enums.RefreshState.SWIPE) {
-            mRefreshState = Enums.RefreshState.AUTO;
-            mLayoutRecyclerView.setErrorText(null);
-            mLayoutRecyclerView.setAutoRefreshing(true);
-        }
+//        if (mRefreshState != Enums.RefreshState.SWIPE) {
+//            mRefreshState = Enums.RefreshState.AUTO;
+//            mLayoutRecyclerView.setTipsText(null);
+//        }
 
         Context context = getContext();
         NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, this, this);
@@ -107,32 +106,33 @@ public class MusicQueryFragment extends Fragment
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
 
-        if (cursor.getCount() > 0 && mRefreshState == Enums.RefreshState.AUTO) {
-            refreshFinished();
-            return;
-        }
+//        if (cursor.getCount() > 0 && mRefreshState == Enums.RefreshState.AUTO) {
+//            refreshFinished();
+//            return;
+//        }
 
         if (mVolleyState == Enums.VolleyState.RESPONSE || mVolleyState == Enums.VolleyState.ERROR) {
             if (mVolleyState == Enums.VolleyState.ERROR) {
-                if (mRefreshState == Enums.RefreshState.AUTO) {
-                    mLayoutRecyclerView.setErrorText(getString(R.string.network_error_text));
-                } else {
-                    mScrolledToEnd = true;
-                    mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
-                }
-            } else if (mRefreshState == Enums.RefreshState.SWIPE) {
-                mLayoutRecyclerView.setErrorText(null);
+//                if (mRefreshState == Enums.RefreshState.AUTO) {
+//                    mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
+//                } else {
+//                    mScrolledToEnd = true;
+//                    mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
+//                }
             }
+//            else if (mRefreshState == Enums.RefreshState.SWIPE) {
+//                mLayoutRecyclerView.setTipsText(null);
+//            }
 
-            mLayoutRecyclerView.setSwipeRefreshing(false);
+            mLayoutRecyclerView.setRefreshing(false);
             refreshFinished();
         }
     }
 
     private void refreshFinished() {
-        mLayoutRecyclerView.setAutoRefreshing(false);
+        mLayoutRecyclerView.setRefreshing(false);
         mVolleyState = Enums.VolleyState.NOTHING;
-        mRefreshState = Enums.RefreshState.NOTHING;
+//        mRefreshState = Enums.RefreshState.NOTHING;
     }
 
     @Override
@@ -166,7 +166,7 @@ public class MusicQueryFragment extends Fragment
 
     @Override
     public void onSwipeRefresh() {
-        mRefreshState = Enums.RefreshState.SWIPE;
+//        mRefreshState = Enums.RefreshState.SWIPE;
         getLoaderManager().restartLoader(0, null, this);
     }
 

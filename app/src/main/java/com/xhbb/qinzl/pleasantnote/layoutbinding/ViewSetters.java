@@ -90,14 +90,16 @@ public class ViewSetters {
         }
     }
 
-    @BindingAdapter(value = {"android:collapsed", "android:onQueryTextSubmit"},
-            requireAll = false)
-    public static void setSearchView(SearchView searchView, boolean collapsed,
-                                     final OnQueryTextSubmitListener onQueryTextSubmitListener) {
+    @BindingAdapter({"android:collapsed"})
+    public static void setSearchView(SearchView searchView, boolean collapsed) {
         if (collapsed) {
             searchView.onActionViewCollapsed();
         }
+    }
 
+    @BindingAdapter({"android:onQueryTextSubmit"})
+    public static void setSearchView(SearchView searchView,
+                                     final OnQueryTextSubmitListener onQueryTextSubmitListener) {
         if (onQueryTextSubmitListener != null) {
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override

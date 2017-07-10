@@ -1,10 +1,12 @@
 package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
+import android.content.Context;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.support.v7.widget.RecyclerView;
 
 import com.xhbb.qinzl.pleasantnote.BR;
+import com.xhbb.qinzl.pleasantnote.R;
 
 /**
  * Created by qinzl on 2017/7/3.
@@ -12,16 +14,17 @@ import com.xhbb.qinzl.pleasantnote.BR;
 
 public class LayoutRecyclerView extends BaseObservable {
 
-    private boolean mAutoRefreshing;
-    private boolean mSwipeRefreshing;
-    private String mErrorText;
+    private boolean mRefreshing;
+    private String mTipsText;
     private RecyclerView.Adapter mRecyclerViewAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private OnLayoutRecyclerViewListener mListener;
 
-    public LayoutRecyclerView(RecyclerView.Adapter recyclerViewAdapter,
+    public LayoutRecyclerView(Context context, RecyclerView.Adapter recyclerViewAdapter,
                               RecyclerView.LayoutManager layoutManager,
                               OnLayoutRecyclerViewListener listener) {
+        mRefreshing = true;
+        mTipsText = context.getString(R.string.refreshing_text);
         mRecyclerViewAdapter = recyclerViewAdapter;
         mLayoutManager = layoutManager;
         mListener = listener;
@@ -36,33 +39,23 @@ public class LayoutRecyclerView extends BaseObservable {
     }
 
     @Bindable
-    public boolean isSwipeRefreshing() {
-        return mSwipeRefreshing;
+    public boolean isRefreshing() {
+        return mRefreshing;
     }
 
-    public void setSwipeRefreshing(boolean swipeRefreshing) {
-        mSwipeRefreshing = swipeRefreshing;
-        notifyPropertyChanged(BR.swipeRefreshing);
-    }
-
-    @Bindable
-    public boolean isAutoRefreshing() {
-        return mAutoRefreshing;
-    }
-
-    public void setAutoRefreshing(boolean autoRefreshing) {
-        mAutoRefreshing = autoRefreshing;
-        notifyPropertyChanged(BR.autoRefreshing);
+    public void setRefreshing(boolean refreshing) {
+        mRefreshing = refreshing;
+        notifyPropertyChanged(BR.refreshing);
     }
 
     @Bindable
-    public String getErrorText() {
-        return mErrorText;
+    public String getTipsText() {
+        return mTipsText;
     }
 
-    public void setErrorText(String errorText) {
-        mErrorText = errorText;
-        notifyPropertyChanged(BR.errorText);
+    public void setTipsText(String tipsText) {
+        mTipsText = tipsText;
+        notifyPropertyChanged(BR.tipsText);
     }
 
     public void onSwipeRefresh() {

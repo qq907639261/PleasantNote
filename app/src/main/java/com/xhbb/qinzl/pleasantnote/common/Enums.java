@@ -12,12 +12,4 @@ public interface Enums {
         int ERROR = 1;
         int RESPONSE = 2;
     }
-
-    interface RefreshState {
-
-        int NOTHING = 0;
-        int AUTO = 1;
-        int SWIPE = 2;
-        int SCROLL = 3;
-    }
 }

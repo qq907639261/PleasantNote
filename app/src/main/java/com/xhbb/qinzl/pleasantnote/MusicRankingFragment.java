@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -18,7 +19,7 @@ import android.view.ViewGroup;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MainTasks;
-import com.xhbb.qinzl.pleasantnote.common.Enums;
+import com.xhbb.qinzl.pleasantnote.async.UpdateMusicService;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
@@ -34,13 +35,16 @@ public class MusicRankingFragment extends Fragment
         LayoutRecyclerView.OnLayoutRecyclerViewListener {
 
     private static final String ARG_RANKING_CODE = "ARG_RANKING_CODE";
+    private static final String ARG_ITEM_POSITION = "ARG_ITEM_POSITION";
 
     private MusicAdapter mMusicAdapter;
     private int mRankingCode;
     private Object mRequestTag;
     private LayoutRecyclerView mLayoutRecyclerView;
-    private int mVolleyState;
-    private int mRefreshState;
+    private LinearLayoutManager mLayoutManager;
+    private boolean mViewRecreating;
+    private MusicAsyncTask mMusicAsyncTask;
+    private boolean mDataHad;
 
     public static MusicRankingFragment newInstance(int rankingCode) {
         Bundle args = new Bundle();
@@ -57,16 +61,24 @@ public class MusicRankingFragment extends Fragment
         LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(
                 inflater, R.layout.layout_recycler_view, container, false);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        final Context context = getContext();
 
+        mMusicAsyncTask = new MusicAsyncTask();
+        mLayoutManager = new LinearLayoutManager(context);
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
-        mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager, this);
+        mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
         mRankingCode = getArguments().getInt(ARG_RANKING_CODE);
         mRequestTag = mRankingCode;
 
-        getLoaderManager().initLoader(0, null, this);
+        if (savedInstanceState != null) {
+            mViewRecreating = true;
+            int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
+            mLayoutManager.scrollToPosition(itemPosition);
+        }
 
+        getLoaderManager().initLoader(0, null, this);
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
+
         return binding.getRoot();
     }
 
@@ -77,51 +89,32 @@ public class MusicRankingFragment extends Fragment
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        if (mRefreshState != Enums.RefreshState.SWIPE) {
-            mRefreshState = Enums.RefreshState.AUTO;
-            mLayoutRecyclerView.setErrorText(null);
-            mLayoutRecyclerView.setAutoRefreshing(true);
-        }
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(ARG_ITEM_POSITION, mLayoutManager.findFirstCompletelyVisibleItemPosition());
+    }
 
-        Context context = getContext();
-        NetworkUtils.addRankingRequest(context, mRankingCode, mRequestTag, this, this);
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        NetworkUtils.addRankingRequest(getContext(), mRankingCode, mRequestTag, this, this);
 
         String selection = MusicContract._RANKING_CODE + "=?";
         String[] selectionArgs = new String[]{String.valueOf(mRankingCode)};
-
-        return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
+        return new CursorLoader(getContext(), MusicContract.URI, null, selection, selectionArgs, null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
 
-        if (cursor.getCount() > 0 && mRefreshState == Enums.RefreshState.AUTO) {
-            refreshFinished();
-            return;
+        if (cursor.getCount() > 0) {
+            mDataHad = true;
+            mLayoutRecyclerView.setTipsText(null);
+            mLayoutRecyclerView.setRefreshing(!mViewRecreating);
+        } else if (mViewRecreating) {
+            NetworkUtils.addRankingRequest(getContext(), mRankingCode, mRequestTag, this, this);
         }
-
-        if (mVolleyState == Enums.VolleyState.RESPONSE || mVolleyState == Enums.VolleyState.ERROR) {
-            if (mVolleyState == Enums.VolleyState.ERROR) {
-                if (mRefreshState == Enums.RefreshState.AUTO) {
-                    mLayoutRecyclerView.setErrorText(getString(R.string.network_error_text));
-                } else {
-                    // TODO: 2017/7/8
-                }
-            } else if (mRefreshState == Enums.RefreshState.SWIPE) {
-                mLayoutRecyclerView.setErrorText(null);
-            }
-
-            mLayoutRecyclerView.setSwipeRefreshing(false);
-            refreshFinished();
-        }
-    }
-
-    private void refreshFinished() {
-        mLayoutRecyclerView.setAutoRefreshing(false);
-        mVolleyState = Enums.VolleyState.NOTHING;
-        mRefreshState = Enums.RefreshState.NOTHING;
+        mViewRecreating = false;
     }
 
     @Override
@@ -130,23 +123,45 @@ public class MusicRankingFragment extends Fragment
     }
 
     @Override
+    public void onSwipeRefresh() {
+        NetworkUtils.addRankingRequest(getContext(), mRankingCode, mRequestTag, this, this);
+    }
+
+    @Override
     public void onErrorResponse(VolleyError error) {
-        mVolleyState = Enums.VolleyState.ERROR;
-        getLoaderManager().initLoader(0, null, this);
+        mLayoutRecyclerView.setRefreshing(false);
+        if (!mDataHad) {
+            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
+        }
     }
 
     @Override
     public void onResponse(String response) {
-        mVolleyState = Enums.VolleyState.RESPONSE;
-
-        ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingCode);
-        MainTasks.updateMusicData(getContext(), musicValueses, mRankingCode);
+        mMusicAsyncTask.execute(response);
+        Context context = getContext();
+        context.startService(UpdateMusicService.newIntent(context, response));
     }
 
-    @Override
-    public void onSwipeRefresh() {
-        mRefreshState = Enums.RefreshState.SWIPE;
-        getLoaderManager().restartLoader(0, null, this);
+    private class MusicAsyncTask extends AsyncTask<String, Void, Void> {
+
+        // TODO: 2017/7/11 把异步工具换成服务+广播
+        @Override
+        protected Void doInBackground(String... jsons) {
+            ContentValues[] musicValueses = JsonUtils.getMusicValueses(jsons[0], mRankingCode);
+            if (isAdded()) {
+                MainTasks.updateMusicData(getContext(), musicValueses, mRankingCode);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if (isAdded()) {
+                mLayoutRecyclerView.setTipsText(null);
+                mLayoutRecyclerView.setRefreshing(false);
+            }
+        }
     }
 
     private class MusicAdapter extends RecyclerViewAdapter {
