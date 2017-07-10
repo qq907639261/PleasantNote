@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="ranking_id_western_countries">3</integer>
-    <integer name="ranking_id_mainland">5</integer>
-    <integer name="ranking_id_hong_kong_and_taiwan">6</integer>
-    <integer name="ranking_id_korea">16</integer>
-    <integer name="ranking_id_japan">17</integer>
-    <integer name="ranking_id_ballad">18</integer>
-    <integer name="ranking_id_rocking">19</integer>
-    <integer name="ranking_id_sales">23</integer>
-    <integer name="ranking_id_default">26</integer>
+    <integer name="popular_song_ranking_code">26</integer>
+    <integer name="western_countries_ranking_code">3</integer>
+    <integer name="mainland_ranking_code">5</integer>
+    <integer name="hong_kong_and_taiwan_ranking_code">6</integer>
+    <integer name="korea_ranking_code">16</integer>
+    <integer name="japan_ranking_code">17</integer>
+    <integer name="ballad_ranking_code">18</integer>
+    <integer name="rocking_ranking_code">19</integer>
+    <integer name="sales_ranking_code">23</integer>
 </resources>

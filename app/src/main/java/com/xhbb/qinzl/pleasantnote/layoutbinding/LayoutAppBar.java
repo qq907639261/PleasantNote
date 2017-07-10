@@ -2,7 +2,7 @@ package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
-import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.SearchView;
 
 import com.xhbb.qinzl.pleasantnote.BR;
@@ -13,8 +13,8 @@ import com.xhbb.qinzl.pleasantnote.BR;
 
 public class LayoutAppBar extends BaseObservable {
 
+    private boolean mTabLayoutVisible;
     private OnLayoutAppBarListener mListener;
-    private int mTabLayoutVisibility;
 
     LayoutAppBar(OnLayoutAppBarListener listener) {
         mListener = listener;
@@ -29,13 +29,22 @@ public class LayoutAppBar extends BaseObservable {
     }
 
     @Bindable
-    public int getTabLayoutVisibility() {
-        return mTabLayoutVisibility;
+    public boolean isTabLayoutVisible() {
+        return mTabLayoutVisible;
     }
 
-    void setTabLayoutVisibility(boolean tabLayoutVisible) {
-        mTabLayoutVisibility = tabLayoutVisible ? View.VISIBLE : View.GONE;
-        notifyPropertyChanged(BR.tabLayoutVisibility);
+    @Bindable
+    public int getSearchViewImeOptions() {
+        return EditorInfo.IME_ACTION_SEARCH;
+    }
+
+    void setTabLayoutVisible(boolean tabLayoutVisible) {
+        mTabLayoutVisible = tabLayoutVisible;
+        notifyPropertyChanged(BR.tabLayoutVisible);
+
+        if (mTabLayoutVisible) {
+            notifyPropertyChanged(BR.searchViewImeOptions);
+        }
     }
 
     interface OnLayoutAppBarListener {

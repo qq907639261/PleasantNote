@@ -28,7 +28,7 @@ public interface Contracts {
         String _SMALL_PICTURE = "small_picture";
         String _PLAY_URL = "play_url";
         String _DOWNLOAD_URL = "download_url";
-        String _RANKING_ID = "ranking_id";
+        String _RANKING_CODE = "ranking_code";
         String _QUERY = "query";
     }
 }

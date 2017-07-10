@@ -71,6 +71,19 @@ public class MusicQueryFragment extends Fragment
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        NetworkUtils.cancelAllRequest(getContext(), null);
+    }
+
+    public void refreshData(String query) {
+        getArguments().putString(ARG_QUERY, query);
+
+        mQuery = query;
+        getLoaderManager().restartLoader(0, null, this);
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         mCurrentPage = 1;
         mScrolledToEnd = false;

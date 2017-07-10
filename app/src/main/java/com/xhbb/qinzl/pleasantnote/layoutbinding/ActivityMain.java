@@ -2,6 +2,7 @@ package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.content.Context;
 import android.support.design.widget.NavigationView;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.view.MenuItem;
 import android.widget.SearchView;
@@ -14,14 +15,23 @@ import com.xhbb.qinzl.pleasantnote.R;
 
 public class ActivityMain implements LayoutAppBar.OnLayoutAppBarListener {
 
-    private OnActivityMainListener mListener;
     private LayoutMain mLayoutMain;
+    private OnActivityMainListener mListener;
+    private boolean mFragmentContainerEmptied;
 
-    public ActivityMain(Context context, OnActivityMainListener listener) {
+    public ActivityMain(Context context, PagerAdapter pagerAdapter,
+                        OnActivityMainListener listener) {
         mListener = listener;
+        mFragmentContainerEmptied = true;
 
-        float bottomFragmentHeight = context.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
-        mLayoutMain = new LayoutMain(bottomFragmentHeight, this);
+        mLayoutMain = new LayoutMain(context, pagerAdapter, this);
+    }
+
+    public void setFragmentContainerEmptied(boolean fragmentContainerEmptied) {
+        if (mFragmentContainerEmptied != fragmentContainerEmptied) {
+            mFragmentContainerEmptied = fragmentContainerEmptied;
+            mLayoutMain.setViewPagerVisible(mFragmentContainerEmptied);
+        }
     }
 
     public LayoutMain getLayoutMain() {

@@ -32,7 +32,7 @@ public class MainTasks {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                String deleteWhere = MusicContract._RANKING_ID + "=?";
+                String deleteWhere = MusicContract._RANKING_CODE + "=?";
                 String[] deleteSelectionArgs = {String.valueOf(rankingId)};
 
                 ContentResolver contentResolver = context.getContentResolver();

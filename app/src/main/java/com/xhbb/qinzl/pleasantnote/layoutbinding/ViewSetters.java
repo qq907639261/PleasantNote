@@ -76,7 +76,6 @@ public class ViewSetters {
     public static void setNavigationView(
             NavigationView navigationView,
             NavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener) {
-
         if (onNavigationItemSelectedListener != null) {
             navigationView.setNavigationItemSelectedListener(onNavigationItemSelectedListener);
         }
@@ -86,16 +85,18 @@ public class ViewSetters {
     public static void setSwipeRefreshLayout(
             SwipeRefreshLayout swipeRefreshLayout,
             SwipeRefreshLayout.OnRefreshListener onRefreshListener) {
-
         if (onRefreshListener != null) {
             swipeRefreshLayout.setOnRefreshListener(onRefreshListener);
         }
     }
 
-    @BindingAdapter({"android:onQueryTextSubmit"})
-    public static void setSearchView(
-            SearchView searchView,
-            final OnQueryTextSubmitListener onQueryTextSubmitListener) {
+    @BindingAdapter(value = {"android:collapsed", "android:onQueryTextSubmit"},
+            requireAll = false)
+    public static void setSearchView(SearchView searchView, boolean collapsed,
+                                     final OnQueryTextSubmitListener onQueryTextSubmitListener) {
+        if (collapsed) {
+            searchView.onActionViewCollapsed();
+        }
 
         if (onQueryTextSubmitListener != null) {
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {

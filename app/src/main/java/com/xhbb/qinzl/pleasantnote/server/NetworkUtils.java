@@ -2,6 +2,7 @@ package com.xhbb.qinzl.pleasantnote.server;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -22,15 +23,15 @@ public class NetworkUtils {
 
     private static final String TAG = "NetworkUtils";
 
-    public static void addRankingRequest(Context context, int rankingId,
+    public static void addRankingRequest(Context context, int rankingCode, @Nullable Object tag,
                                          Response.Listener<String> listener,
                                          Response.ErrorListener errorListener) {
         String url = Uri.parse("http://ali-qqmusic.showapi.com/top")
                 .buildUpon()
-                .appendQueryParameter("topid", String.valueOf(rankingId))
+                .appendQueryParameter("topid", String.valueOf(rankingCode))
                 .build().toString();
 
-        addRequest(context, url, listener, errorListener);
+        addRequest(context, url, tag, listener, errorListener);
     }
 
     public static void addQueryRequest(Context context, String query, int pages,
@@ -42,14 +43,14 @@ public class NetworkUtils {
                 .appendQueryParameter("page", String.valueOf(pages))
                 .build().toString();
 
-        addRequest(context, url, listener, errorListener);
+        addRequest(context, url, null, listener, errorListener);
     }
 
-    public static void cancelAllRequest(Context context) {
-        MainSingleton.getInstance(context).getRequestQueue().cancelAll(TAG);
+    public static void cancelAllRequest(Context context, @Nullable Object tag) {
+        MainSingleton.getInstance(context).getRequestQueue().cancelAll(tag == null ? TAG : tag);
     }
 
-    private static void addRequest(final Context context, String url,
+    private static void addRequest(final Context context, String url, @Nullable Object tag,
                                    Response.Listener<String> listener,
                                    Response.ErrorListener errorListener) {
         StringRequest request = new StringRequest(Request.Method.GET, url, listener, errorListener) {
@@ -60,7 +61,7 @@ public class NetworkUtils {
                 return headers;
             }
         };
-        request.setTag(TAG);
+        request.setTag(tag == null ? TAG : tag);
 
         RequestQueue queue = MainSingleton.getInstance(context).getRequestQueue();
         queue.add(request);

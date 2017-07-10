@@ -33,17 +33,18 @@ public class MusicRankingFragment extends Fragment
         Response.Listener<String>, Response.ErrorListener,
         LayoutRecyclerView.OnLayoutRecyclerViewListener {
 
-    private static final String ARG_RANKING_ID = "ARG_RANKING_ID";
+    private static final String ARG_RANKING_CODE = "ARG_RANKING_CODE";
 
     private MusicAdapter mMusicAdapter;
-    private int mRankingId;
+    private int mRankingCode;
+    private Object mRequestTag;
     private LayoutRecyclerView mLayoutRecyclerView;
     private int mVolleyState;
     private int mRefreshState;
 
-    public static MusicRankingFragment newInstance(int rankingId) {
+    public static MusicRankingFragment newInstance(int rankingCode) {
         Bundle args = new Bundle();
-        args.putInt(ARG_RANKING_ID, rankingId);
+        args.putInt(ARG_RANKING_CODE, rankingCode);
 
         MusicRankingFragment fragment = new MusicRankingFragment();
         fragment.setArguments(args);
@@ -60,12 +61,19 @@ public class MusicRankingFragment extends Fragment
 
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(mMusicAdapter, layoutManager, this);
-        mRankingId = getArguments().getInt(ARG_RANKING_ID);
+        mRankingCode = getArguments().getInt(ARG_RANKING_CODE);
+        mRequestTag = mRankingCode;
 
         getLoaderManager().initLoader(0, null, this);
 
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
         return binding.getRoot();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        NetworkUtils.cancelAllRequest(getContext(), mRequestTag);
     }
 
     @Override
@@ -77,10 +85,10 @@ public class MusicRankingFragment extends Fragment
         }
 
         Context context = getContext();
-        NetworkUtils.addRankingRequest(context, mRankingId, this, this);
+        NetworkUtils.addRankingRequest(context, mRankingCode, mRequestTag, this, this);
 
-        String selection = MusicContract._RANKING_ID + "=?";
-        String[] selectionArgs = new String[]{String.valueOf(mRankingId)};
+        String selection = MusicContract._RANKING_CODE + "=?";
+        String[] selectionArgs = new String[]{String.valueOf(mRankingCode)};
 
         return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
     }
@@ -131,8 +139,8 @@ public class MusicRankingFragment extends Fragment
     public void onResponse(String response) {
         mVolleyState = Enums.VolleyState.RESPONSE;
 
-        ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingId);
-        MainTasks.updateMusicData(getContext(), musicValueses, mRankingId);
+        ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mRankingCode);
+        MainTasks.updateMusicData(getContext(), musicValueses, mRankingCode);
     }
 
     @Override

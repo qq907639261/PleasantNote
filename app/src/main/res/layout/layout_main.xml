@@ -23,11 +23,14 @@
             app:layoutAppBar="@{layoutMain.layoutAppBar}"
             app:viewPager="@{viewPager}"/>
 
+        <!--suppress AndroidUnknownAttribute -->
         <android.support.v4.view.ViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:adapter="@{layoutMain.pagerAdapter}"
             android:paddingBottom="@{layoutMain.bottomFragmentHeight}"
+            android:visibility="@{layoutMain.viewPagerVisibility}"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
         <FrameLayout
