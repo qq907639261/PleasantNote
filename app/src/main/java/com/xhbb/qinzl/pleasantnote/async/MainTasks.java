@@ -22,8 +22,8 @@ public class MainTasks {
         contentResolver.bulkInsert(MusicContract.URI, musicValueses);
     }
 
-    public static void updateMusicData(Context context, ContentValues[] musicValueses,
-                                       int rankingCode) {
+    static void updateMusicData(Context context, ContentValues[] musicValueses,
+                                int rankingCode) {
         ContentResolver contentResolver = context.getContentResolver();
         String deleteWhere = MusicContract._RANKING_CODE + "=?";
         String[] deleteSelectionArgs = {String.valueOf(rankingCode)};

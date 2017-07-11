@@ -131,8 +131,8 @@ public class MusicQueryFragment extends Fragment
 
     private void refreshFinished() {
         mLayoutRecyclerView.setRefreshing(false);
-        mVolleyState = Enums.VolleyState.NOTHING;
-//        mRefreshState = Enums.RefreshState.NOTHING;
+        mVolleyState = Enums.VolleyState.DEFAULT;
+//        mRefreshState = Enums.RefreshState.DEFAULT;
     }
 
     @Override

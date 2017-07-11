@@ -30,9 +30,8 @@
             android:exported="false"/>
 
         <service
-            android:name=".async.UpdateMusicService"
-            android:exported="false">
-        </service>
+            android:name=".async.UpdateMusicDataService"
+            android:exported="false"/>
     </application>
 
 </manifest>

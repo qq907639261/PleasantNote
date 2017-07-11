@@ -8,7 +8,7 @@ public interface Enums {
 
     interface VolleyState {
 
-        int NOTHING = 0;
+        int DEFAULT = 0;
         int ERROR = 1;
         int RESPONSE = 2;
     }
