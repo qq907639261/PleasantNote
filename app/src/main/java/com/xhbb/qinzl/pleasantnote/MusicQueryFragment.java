@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MainTasks;
-import com.xhbb.qinzl.pleasantnote.common.Enums;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
@@ -34,14 +33,18 @@ public class MusicQueryFragment extends Fragment
         LayoutRecyclerView.OnLayoutRecyclerViewListener {
 
     private static final String ARG_QUERY = "ARG_QUERY";
+    private static final String ARG_CURRENT_PAGE = "ARG_CURRENT_PAGE";
+    private static final String ARG_SCROLLED_TO_END = "ARG_SCROLLED_TO_END";
+    private static final String ARG_ITEM_POSITION = "ARG_ITEM_POSITION";
 
     private MusicAdapter mMusicAdapter;
     private String mQuery;
     private LayoutRecyclerView mLayoutRecyclerView;
-    private int mVolleyState;
     private int mCurrentPage;
     private boolean mScrolledToEnd;
-    private int mRefreshState;
+    private LinearLayoutManager mLayoutManager;
+    private boolean mHasMusicData;
+    private boolean mViewRecreating;
 
     public static MusicQueryFragment newInstance(String query) {
         Bundle args = new Bundle();
@@ -58,15 +61,26 @@ public class MusicQueryFragment extends Fragment
         LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(
                 inflater, R.layout.layout_recycler_view, container, false);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        Context context = getContext();
 
+        mLayoutManager = new LinearLayoutManager(context);
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
-        mLayoutRecyclerView = new LayoutRecyclerView(getContext(), mMusicAdapter, layoutManager, this);
+        mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
         mQuery = getArguments().getString(ARG_QUERY);
 
-        getLoaderManager().initLoader(0, null, this);
+        if (savedInstanceState != null) {
+            mCurrentPage = savedInstanceState.getInt(ARG_CURRENT_PAGE);
+            mScrolledToEnd = savedInstanceState.getBoolean(ARG_SCROLLED_TO_END);
+
+            int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
+            mLayoutManager.scrollToPosition(itemPosition);
+        }
 
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
+        getLoaderManager().initLoader(0, null, this);
+
+        // TODO: 2017/7/11 还需要修复旋转BUG，以及实现滚动刷新。
+
         return binding.getRoot();
     }
 
@@ -76,10 +90,21 @@ public class MusicQueryFragment extends Fragment
         NetworkUtils.cancelAllRequest(getContext(), null);
     }
 
-    public void refreshData(String query) {
-        getArguments().putString(ARG_QUERY, query);
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(ARG_CURRENT_PAGE, mCurrentPage);
+        outState.putInt(ARG_ITEM_POSITION, mLayoutManager.findFirstVisibleItemPosition());
+        outState.putBoolean(ARG_SCROLLED_TO_END, mScrolledToEnd);
+    }
 
+    public void refreshData(String query) {
         mQuery = query;
+        getArguments().putString(ARG_QUERY, mQuery);
+
+        mLayoutRecyclerView.setRefreshing(true);
+        mLayoutRecyclerView.setTipsText(getString(R.string.refreshing_text));
+
         getLoaderManager().restartLoader(0, null, this);
     }
 
@@ -87,14 +112,10 @@ public class MusicQueryFragment extends Fragment
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         mCurrentPage = 1;
         mScrolledToEnd = false;
-
-//        if (mRefreshState != Enums.RefreshState.SWIPE) {
-//            mRefreshState = Enums.RefreshState.AUTO;
-//            mLayoutRecyclerView.setTipsText(null);
-//        }
+        mHasMusicData = false;
 
         Context context = getContext();
-        NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, this, this);
+        NetworkUtils.addQueryRequest(context, mQuery, 1, this, this);
 
         String selection = MusicContract._QUERY + "=?";
         String[] selectionArgs = new String[]{mQuery};
@@ -105,34 +126,16 @@ public class MusicQueryFragment extends Fragment
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
+        mHasMusicData = cursor.getCount() > 0;
 
-//        if (cursor.getCount() > 0 && mRefreshState == Enums.RefreshState.AUTO) {
-//            refreshFinished();
-//            return;
-//        }
-
-        if (mVolleyState == Enums.VolleyState.RESPONSE || mVolleyState == Enums.VolleyState.ERROR) {
-            if (mVolleyState == Enums.VolleyState.ERROR) {
-//                if (mRefreshState == Enums.RefreshState.AUTO) {
-//                    mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
-//                } else {
-//                    mScrolledToEnd = true;
-//                    mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
-//                }
-            }
-//            else if (mRefreshState == Enums.RefreshState.SWIPE) {
-//                mLayoutRecyclerView.setTipsText(null);
-//            }
-
+        if (mHasMusicData) {
+            mLayoutRecyclerView.setTipsText(null);
             mLayoutRecyclerView.setRefreshing(false);
-            refreshFinished();
+        } else if (mViewRecreating) {
+            NetworkUtils.addQueryRequest(getContext(), mQuery, mCurrentPage, this, this);
         }
-    }
 
-    private void refreshFinished() {
-        mLayoutRecyclerView.setRefreshing(false);
-        mVolleyState = Enums.VolleyState.DEFAULT;
-//        mRefreshState = Enums.RefreshState.DEFAULT;
+        mViewRecreating = false;
     }
 
     @Override
@@ -141,33 +144,40 @@ public class MusicQueryFragment extends Fragment
     }
 
     @Override
-    public void onErrorResponse(VolleyError error) {
-        mVolleyState = Enums.VolleyState.ERROR;
-        getLoaderManager().initLoader(0, null, this);
+    public void onSwipeRefresh() {
+        getLoaderManager().restartLoader(0, null, this);
     }
 
     @Override
-    public void onResponse(String response) {
-        mVolleyState = Enums.VolleyState.RESPONSE;
-
-        ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mQuery);
-        if (musicValueses != null) {
-            if (musicValueses.length < 20) {
-                mScrolledToEnd = true;
-            }
-
-            boolean firstPage = mCurrentPage == 1;
-            MainTasks.updateMusicData(getContext(), musicValueses, firstPage);
-        } else {
-            mScrolledToEnd = true;
-            getLoaderManager().initLoader(0, null, this);
+    public void onErrorResponse(VolleyError error) {
+        mLayoutRecyclerView.setRefreshing(false);
+        if (!mHasMusicData) {
+            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
         }
     }
 
     @Override
-    public void onSwipeRefresh() {
-//        mRefreshState = Enums.RefreshState.SWIPE;
-        getLoaderManager().restartLoader(0, null, this);
+    public void onResponse(String response) {
+        ContentValues[] musicValueses = JsonUtils.getMusicValueses(response, mQuery);
+        if (!isAdded()) {
+            return;
+        }
+
+        if (musicValueses != null) {
+            if (musicValueses.length < NetworkUtils.COUNT_OF_QUERY_PAGE) {
+                mScrolledToEnd = true;
+            }
+            boolean firstPage = mCurrentPage == 1;
+            MainTasks.updateMusicData(getContext(), musicValueses, firstPage);
+        } else {
+            if (mMusicAdapter.getItemCount() > 0) {
+                mScrolledToEnd = true;
+                mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
+            } else {
+                mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
+                mLayoutRecyclerView.setRefreshing(false);
+            }
+        }
     }
 
     private class MusicAdapter extends RecyclerViewAdapter {

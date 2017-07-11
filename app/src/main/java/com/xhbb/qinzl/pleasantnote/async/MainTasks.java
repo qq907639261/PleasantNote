@@ -12,14 +12,20 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 
 public class MainTasks {
 
-    public static void updateMusicData(Context context, ContentValues[] musicValueses,
-                                       boolean firstPage) {
-        ContentResolver contentResolver = context.getContentResolver();
-        if (firstPage) {
-            String deleteWhere = MusicContract._QUERY + " NOT NULL";
-            contentResolver.delete(MusicContract.URI, deleteWhere, null);
-        }
-        contentResolver.bulkInsert(MusicContract.URI, musicValueses);
+    public static void updateMusicData(final Context context,
+                                       final ContentValues[] musicValueses,
+                                       final boolean firstPage) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ContentResolver contentResolver = context.getContentResolver();
+                if (firstPage) {
+                    String deleteWhere = MusicContract._QUERY + " NOT NULL";
+                    contentResolver.delete(MusicContract.URI, deleteWhere, null);
+                }
+                contentResolver.bulkInsert(MusicContract.URI, musicValueses);
+            }
+        }).start();
     }
 
     static void updateMusicData(Context context, ContentValues[] musicValueses,

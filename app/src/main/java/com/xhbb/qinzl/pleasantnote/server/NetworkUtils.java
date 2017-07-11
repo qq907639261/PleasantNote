@@ -21,6 +21,8 @@ import java.util.Map;
 
 public class NetworkUtils {
 
+    public static final int COUNT_OF_QUERY_PAGE = 20;
+
     private static final String TAG = "NetworkUtils";
 
     public static void addRankingRequest(Context context, int rankingCode, @Nullable Object tag,
@@ -34,13 +36,13 @@ public class NetworkUtils {
         addRequest(context, url, tag, listener, errorListener);
     }
 
-    public static void addQueryRequest(Context context, String query, int pages,
+    public static void addQueryRequest(Context context, String query, int currentPage,
                                        Response.Listener<String> listener,
                                        Response.ErrorListener errorListener) {
         String url = Uri.parse("http://ali-qqmusic.showapi.com/search")
                 .buildUpon()
                 .appendQueryParameter("keyword", query)
-                .appendQueryParameter("page", String.valueOf(pages))
+                .appendQueryParameter("page", String.valueOf(currentPage))
                 .build().toString();
 
         addRequest(context, url, null, listener, errorListener);
