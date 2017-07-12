@@ -21,7 +21,6 @@ public class ActivityMain implements LayoutAppBar.OnLayoutAppBarListener {
     public ActivityMain(Context context, PagerAdapter pagerAdapter,
                         OnActivityMainListener listener) {
         mListener = listener;
-
         mLayoutMain = new LayoutMain(context, pagerAdapter, this);
     }
 

@@ -27,15 +27,14 @@ public class MainActivity extends AppCompatActivity
         MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(getSupportFragmentManager());
 
         mActivityMain = new ActivityMain(this, pagerAdapter, this);
-        mActivityMain.setSearchViewCollapsed(true);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
                     .commit();
         } else {
-            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-            if (fragment != null) {
+            mActivityMain.setSearchViewCollapsed(true);
+            if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) != null) {
                 mActivityMain.setViewPagerVisible(false);
             }
         }
@@ -50,12 +49,24 @@ public class MainActivity extends AppCompatActivity
 
         if (drawerLayout.isDrawerOpen(navigationView)) {
             drawerLayout.closeDrawer(navigationView);
-        } else {
-            super.onBackPressed();
-            if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
-                mActivityMain.setViewPagerVisible(true);
-            }
+            return;
         }
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentById(R.id.fragment_container);
+
+        if (fragment instanceof MusicQueryFragment) {
+            fragmentManager.beginTransaction()
+                    .remove(fragment)
+                    .commit();
+
+            mActivityMain.setViewPagerVisible(true);
+            mActivityMain.setSearchViewCollapsed(true);
+
+            return;
+        }
+
+        super.onBackPressed();
     }
 
     @Override
@@ -73,24 +84,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onQueryTextSubmit(SearchView searchView, String s) {
         clearFocus(searchView);
+        mActivityMain.setViewPagerVisible(false);
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        String fragmentTag = MusicQueryFragment.class.getSimpleName();
-
-        MusicQueryFragment queryFragment = (MusicQueryFragment)
-                fragmentManager.findFragmentByTag(fragmentTag);
-
-        if (queryFragment == null) {
-            mActivityMain.setViewPagerVisible(false);
-
-            MusicQueryFragment newFragment = MusicQueryFragment.newInstance(s);
-            fragmentManager.beginTransaction().
-                    add(R.id.fragment_container, newFragment, fragmentTag)
-                    .addToBackStack(null)
-                    .commit();
-        } else {
-            queryFragment.refreshData(s);
-        }
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, MusicQueryFragment.newInstance(s))
+                .commit();
     }
 
     private class MusicRankingAdapter extends FragmentStatePagerAdapter {
@@ -105,7 +103,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public Fragment getItem(int position) {
             int rankingCode = mRankingCodes[position];
-            return MusicRankingFragment.newInstance(rankingCode);
+            return MainFragment.newInstance(rankingCode);
         }
 
         @Override

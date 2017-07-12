@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
@@ -100,20 +101,38 @@ public class ViewSetters {
     @BindingAdapter({"android:onQueryTextSubmit"})
     public static void setSearchView(SearchView searchView,
                                      final OnQueryTextSubmitListener onQueryTextSubmitListener) {
-        if (onQueryTextSubmitListener != null) {
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextSubmit(String s) {
-                    onQueryTextSubmitListener.onQueryTextSubmit(s);
-                    return true;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String s) {
-                    return false;
-                }
-            });
+        if (onQueryTextSubmitListener == null) {
+            return;
         }
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                onQueryTextSubmitListener.onQueryTextSubmit(s);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                return false;
+            }
+        });
+    }
+
+    @BindingAdapter({"android:onScrollStateChanged"})
+    public static void setRecyclerView(RecyclerView recyclerView,
+                                       final OnScrollStateChangedListener onScrollStateChangedListener) {
+        if (onScrollStateChangedListener == null) {
+            return;
+        }
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                onScrollStateChangedListener.onScrollStateChanged(newState);
+            }
+        });
     }
 
     public interface OnDrawerOpenedListener {
@@ -124,5 +143,10 @@ public class ViewSetters {
     public interface OnQueryTextSubmitListener {
 
         void onQueryTextSubmit(String s);
+    }
+
+    public interface OnScrollStateChangedListener {
+
+        void onScrollStateChanged(int newState);
     }
 }

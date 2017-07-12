@@ -18,6 +18,8 @@ import android.view.ViewGroup;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
+import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
+import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
@@ -26,27 +28,33 @@ import com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
-public class MusicRankingFragment extends Fragment
+public class MainFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor>,
         Response.Listener<String>, Response.ErrorListener,
         LayoutRecyclerView.OnLayoutRecyclerViewListener {
 
     private static final String ARG_RANKING_CODE = "ARG_RANKING_CODE";
     private static final String ARG_ITEM_POSITION = "ARG_ITEM_POSITION";
+    private static final String ARG_TIPS_TEXT = "ARG_TIPS_TEXT";
 
-    private MusicAdapter mMusicAdapter;
     private int mRankingCode;
     private Object mRequestTag;
-    private LayoutRecyclerView mLayoutRecyclerView;
-    private LinearLayoutManager mLayoutManager;
-    private boolean mViewRecreating;
-    private boolean mHasMusicData;
+    private String mTipsText;
 
-    public static MusicRankingFragment newInstance(int rankingCode) {
+    protected LayoutRecyclerView mLayoutRecyclerView;
+    protected LinearLayoutManager mLayoutManager;
+    protected boolean mViewRecreating;
+    protected boolean mHasMusicData;
+    protected MusicAdapter mMusicAdapter;
+    protected boolean mScrolledToEnd;
+    protected int mRefreshState;
+    protected int mVolleyState;
+
+    public static MainFragment newInstance(int rankingCode) {
         Bundle args = new Bundle();
         args.putInt(ARG_RANKING_CODE, rankingCode);
 
-        MusicRankingFragment fragment = new MusicRankingFragment();
+        MainFragment fragment = new MainFragment();
         fragment.setArguments(args);
         return fragment;
     }
@@ -59,6 +67,7 @@ public class MusicRankingFragment extends Fragment
 
         Context context = getContext();
 
+        mScrolledToEnd = true;
         mLayoutManager = new LinearLayoutManager(context);
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
@@ -69,6 +78,7 @@ public class MusicRankingFragment extends Fragment
             mViewRecreating = true;
             int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
             mLayoutManager.scrollToPosition(itemPosition);
+            mTipsText = savedInstanceState.getString(ARG_TIPS_TEXT);
         }
 
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
@@ -87,6 +97,7 @@ public class MusicRankingFragment extends Fragment
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(ARG_ITEM_POSITION, mLayoutManager.findFirstVisibleItemPosition());
+        outState.putString(ARG_TIPS_TEXT, mLayoutRecyclerView.getTipsText());
     }
 
     @Override
@@ -96,6 +107,7 @@ public class MusicRankingFragment extends Fragment
 
         String selection = MusicContract._RANKING_CODE + "=?";
         String[] selectionArgs = new String[]{String.valueOf(mRankingCode)};
+
         return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
     }
 
@@ -106,12 +118,24 @@ public class MusicRankingFragment extends Fragment
 
         if (mHasMusicData) {
             mLayoutRecyclerView.setTipsText(null);
-            mLayoutRecyclerView.setRefreshing(false);
-        } else if (mViewRecreating) {
-            NetworkUtils.addRankingRequest(getContext(), mRankingCode, mRequestTag, this, this);
         }
 
-        mViewRecreating = false;
+        if (mViewRecreating || mVolleyState != VolleyState.DEFAULT) {
+            if (!mHasMusicData) {
+                if (mVolleyState == VolleyState.RESPONSE) {
+                    mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
+                } else if (mVolleyState == VolleyState.ERROR) {
+                    mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
+                } else {
+                    mLayoutRecyclerView.setTipsText(mTipsText);
+                }
+            }
+
+            mViewRecreating = false;
+            mLayoutRecyclerView.setRefreshing(false);
+            mRefreshState = RefreshState.DEFAULT;
+            mVolleyState = VolleyState.DEFAULT;
+        }
     }
 
     @Override
@@ -125,21 +149,26 @@ public class MusicRankingFragment extends Fragment
     }
 
     @Override
+    public void onScrollStateChanged(int newState) {
+
+    }
+
+    @Override
     public void onErrorResponse(VolleyError error) {
-        mLayoutRecyclerView.setRefreshing(false);
-        if (!mHasMusicData) {
-            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
-        }
+        mVolleyState = VolleyState.ERROR;
+        mScrolledToEnd = mHasMusicData;
+        getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
     public void onResponse(String response) {
+        mVolleyState = VolleyState.RESPONSE;
         Context context = getContext();
         Intent intent = UpdateMusicDataService.newIntent(context, response, mRankingCode);
         context.startService(intent);
     }
 
-    private class MusicAdapter extends RecyclerViewAdapter {
+    class MusicAdapter extends RecyclerViewAdapter {
 
         private static final int TYPE_DEFAULT_ITEM = 0;
         private static final int TYPE_LAST_ITEM = 1;
@@ -181,7 +210,7 @@ public class MusicRankingFragment extends Fragment
 
             binding.setVariable(BR.itemMusic, itemMusic);
             if (position == getItemCount() - 1) {
-                binding.setVariable(BR.scrolledToEnd, true);
+                binding.setVariable(BR.scrolledToEnd, mScrolledToEnd);
             }
 
             binding.executePendingBindings();

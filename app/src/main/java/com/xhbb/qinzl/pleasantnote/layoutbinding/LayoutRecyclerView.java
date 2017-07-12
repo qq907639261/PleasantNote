@@ -62,8 +62,13 @@ public class LayoutRecyclerView extends BaseObservable {
         mListener.onSwipeRefresh();
     }
 
+    public void onScrollStateChanged(int newState) {
+        mListener.onScrollStateChanged(newState);
+    }
+
     public interface OnLayoutRecyclerViewListener {
 
         void onSwipeRefresh();
+        void onScrollStateChanged(int newState);
     }
 }
