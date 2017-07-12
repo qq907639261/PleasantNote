@@ -27,11 +27,17 @@ public class MainActivity extends AppCompatActivity
         MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(getSupportFragmentManager());
 
         mActivityMain = new ActivityMain(this, pagerAdapter, this);
+        mActivityMain.setSearchViewCollapsed(true);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
                     .commit();
+        } else {
+            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+            if (fragment != null) {
+                mActivityMain.setViewPagerVisible(false);
+            }
         }
 
         mBinding.setActivityMain(mActivityMain);
@@ -47,7 +53,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
             if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
-                mActivityMain.setFragmentContainerEmptied(true);
+                mActivityMain.setViewPagerVisible(true);
             }
         }
     }
@@ -75,7 +81,7 @@ public class MainActivity extends AppCompatActivity
                 fragmentManager.findFragmentByTag(fragmentTag);
 
         if (queryFragment == null) {
-            mActivityMain.setFragmentContainerEmptied(false);
+            mActivityMain.setViewPagerVisible(false);
 
             MusicQueryFragment newFragment = MusicQueryFragment.newInstance(s);
             fragmentManager.beginTransaction().

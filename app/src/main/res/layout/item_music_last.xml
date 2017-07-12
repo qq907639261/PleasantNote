@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
 
@@ -21,9 +20,10 @@
         android:orientation="vertical"
         android:paddingBottom="8dp">
 
+        <!--suppress AndroidUnknownAttribute -->
         <include
             layout="@layout/item_music"
-            app:itemMusic="@{itemMusic}"/>
+            android:itemMusic="@{itemMusic}"/>
 
         <ProgressBar
             android:id="@+id/progressBar"

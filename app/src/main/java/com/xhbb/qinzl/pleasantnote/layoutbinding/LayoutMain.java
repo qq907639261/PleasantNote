@@ -42,6 +42,10 @@ public class LayoutMain extends BaseObservable {
         mLayoutAppBar.setTabLayoutVisible(viewPagerVisible);
     }
 
+    void setSearchViewCollapsed(boolean searchViewCollapsed) {
+        mLayoutAppBar.setSearchViewCollapsed(searchViewCollapsed);
+    }
+
     public PagerAdapter getPagerAdapter() {
         return mPagerAdapter;
     }

@@ -15,6 +15,7 @@ public class LayoutAppBar extends BaseObservable {
 
     private boolean mTabLayoutVisible;
     private OnLayoutAppBarListener mListener;
+    private boolean mSearchViewCollapsed;
 
     LayoutAppBar(OnLayoutAppBarListener listener) {
         mListener = listener;
@@ -26,6 +27,20 @@ public class LayoutAppBar extends BaseObservable {
 
     public void onQueryTextSubmit(SearchView searchView, String s) {
         mListener.onQueryTextSubmit(searchView, s);
+    }
+
+    @Bindable
+    public boolean isSearchViewCollapsed() {
+        return mSearchViewCollapsed;
+    }
+
+    void setSearchViewCollapsed(boolean searchViewCollapsed) {
+        mSearchViewCollapsed = searchViewCollapsed;
+        notifyPropertyChanged(BR.searchViewCollapsed);
+
+        if (searchViewCollapsed) {
+            notifyPropertyChanged(BR.searchViewImeOptions);
+        }
     }
 
     @Bindable
@@ -41,10 +56,6 @@ public class LayoutAppBar extends BaseObservable {
     void setTabLayoutVisible(boolean tabLayoutVisible) {
         mTabLayoutVisible = tabLayoutVisible;
         notifyPropertyChanged(BR.tabLayoutVisible);
-
-        if (mTabLayoutVisible) {
-            notifyPropertyChanged(BR.searchViewImeOptions);
-        }
     }
 
     interface OnLayoutAppBarListener {

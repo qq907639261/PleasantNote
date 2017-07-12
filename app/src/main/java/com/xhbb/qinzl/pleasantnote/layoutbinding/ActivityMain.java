@@ -17,21 +17,20 @@ public class ActivityMain implements LayoutAppBar.OnLayoutAppBarListener {
 
     private LayoutMain mLayoutMain;
     private OnActivityMainListener mListener;
-    private boolean mFragmentContainerEmptied;
 
     public ActivityMain(Context context, PagerAdapter pagerAdapter,
                         OnActivityMainListener listener) {
         mListener = listener;
-        mFragmentContainerEmptied = true;
 
         mLayoutMain = new LayoutMain(context, pagerAdapter, this);
     }
 
-    public void setFragmentContainerEmptied(boolean fragmentContainerEmptied) {
-        if (mFragmentContainerEmptied != fragmentContainerEmptied) {
-            mFragmentContainerEmptied = fragmentContainerEmptied;
-            mLayoutMain.setViewPagerVisible(mFragmentContainerEmptied);
-        }
+    public void setViewPagerVisible(boolean viewPagerVisible) {
+        mLayoutMain.setViewPagerVisible(viewPagerVisible);
+    }
+
+    public void setSearchViewCollapsed(boolean searchViewCollapsed) {
+        mLayoutMain.setSearchViewCollapsed(searchViewCollapsed);
     }
 
     public LayoutMain getLayoutMain() {

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--suppress AndroidUnknownAttribute -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
@@ -17,11 +18,11 @@
         tools:openDrawer="start">
 
         <include
+            android:id="@+id/layoutMain"
             layout="@layout/layout_main"
-            app:drawerLayout="@{drawerLayout}"
-            app:layoutMain="@{activityMain.layoutMain}"/>
+            android:drawerLayout="@{drawerLayout}"
+            android:layoutMain="@{activityMain.layoutMain}"/>
 
-        <!--suppress AndroidUnknownAttribute -->
         <android.support.design.widget.NavigationView
             android:id="@+id/navigationView"
             android:layout_width="wrap_content"

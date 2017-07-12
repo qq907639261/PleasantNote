@@ -41,7 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:collapsed="@{layoutAppBar.tabLayoutVisible}"
+                android:collapsed="@{layoutAppBar.searchViewCollapsed}"
                 android:imeOptions="@{layoutAppBar.searchViewImeOptions}"
                 android:onQueryTextSubmit="@{(s)->layoutAppBar.onQueryTextSubmit(searchView,s)}"
                 android:queryHint="@string/music_search_hint"/>
