@@ -32,6 +32,11 @@
         <service
             android:name=".async.UpdateMusicDataService"
             android:exported="false"/>
+        <service
+            android:name=".async.MusicService"
+            android:enabled="true"
+            android:exported="false">
+        </service>
     </application>
 
 </manifest>

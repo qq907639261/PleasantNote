@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
 import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
@@ -40,6 +41,7 @@ public class MainFragment extends Fragment
     private int mRankingCode;
     private Object mRequestTag;
     private String mTipsText;
+    private OnMainFragmentListener mListener;
 
     protected LayoutRecyclerView mLayoutRecyclerView;
     protected LinearLayoutManager mLayoutManager;
@@ -91,6 +93,20 @@ public class MainFragment extends Fragment
     public void onStop() {
         super.onStop();
         NetworkUtils.cancelAllRequest(getContext(), mRequestTag);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnMainFragmentListener) {
+            mListener = (OnMainFragmentListener) context;
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     @Override
@@ -168,7 +184,7 @@ public class MainFragment extends Fragment
         context.startService(intent);
     }
 
-    class MusicAdapter extends RecyclerViewAdapter {
+    class MusicAdapter extends RecyclerViewAdapter implements ItemMusic.OnItemMusicListener {
 
         private static final int TYPE_DEFAULT_ITEM = 0;
         private static final int TYPE_LAST_ITEM = 1;
@@ -205,7 +221,8 @@ public class MainFragment extends Fragment
             String singer = music.getSinger();
             int seconds = music.getSeconds();
 
-            ItemMusic itemMusic = new ItemMusic(getContext(), picture, musicName, singer, seconds);
+            ItemMusic itemMusic = new ItemMusic(getContext(), picture, musicName, singer, seconds,
+                    position, this);
             ViewDataBinding binding = holder.getBinding();
 
             binding.setVariable(BR.itemMusic, itemMusic);
@@ -215,5 +232,23 @@ public class MainFragment extends Fragment
 
             binding.executePendingBindings();
         }
+
+        @Override
+        public void onClickItem(int itemPosition) {
+            mCursor.moveToPosition(itemPosition);
+            Music music = new Music(mCursor);
+
+            Context context = getContext();
+            context.startService(MusicService.newIntent(context, music.getPlayUrl()));
+
+            if (mListener != null) {
+                mListener.onClickItem(music);
+            }
+        }
+    }
+
+    interface OnMainFragmentListener {
+
+        void onClickItem(Music music);
     }
 }

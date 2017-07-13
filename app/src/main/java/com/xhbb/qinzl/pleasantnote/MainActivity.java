@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.SearchView;
 
+import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
 
@@ -24,17 +25,18 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(getSupportFragmentManager());
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(fragmentManager);
 
         mActivityMain = new ActivityMain(this, pagerAdapter, this);
 
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
                     .commit();
         } else {
             mActivityMain.setSearchViewCollapsed(true);
-            if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) != null) {
+            if (fragmentManager.findFragmentById(R.id.fragment_container) != null) {
                 mActivityMain.setViewPagerVisible(false);
             }
         }
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        stopService(MusicService.newIntent(this));
         super.onBackPressed();
     }
 

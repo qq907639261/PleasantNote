@@ -14,22 +14,30 @@ public class ItemMusic {
     private String mMusic;
     private String mSinger;
     private String mDuration;
+    private int mItemPosition;
+    private OnItemMusicListener mListener;
 
-    public ItemMusic(Context context, String imageUrl, String music, String singer,
-                     int totalSeconds) {
+    public ItemMusic(Context context, String imageUrl, String music, String singer, int seconds,
+                     int itemPosition, OnItemMusicListener listener) {
         mImageUrl = imageUrl;
         mMusic = music;
         mSinger = singer;
+        mItemPosition = itemPosition;
+        mListener = listener;
 
-        if (totalSeconds != 0) {
-            setDuration(context, totalSeconds);
+        if (seconds != 0) {
+            setDuration(context, seconds);
         }
     }
 
-    private void setDuration(Context context, int totalSeconds) {
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        mDuration = context.getString(R.string.format_music_duration, minutes, seconds);
+    private void setDuration(Context context, int seconds) {
+        int minutes = seconds / 60;
+        int secondOfMinute = seconds % 60;
+        mDuration = context.getString(R.string.format_music_duration, minutes, secondOfMinute);
+    }
+
+    public void onClickItem() {
+        mListener.onClickItem(mItemPosition);
     }
 
     public String getImageUrl() {
@@ -46,5 +54,10 @@ public class ItemMusic {
 
     public String getDuration() {
         return mDuration;
+    }
+
+    public interface OnItemMusicListener {
+
+        void onClickItem(int itemPosition);
     }
 }

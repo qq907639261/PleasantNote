@@ -14,6 +14,8 @@ public interface Contracts {
     String AUTHORITY = BuildConfig.APPLICATION_ID;
     String CONTENT_AUTHORITY = "content://" + AUTHORITY + "/";
 
+    String ACTION_PLAY_MUSIC = AUTHORITY + ".ACTION_PLAY_MUSIC";
+
     interface MusicContract extends BaseColumns {
 
         String TABLE = "music";
