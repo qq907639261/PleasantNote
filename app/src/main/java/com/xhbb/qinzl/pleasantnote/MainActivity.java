@@ -13,9 +13,11 @@ import android.widget.SearchView;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
+import com.xhbb.qinzl.pleasantnote.model.Music;
 
 public class MainActivity extends AppCompatActivity
-        implements ActivityMain.OnActivityMainListener {
+        implements ActivityMain.OnActivityMainListener,
+        MainFragment.OnMainFragmentListener {
 
     private ActivityMainBinding mBinding;
     private ActivityMain mActivityMain;
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             fragmentManager.beginTransaction()
-                    .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
+                    .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance(null))
                     .commit();
         } else {
             mActivityMain.setSearchViewCollapsed(true);
@@ -91,6 +93,13 @@ public class MainActivity extends AppCompatActivity
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, MusicQueryFragment.newInstance(s))
+                .commit();
+    }
+
+    @Override
+    public void onClickItem(Music music) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.bottom_fragment_container, BottomPlayFragment.newInstance(music))
                 .commit();
     }
 

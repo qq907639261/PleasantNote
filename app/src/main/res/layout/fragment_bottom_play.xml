@@ -1,6 +1,14 @@
+<!--suppress AndroidUnknownAttribute -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="fragmentBottomPlay"
+            type="com.xhbb.qinzl.pleasantnote.layoutbinding.FragmentBottomPlay"/>
+    </data>
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
@@ -14,6 +22,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:contentDescription="@string/music_image_accessibility"
+            android:url="@{fragmentBottomPlay.imageUrl}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -28,6 +37,7 @@
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:maxLines="1"
+            android:text="@{fragmentBottomPlay.musicName}"
             android:textAppearance="@android:style/TextAppearance.Widget.TextView"
             app:layout_constraintBottom_toTopOf="@+id/singerName"
             app:layout_constraintLeft_toRightOf="@+id/musicImage"
@@ -42,6 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:maxLines="1"
+            android:text="@{fragmentBottomPlay.singer}"
             android:typeface="monospace"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="@+id/musicName"
@@ -55,7 +66,8 @@
             android:layout_height="0dp"
             android:background="@drawable/selector_bottom_fragment"
             android:contentDescription="@string/play_or_pause_accessibility"
-            android:src="@drawable/ic_play"
+            android:onClick="@{()->fragmentBottomPlay.onClickPlayButton()}"
+            android:src="@{fragmentBottomPlay.playButtonDrawable}"
             android:tint="@color/appBarContent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
@@ -68,6 +80,7 @@
             android:layout_height="0dp"
             android:background="@drawable/selector_bottom_fragment"
             android:contentDescription="@string/skip_next_accessibility"
+            android:onClick="@{()->fragmentBottomPlay.onClickNextButton()}"
             android:src="@drawable/ic_skip_next"
             android:tint="@color/appBarContent"
             app:layout_constraintBottom_toBottomOf="parent"

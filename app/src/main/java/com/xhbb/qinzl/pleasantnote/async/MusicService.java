@@ -11,7 +11,8 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts;
 
 import java.io.IOException;
 
-public class MusicService extends Service implements MediaPlayer.OnPreparedListener {
+public class MusicService extends Service
+        implements MediaPlayer.OnPreparedListener {
 
     private static final String EXTRA_MUSIC_URL = Contracts.AUTHORITY + ".EXTRA_MUSIC_URL";
 
@@ -19,7 +20,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public static Intent newIntent(Context context, String musicUrl) {
         return newIntent(context).putExtra(EXTRA_MUSIC_URL, musicUrl)
-                .setAction(Contracts.ACTION_PLAY_MUSIC);
+                .setAction(Contracts.ACTION_RESET);
     }
 
     public static Intent newIntent(Context context) {
@@ -34,17 +35,27 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        handleIntent(intent);
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void handleIntent(Intent intent) {
         switch (intent.getAction()) {
-            case Contracts.ACTION_PLAY_MUSIC:
-                playMusic(intent);
+            case Contracts.ACTION_RESET:
+                resetMusic(intent);
+                break;
+            case Contracts.ACTION_PLAY:
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.pause();
+                } else {
+                    mMediaPlayer.start();
+                }
                 break;
             default:
         }
-
-        return START_NOT_STICKY;
     }
 
-    private void playMusic(Intent intent) {
+    private void resetMusic(Intent intent) {
         try {
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(intent.getStringExtra(EXTRA_MUSIC_URL));

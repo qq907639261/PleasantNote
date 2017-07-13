@@ -184,7 +184,8 @@ public class MainFragment extends Fragment
         context.startService(intent);
     }
 
-    class MusicAdapter extends RecyclerViewAdapter implements ItemMusic.OnItemMusicListener {
+    class MusicAdapter extends RecyclerViewAdapter
+            implements ItemMusic.OnItemMusicListener {
 
         private static final int TYPE_DEFAULT_ITEM = 0;
         private static final int TYPE_LAST_ITEM = 1;
@@ -239,7 +240,8 @@ public class MainFragment extends Fragment
             Music music = new Music(mCursor);
 
             Context context = getContext();
-            context.startService(MusicService.newIntent(context, music.getPlayUrl()));
+            Intent intent = MusicService.newIntent(context, music.getPlayUrl());
+            context.startService(intent);
 
             if (mListener != null) {
                 mListener.onClickItem(music);
