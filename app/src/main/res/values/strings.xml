@@ -31,4 +31,5 @@
     <string name="scrolled_to_end_text">已经到底啦</string>
     <string name="refreshing_text">快上音乐！</string>
     <string name="empty_data_text">暂无相关内容，我们将继续完善，敬请期待。^_^</string>
+    <string name="music_playing_notification_content">正在播放音乐</string>
 </resources>

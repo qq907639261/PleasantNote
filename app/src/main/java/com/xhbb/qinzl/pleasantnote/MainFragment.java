@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -22,6 +23,7 @@ import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
 import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
+import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ItemMusic;
@@ -129,8 +131,8 @@ public class MainFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        mMusicAdapter.swapCursor(cursor);
         mHasMusicData = cursor.getCount() > 0;
+        mMusicAdapter.swapCursor(cursor);
 
         if (mHasMusicData) {
             mLayoutRecyclerView.setTipsText(null);
@@ -240,8 +242,13 @@ public class MainFragment extends Fragment
             Music music = new Music(mCursor);
 
             Context context = getContext();
-            Intent intent = MusicService.newIntent(context, music.getPlayUrl());
-            context.startService(intent);
+            String playUrl = music.getPlayUrl();
+            Intent intent = MusicService.newIntent(context, Contracts.ACTION_RESET, playUrl);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
 
             if (mListener != null) {
                 mListener.onClickItem(music);

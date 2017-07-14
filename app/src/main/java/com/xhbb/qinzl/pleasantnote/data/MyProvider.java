@@ -67,7 +67,6 @@ public class MyProvider extends ContentProvider {
     public Uri insert(@NonNull Uri uri, ContentValues values) {
         String table = uri.getLastPathSegment();
         long insertedId = getWritableDb().insert(table, null, values);
-        notifyChange(uri);
         return ContentUris.withAppendedId(uri, insertedId);
     }
 
@@ -75,17 +74,13 @@ public class MyProvider extends ContentProvider {
     public int update(@NonNull Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
         String table = uri.getLastPathSegment();
-        int affectedRows = getWritableDb().update(table, values, selection, selectionArgs);
-        notifyChange(uri);
-        return affectedRows;
+        return getWritableDb().update(table, values, selection, selectionArgs);
     }
 
     @Override
     public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
         String table = uri.getLastPathSegment();
-        int affectedRows = getWritableDb().delete(table, selection, selectionArgs);
-        notifyChange(uri);
-        return affectedRows;
+        return getWritableDb().delete(table, selection, selectionArgs);
     }
 
     private SQLiteDatabase getWritableDb() {

@@ -63,11 +63,9 @@ public class BottomPlayFragment extends Fragment
     @Override
     public void onClickPlayButton() {
         Context context = getContext();
-
         mFragmentBottomPlay.changePlayButtonDrawable(context);
 
-        Intent intent = MusicService.newIntent(context)
-                .setAction(Contracts.ACTION_PLAY);
+        Intent intent = MusicService.newIntent(context, Contracts.ACTION_PLAY_PAUSE);
         context.startService(intent);
     }
 

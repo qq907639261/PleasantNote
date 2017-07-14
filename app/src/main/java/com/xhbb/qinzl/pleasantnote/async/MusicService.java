@@ -1,5 +1,6 @@
 package com.xhbb.qinzl.pleasantnote.async;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -18,19 +19,23 @@ public class MusicService extends Service
 
     private MediaPlayer mMediaPlayer;
 
-    public static Intent newIntent(Context context, String musicUrl) {
-        return newIntent(context).putExtra(EXTRA_MUSIC_URL, musicUrl)
-                .setAction(Contracts.ACTION_RESET);
+    public static Intent newIntent(Context context, String action, String musicUrl) {
+        return newIntent(context, action)
+                .putExtra(EXTRA_MUSIC_URL, musicUrl);
     }
 
-    public static Intent newIntent(Context context) {
-        return new Intent(context, MusicService.class);
+    public static Intent newIntent(Context context, String action) {
+        return new Intent(context, MusicService.class)
+                .setAction(action);
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         mMediaPlayer = new MediaPlayer();
+
+        Notification notification = NotificationUtils.getForegroundNotification(getApplicationContext());
+        startForeground(1, notification);
     }
 
     @Override
@@ -42,23 +47,28 @@ public class MusicService extends Service
     private void handleIntent(Intent intent) {
         switch (intent.getAction()) {
             case Contracts.ACTION_RESET:
-                resetMusic(intent);
+                String musicUrl = intent.getStringExtra(EXTRA_MUSIC_URL);
+                reset(musicUrl);
                 break;
-            case Contracts.ACTION_PLAY:
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.pause();
-                } else {
-                    mMediaPlayer.start();
-                }
+            case Contracts.ACTION_PLAY_PAUSE:
+                playOrPause();
                 break;
             default:
         }
     }
 
-    private void resetMusic(Intent intent) {
+    private void playOrPause() {
+        if (mMediaPlayer.isPlaying()) {
+            mMediaPlayer.pause();
+        } else {
+            mMediaPlayer.start();
+        }
+    }
+
+    private void reset(String musicUrl) {
         try {
             mMediaPlayer.reset();
-            mMediaPlayer.setDataSource(intent.getStringExtra(EXTRA_MUSIC_URL));
+            mMediaPlayer.setDataSource(musicUrl);
             mMediaPlayer.setLooping(true);
             mMediaPlayer.prepareAsync();
             mMediaPlayer.setOnPreparedListener(this);

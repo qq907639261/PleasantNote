@@ -1,5 +1,7 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.content.Context;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -21,6 +23,10 @@ public class MainActivity extends AppCompatActivity
 
     private ActivityMainBinding mBinding;
     private ActivityMain mActivityMain;
+
+    public static Intent newIntent(Context context) {
+        return new Intent(context, MainActivity.class);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +76,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        stopService(MusicService.newIntent(this));
+        stopService(new Intent(this, MusicService.class));
         super.onBackPressed();
     }
 

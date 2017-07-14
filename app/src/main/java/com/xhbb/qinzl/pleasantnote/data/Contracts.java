@@ -15,7 +15,7 @@ public interface Contracts {
     String CONTENT_AUTHORITY = "content://" + AUTHORITY + "/";
 
     String ACTION_RESET = AUTHORITY + ".ACTION_RESET";
-    String ACTION_PLAY = AUTHORITY + ".ACTION_PLAY";
+    String ACTION_PLAY_PAUSE = AUTHORITY + ".ACTION_PLAY_PAUSE";
 
     interface MusicContract extends BaseColumns {
 
