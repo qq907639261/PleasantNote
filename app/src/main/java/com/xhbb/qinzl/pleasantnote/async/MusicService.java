@@ -6,8 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.xhbb.qinzl.pleasantnote.common.MainSingleton;
@@ -26,6 +26,7 @@ public class MusicService extends Service
     private MediaPlayer mMediaPlayer;
     private Notification mNotification;
     private Cursor mCursor;
+    private InitCursorTask mInitCursorTask;
 
     public static Intent newIntent(Context context, String action, Music music) {
         return newIntent(context, action)
@@ -35,6 +36,11 @@ public class MusicService extends Service
     public static Intent newIntent(Context context, String action) {
         return new Intent(context, MusicService.class)
                 .setAction(action);
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
@@ -72,39 +78,13 @@ public class MusicService extends Service
         }
     }
 
-    private void initCursor(final Music music) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (mCursor != null) {
-                    mCursor.close();
-                }
+    private void initCursor(Music music) {
+        if (mInitCursorTask != null) {
+            mInitCursorTask.cancel(true);
+        }
 
-                String query = music.getQuery();
-                String selection;
-                String[] selectionArgs;
-
-                if (query != null) {
-                    selection = MusicContract._QUERY + "=?";
-                    selectionArgs = new String[]{query};
-                } else {
-                    selection = MusicContract._RANKING_CODE + "=?";
-                    selectionArgs = new String[]{String.valueOf(music.getRankingCode())};
-                }
-
-                mCursor = getContentResolver().query(MusicContract.URI, null, selection, selectionArgs, null);
-                assert mCursor != null;
-                while (mCursor.moveToNext()) {
-                    long musicId = mCursor.getLong(mCursor.getColumnIndex(MusicContract._ID));
-                    if (musicId == music.getId() || mCursor.isLast()) {
-                        if (!mCursor.moveToNext()) {
-                            mCursor.moveToFirst();
-                        }
-                        break;
-                    }
-                }
-            }
-        }).start();
+        mInitCursorTask = new InitCursorTask();
+        mInitCursorTask.execute(music);
     }
 
     private void playOrPause() {
@@ -134,6 +114,7 @@ public class MusicService extends Service
         super.onDestroy();
         mMediaPlayer.release();
         mMediaPlayer = null;
+        mInitCursorTask.cancel(true);
         if (mCursor != null) {
             mCursor.close();
         }
@@ -142,12 +123,6 @@ public class MusicService extends Service
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         mediaPlayer.start();
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
     @Override
@@ -171,6 +146,55 @@ public class MusicService extends Service
 
         if (!mCursor.moveToNext()) {
             mCursor.moveToFirst();
+        }
+    }
+
+    private class InitCursorTask extends AsyncTask<Music, Void, Cursor> {
+
+        @Override
+        protected Cursor doInBackground(Music... musics) {
+            Music music = musics[0];
+            String query = music.getQuery();
+            String selection;
+            String[] selectionArgs;
+
+            if (query != null) {
+                selection = MusicContract._QUERY + "=?";
+                selectionArgs = new String[]{query};
+            } else {
+                selection = MusicContract._RANKING_CODE + "=?";
+                selectionArgs = new String[]{String.valueOf(music.getRankingCode())};
+            }
+
+            Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, selectionArgs, null);
+            if (cursor == null || isCancelled()) {
+                return null;
+            }
+
+            while (cursor.moveToNext()) {
+                if (isCancelled()) {
+                    return null;
+                }
+
+                long musicId = cursor.getLong(cursor.getColumnIndex(MusicContract._ID));
+                if (musicId == music.getId() || cursor.isLast()) {
+                    if (!cursor.moveToNext()) {
+                        cursor.moveToFirst();
+                    }
+                    break;
+                }
+            }
+
+            return cursor;
+        }
+
+        @Override
+        protected void onPostExecute(Cursor cursor) {
+            super.onPostExecute(cursor);
+            if (mCursor != null) {
+                mCursor.close();
+            }
+            mCursor = cursor;
         }
     }
 }

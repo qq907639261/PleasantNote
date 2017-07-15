@@ -3,9 +3,7 @@ package com.xhbb.qinzl.pleasantnote.layoutbinding;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.databinding.BindingAdapter;
-import android.graphics.drawable.Drawable;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -60,16 +58,16 @@ public class ViewSetters {
         }
     }
 
-    @BindingAdapter(value = {"android:url", "android:placeholder"}, requireAll = false)
-    public static void setImageView(ImageView imageView, String url, Drawable placeholder) {
+    @BindingAdapter(value = {"android:url", "android:errorRes"}, requireAll = false)
+    public static void setImageView(ImageView imageView, String url, Integer errorRes) {
         Context context = imageView.getContext();
-        if (placeholder == null) {
-            placeholder = ActivityCompat.getDrawable(context, R.drawable.empty_image);
+        if (errorRes == null) {
+            errorRes = R.drawable.empty_image;
         }
 
         GlideApp.with(context)
                 .load(url)
-                .placeholder(placeholder)
+                .error(errorRes)
                 .into(imageView);
     }
 

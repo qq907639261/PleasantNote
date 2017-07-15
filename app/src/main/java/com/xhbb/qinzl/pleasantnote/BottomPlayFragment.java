@@ -54,27 +54,27 @@ public class BottomPlayFragment extends Fragment
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mLocalReceiver, filter);
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
-    }
-
     private void setBindingVariable(FragmentBottomPlayBinding binding) {
         Music music = getArguments().getParcelable(ARG_MUSIC);
         Context context = getContext();
 
         if (music != null) {
-            String imageUrl = music.getSmallPicture();
-            String musicName = music.getName();
-            String singer = music.getSinger();
-            mFragmentBottomPlay = new FragmentBottomPlay(
-                    context, imageUrl, musicName, singer, this);
+            mFragmentBottomPlay = new FragmentBottomPlay(context,
+                    music.getSmallPicture(),
+                    music.getName(),
+                    music.getSinger(),
+                    this);
         } else {
             mFragmentBottomPlay = new FragmentBottomPlay(context, this);
         }
 
         binding.setFragmentBottomPlay(mFragmentBottomPlay);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
     }
 
     @Override
@@ -104,9 +104,12 @@ public class BottomPlayFragment extends Fragment
             switch (intent.getAction()) {
                 case Contracts.ACTION_NEXT_PLAYED:
                     Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
+
                     mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
                     mFragmentBottomPlay.setMusicName(music.getName());
                     mFragmentBottomPlay.setSinger(music.getSinger());
+
+                    getArguments().putParcelable(ARG_MUSIC, music);
                     break;
                 default:
             }

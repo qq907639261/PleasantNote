@@ -15,7 +15,8 @@
         android:layout_height="match_parent"
         android:background="?colorPrimary"
         android:theme="@style/AppTheme.AppBarOverlay"
-        tools:layout_gravity="bottom">
+        tools:layout_gravity="bottom"
+        tools:layout_height="56dp">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/musicImage"
@@ -72,7 +73,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintRight_toLeftOf="@+id/nextButton"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_play"/>
 
         <ImageButton
             android:id="@+id/nextButton"
