@@ -18,6 +18,7 @@ public class MusicService extends Service
     private static final String EXTRA_MUSIC_URL = Contracts.AUTHORITY + ".EXTRA_MUSIC_URL";
 
     private MediaPlayer mMediaPlayer;
+    private Notification mNotification;
 
     public static Intent newIntent(Context context, String action, String musicUrl) {
         return newIntent(context, action)
@@ -32,10 +33,11 @@ public class MusicService extends Service
     @Override
     public void onCreate() {
         super.onCreate();
+
+        mNotification = NotificationUtils.getForegroundNotification(getApplicationContext());
         mMediaPlayer = new MediaPlayer();
 
-        Notification notification = NotificationUtils.getForegroundNotification(getApplicationContext());
-        startForeground(1, notification);
+        mMediaPlayer.setOnPreparedListener(this);
     }
 
     @Override
@@ -60,8 +62,10 @@ public class MusicService extends Service
     private void playOrPause() {
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
+            stopForeground(true);
         } else {
             mMediaPlayer.start();
+            startForeground(1, mNotification);
         }
     }
 
@@ -71,7 +75,8 @@ public class MusicService extends Service
             mMediaPlayer.setDataSource(musicUrl);
             mMediaPlayer.setLooping(true);
             mMediaPlayer.prepareAsync();
-            mMediaPlayer.setOnPreparedListener(this);
+
+            startForeground(1, mNotification);
         } catch (IOException e) {
             e.printStackTrace();
         }

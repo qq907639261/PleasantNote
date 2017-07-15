@@ -10,26 +10,19 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
  * Created by qinzl on 2017/7/6.
  */
 
-public class MainTasks {
-
-    public static void updateMusicData(final Context context,
-                                       final ContentValues[] musicValueses,
-                                       final boolean firstPage) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ContentResolver contentResolver = context.getContentResolver();
-                if (firstPage) {
-                    String deleteWhere = MusicContract._QUERY + " NOT NULL";
-                    contentResolver.delete(MusicContract.URI, deleteWhere, null);
-                }
-                contentResolver.bulkInsert(MusicContract.URI, musicValueses);
-            }
-        }).start();
-    }
+class MainTasks {
 
     static void updateMusicData(Context context, ContentValues[] musicValueses,
-                                int rankingCode) {
+                                boolean firstPage) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (firstPage) {
+            String deleteWhere = MusicContract._QUERY + " NOT NULL";
+            contentResolver.delete(MusicContract.URI, deleteWhere, null);
+        }
+        contentResolver.bulkInsert(MusicContract.URI, musicValueses);
+    }
+
+    static void updateMusicData(Context context, ContentValues[] musicValueses, int rankingCode) {
         ContentResolver contentResolver = context.getContentResolver();
         String deleteWhere = MusicContract._RANKING_CODE + "=?";
         String[] deleteSelectionArgs = {String.valueOf(rankingCode)};

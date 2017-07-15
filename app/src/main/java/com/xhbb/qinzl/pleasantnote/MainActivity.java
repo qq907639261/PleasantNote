@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment fragment = fragmentManager.findFragmentById(R.id.fragment_container);
 
-        if (fragment instanceof MusicQueryFragment) {
+        if (fragment != null) {
             fragmentManager.beginTransaction()
                     .remove(fragment)
                     .commit();

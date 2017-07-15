@@ -36,8 +36,10 @@ public class MyProvider extends ContentProvider {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         Cursor cursor = db.query(table, projection, selection, selectionArgs, null, null, sortOrder);
+
         Context context = getContext();
         if (context != null) {
+            context = context.getApplicationContext();
             cursor.setNotificationUri(context.getContentResolver(), uri);
         }
 
@@ -90,6 +92,7 @@ public class MyProvider extends ContentProvider {
     private void notifyChange(@NonNull Uri uri) {
         Context context = getContext();
         if (context != null) {
+            context = context.getApplicationContext();
             context.getContentResolver().notifyChange(uri, null);
         }
     }

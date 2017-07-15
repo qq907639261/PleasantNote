@@ -19,8 +19,8 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 
 class NotificationUtils {
 
-    private static final String FOREGROUND_CHANNEL_ID = "FOREGROUND_CHANNEL_ID";
-    private static final String FOREGROUND_CHANNEL_NAME = "正在播放音乐";
+    // 渠道ID值最好别动，否则要手动删除前一个渠道，不然用户的相关设置界面会残留以前的渠道名称
+    private static final String CHANNEL_ID_FOREGROUND = "channel_id_01";
 
     static Notification getForegroundNotification(Context context) {
         PendingIntent pendingIntent = PendingIntent.getActivity(context,
@@ -28,8 +28,10 @@ class NotificationUtils {
 
         Notification notification;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(FOREGROUND_CHANNEL_ID,
-                    FOREGROUND_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID_FOREGROUND,
+                    context.getText(R.string.play_music_tips_channel),
+                    NotificationManager.IMPORTANCE_DEFAULT);
 
             channel.enableLights(false);
             channel.enableVibration(false);
@@ -37,9 +39,10 @@ class NotificationUtils {
 
             NotificationManager manager = (NotificationManager)
                     context.getSystemService(NOTIFICATION_SERVICE);
+
             manager.createNotificationChannel(channel);
 
-            notification = new Notification.Builder(context, FOREGROUND_CHANNEL_ID)
+            notification = new Notification.Builder(context, CHANNEL_ID_FOREGROUND)
                     .setWhen(System.currentTimeMillis())
                     .setShowWhen(true)
                     .setSmallIcon(R.drawable.ic_notifications_active)

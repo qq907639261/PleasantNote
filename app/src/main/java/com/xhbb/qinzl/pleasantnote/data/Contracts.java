@@ -17,6 +17,9 @@ public interface Contracts {
     String ACTION_RESET = AUTHORITY + ".ACTION_RESET";
     String ACTION_PLAY_PAUSE = AUTHORITY + ".ACTION_PLAY_PAUSE";
 
+    String ACTION_EMPTY_DATA = AUTHORITY + ".ACTION_EMPTY_DATA";
+    String ACTION_SCROLLED_TO_END = AUTHORITY + ".ACTION_SCROLLED_TO_END";
+
     interface MusicContract extends BaseColumns {
 
         String TABLE = "music";

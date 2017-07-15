@@ -20,8 +20,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
-import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
-import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
@@ -38,21 +36,17 @@ public class MainFragment extends Fragment
 
     private static final String ARG_RANKING_CODE = "ARG_RANKING_CODE";
     private static final String ARG_ITEM_POSITION = "ARG_ITEM_POSITION";
-    private static final String ARG_TIPS_TEXT = "ARG_TIPS_TEXT";
 
     private int mRankingCode;
     private Object mRequestTag;
-    private String mTipsText;
     private OnMainFragmentListener mListener;
+    private boolean mVolleyResponded;
+    private boolean mHasData;
 
     protected LayoutRecyclerView mLayoutRecyclerView;
     protected LinearLayoutManager mLayoutManager;
     protected boolean mViewRecreating;
-    protected boolean mHasMusicData;
     protected MusicAdapter mMusicAdapter;
-    protected boolean mScrolledToEnd;
-    protected int mRefreshState;
-    protected int mVolleyState;
 
     public static MainFragment newInstance(int rankingCode) {
         Bundle args = new Bundle();
@@ -71,7 +65,6 @@ public class MainFragment extends Fragment
 
         Context context = getContext();
 
-        mScrolledToEnd = true;
         mLayoutManager = new LinearLayoutManager(context);
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
@@ -79,12 +72,13 @@ public class MainFragment extends Fragment
         mRequestTag = mRankingCode;
 
         if (savedInstanceState != null) {
-            mViewRecreating = true;
             int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
+
+            mViewRecreating = true;
             mLayoutManager.scrollToPosition(itemPosition);
-            mTipsText = savedInstanceState.getString(ARG_TIPS_TEXT);
         }
 
+        mMusicAdapter.setScrolledToEnd(true);
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
         getLoaderManager().initLoader(0, null, this);
 
@@ -94,6 +88,10 @@ public class MainFragment extends Fragment
     @Override
     public void onStop() {
         super.onStop();
+        cancelVolleyRequest();
+    }
+
+    protected void cancelVolleyRequest() {
         NetworkUtils.cancelAllRequest(getContext(), mRequestTag);
     }
 
@@ -114,8 +112,11 @@ public class MainFragment extends Fragment
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        saveInstanceState(outState);
+    }
+
+    protected void saveInstanceState(Bundle outState) {
         outState.putInt(ARG_ITEM_POSITION, mLayoutManager.findFirstVisibleItemPosition());
-        outState.putString(ARG_TIPS_TEXT, mLayoutRecyclerView.getTipsText());
     }
 
     @Override
@@ -131,28 +132,19 @@ public class MainFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        mHasMusicData = cursor.getCount() > 0;
         mMusicAdapter.swapCursor(cursor);
+        mHasData = cursor.getCount() > 0;
 
-        if (mHasMusicData) {
+        if (mHasData) {
             mLayoutRecyclerView.setTipsText(null);
+        } else if (mViewRecreating) {
+            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
         }
 
-        if (mViewRecreating || mVolleyState != VolleyState.DEFAULT) {
-            if (!mHasMusicData) {
-                if (mVolleyState == VolleyState.RESPONSE) {
-                    mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
-                } else if (mVolleyState == VolleyState.ERROR) {
-                    mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
-                } else {
-                    mLayoutRecyclerView.setTipsText(mTipsText);
-                }
-            }
-
+        if (mViewRecreating || mVolleyResponded) {
             mViewRecreating = false;
+            mVolleyResponded = false;
             mLayoutRecyclerView.setRefreshing(false);
-            mRefreshState = RefreshState.DEFAULT;
-            mVolleyState = VolleyState.DEFAULT;
         }
     }
 
@@ -173,14 +165,15 @@ public class MainFragment extends Fragment
 
     @Override
     public void onErrorResponse(VolleyError error) {
-        mVolleyState = VolleyState.ERROR;
-        mScrolledToEnd = mHasMusicData;
-        getLoaderManager().initLoader(0, null, this);
+        mLayoutRecyclerView.setRefreshing(false);
+        if (mHasData) {
+            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
+        }
     }
 
     @Override
     public void onResponse(String response) {
-        mVolleyState = VolleyState.RESPONSE;
+        mVolleyResponded = true;
         Context context = getContext();
         Intent intent = UpdateMusicDataService.newIntent(context, response, mRankingCode);
         context.startService(intent);
@@ -192,8 +185,18 @@ public class MainFragment extends Fragment
         private static final int TYPE_DEFAULT_ITEM = 0;
         private static final int TYPE_LAST_ITEM = 1;
 
+        private boolean mScrolledToEnd;
+
         MusicAdapter(int defaultLayoutRes) {
             super(defaultLayoutRes);
+        }
+
+        void setScrolledToEnd(boolean scrolledToEnd) {
+            mScrolledToEnd = scrolledToEnd;
+        }
+
+        boolean isScrolledToEnd() {
+            return mScrolledToEnd;
         }
 
         @Override
