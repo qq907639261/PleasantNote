@@ -243,10 +243,10 @@ public class MainFragment extends Fragment
         public void onClickItem(int itemPosition) {
             mCursor.moveToPosition(itemPosition);
             Music music = new Music(mCursor);
-
             Context context = getContext();
-            String playUrl = music.getPlayUrl();
-            Intent intent = MusicService.newIntent(context, Contracts.ACTION_RESET, playUrl);
+
+            Intent intent = MusicService.newIntent(context, Contracts.ACTION_RESET, music);
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent);
             } else {

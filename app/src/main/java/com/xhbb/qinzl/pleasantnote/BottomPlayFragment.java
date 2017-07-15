@@ -1,11 +1,14 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +25,7 @@ public class BottomPlayFragment extends Fragment
     private static final String ARG_MUSIC = "ARG_MUSIC";
 
     private FragmentBottomPlay mFragmentBottomPlay;
+    private LocalReceiver mLocalReceiver;
 
     public static BottomPlayFragment newInstance(@Nullable Music music) {
         Bundle args = new Bundle();
@@ -39,8 +43,21 @@ public class BottomPlayFragment extends Fragment
                 inflater, R.layout.fragment_bottom_play, container, false);
 
         setBindingVariable(binding);
+        registerLocalReceiver();
 
         return binding.getRoot();
+    }
+
+    private void registerLocalReceiver() {
+        mLocalReceiver = new LocalReceiver();
+        IntentFilter filter = new IntentFilter(Contracts.ACTION_NEXT_PLAYED);
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mLocalReceiver, filter);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
     }
 
     private void setBindingVariable(FragmentBottomPlayBinding binding) {
@@ -71,6 +88,28 @@ public class BottomPlayFragment extends Fragment
 
     @Override
     public void onClickNextButton() {
+        Context context = getContext();
+        if (!mFragmentBottomPlay.isMusicPlaying()) {
+            mFragmentBottomPlay.changePlayButtonDrawable(context);
+        }
 
+        Intent intent = MusicService.newIntent(context, Contracts.ACTION_NEXT);
+        context.startService(intent);
+    }
+
+    private class LocalReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case Contracts.ACTION_NEXT_PLAYED:
+                    Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
+                    mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
+                    mFragmentBottomPlay.setMusicName(music.getName());
+                    mFragmentBottomPlay.setSinger(music.getSinger());
+                    break;
+                default:
+            }
+        }
     }
 }

@@ -16,9 +16,11 @@ public interface Contracts {
 
     String ACTION_RESET = AUTHORITY + ".ACTION_RESET";
     String ACTION_PLAY_PAUSE = AUTHORITY + ".ACTION_PLAY_PAUSE";
+    String ACTION_NEXT = AUTHORITY + ".ACTION_NEXT";
 
     String ACTION_EMPTY_DATA = AUTHORITY + ".ACTION_EMPTY_DATA";
     String ACTION_SCROLLED_TO_END = AUTHORITY + ".ACTION_SCROLLED_TO_END";
+    String ACTION_NEXT_PLAYED = AUTHORITY + ".ACTION_NEXT_PLAYED";
 
     interface MusicContract extends BaseColumns {
 
@@ -29,7 +31,6 @@ public interface Contracts {
         String _SECONDS = "seconds";
         String _CODE = "code";
         String _SINGER = "singer";
-        String _SINGER_CODE = "singer_code";
         String _BIG_PICTURE = "big_picture";
         String _SMALL_PICTURE = "small_picture";
         String _PLAY_URL = "play_url";

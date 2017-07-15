@@ -13,7 +13,7 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "pleasant_note.db";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 3;
 
     private static final String CREATE_TABLE_MUSIC =
             "CREATE TABLE " + MusicContract.TABLE + "(" +
@@ -22,7 +22,6 @@ class DbHelper extends SQLiteOpenHelper {
                     MusicContract._SECONDS + " INTEGER," +
                     MusicContract._CODE + " LONG," +
                     MusicContract._SINGER + " TEXT," +
-                    MusicContract._SINGER_CODE + " LONG," +
                     MusicContract._BIG_PICTURE + " TEXT," +
                     MusicContract._SMALL_PICTURE + " TEXT," +
                     MusicContract._PLAY_URL + " TEXT," +
@@ -42,6 +41,14 @@ class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL("DROP TABLE " + MusicContract.TABLE);
+            onCreate(sqLiteDatabase);
 
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
     }
 }

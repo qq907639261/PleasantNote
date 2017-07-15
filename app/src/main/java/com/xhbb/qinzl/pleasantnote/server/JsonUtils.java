@@ -28,7 +28,6 @@ public class JsonUtils {
             musicValueses[i].put(MusicContract._DOWNLOAD_URL, songs[i].downUrl);
             musicValueses[i].put(MusicContract._PLAY_URL, songs[i].url);
             musicValueses[i].put(MusicContract._SINGER, songs[i].singername);
-            musicValueses[i].put(MusicContract._SINGER_CODE, songs[i].singerid);
         }
         return musicValueses;
     }
@@ -50,7 +49,6 @@ public class JsonUtils {
             musicValueses[i].put(MusicContract._DOWNLOAD_URL, contents[i].downUrl);
             musicValueses[i].put(MusicContract._BIG_PICTURE, contents[i].albumpic_big);
             musicValueses[i].put(MusicContract._SMALL_PICTURE, contents[i].albumpic_small);
-            musicValueses[i].put(MusicContract._SINGER_CODE, contents[i].singerid);
             musicValueses[i].put(MusicContract._CODE, contents[i].songid);
             musicValueses[i].put(MusicContract._PLAY_URL, contents[i].m4a);
             musicValueses[i].put(MusicContract._NAME, contents[i].songname);
@@ -76,7 +74,6 @@ public class JsonUtils {
                     String songname;
                     int seconds;
                     long songid;
-                    long singerid;
                     String albumpic_big;
                     String albumpic_small;
                     String downUrl;
@@ -106,7 +103,6 @@ public class JsonUtils {
 
                     String m4a;
                     long songid;
-                    long singerid;
                     String downUrl;
                     String singername;
                     String songname;

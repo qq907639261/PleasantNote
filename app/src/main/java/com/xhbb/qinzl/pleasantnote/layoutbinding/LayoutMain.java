@@ -30,6 +30,9 @@ public class LayoutMain extends BaseObservable {
         mLayoutAppBar.setTabLayoutVisible(true);
     }
 
+    public void onClickBottomFragment() {
+    }
+
     @Bindable
     public int getViewPagerVisibility() {
         return mViewPagerVisibility;

@@ -37,16 +37,38 @@ public class FragmentBottomPlay extends BaseObservable {
         mListener = listener;
     }
 
+    @Bindable
     public String getImageUrl() {
         return mImageUrl;
     }
 
+    public void setImageUrl(String imageUrl) {
+        mImageUrl = imageUrl;
+        notifyPropertyChanged(BR.imageUrl);
+    }
+
+    @Bindable
     public String getMusicName() {
         return mMusicName;
     }
 
+    public void setMusicName(String musicName) {
+        mMusicName = musicName;
+        notifyPropertyChanged(BR.musicName);
+    }
+
+    @Bindable
     public String getSinger() {
         return mSinger;
+    }
+
+    public void setSinger(String singer) {
+        mSinger = singer;
+        notifyPropertyChanged(BR.singer);
+    }
+
+    public boolean isMusicPlaying() {
+        return mMusicPlaying;
     }
 
     @Bindable
