@@ -1,5 +1,6 @@
 package com.xhbb.qinzl.pleasantnote.model;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -65,6 +66,23 @@ public class Music implements Parcelable {
         parcel.writeString(mDownloadUrl);
         parcel.writeInt(mRankingCode);
         parcel.writeString(mQuery);
+    }
+
+    public ContentValues getMusicValues() {
+        ContentValues musicValues = new ContentValues();
+
+        musicValues.put(MusicContract._NAME, mName);
+        musicValues.put(MusicContract._CODE, mCode);
+        musicValues.put(MusicContract._SECONDS, mSeconds);
+        musicValues.put(MusicContract._PLAY_URL, mPlayUrl);
+        musicValues.put(MusicContract._DOWNLOAD_URL, mDownloadUrl);
+        musicValues.put(MusicContract._SMALL_PICTURE, mSmallPicture);
+        musicValues.put(MusicContract._BIG_PICTURE, mBigPicture);
+        musicValues.put(MusicContract._SINGER, mSinger);
+        musicValues.put(MusicContract._QUERY, mQuery);
+        musicValues.put(MusicContract._RANKING_CODE, mRankingCode);
+
+        return musicValues;
     }
 
     public String getName() {

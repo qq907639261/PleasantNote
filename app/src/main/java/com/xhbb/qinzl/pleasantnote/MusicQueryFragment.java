@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
+import com.xhbb.qinzl.pleasantnote.common.Enums.MusicDataUpdatedState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
@@ -36,7 +37,6 @@ public class MusicQueryFragment extends MainFragment {
     private String mQuery;
     private int mCurrentPage;
     private int mRefreshState;
-    private int mVolleyState;
     private String mTipsText;
     private LocalReceiver mLocalReceiver;
 
@@ -57,6 +57,7 @@ public class MusicQueryFragment extends MainFragment {
 
         Context context = getContext();
 
+        mLocalReceiver = new LocalReceiver();
         mLayoutManager = new LinearLayoutManager(context);
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
@@ -81,12 +82,7 @@ public class MusicQueryFragment extends MainFragment {
     }
 
     private void registerLocalBroadcast(Context context) {
-        mLocalReceiver = new LocalReceiver();
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Contracts.ACTION_EMPTY_DATA);
-        filter.addAction(Contracts.ACTION_SCROLLED_TO_END);
-
+        IntentFilter filter = new IntentFilter(Contracts.ACTION_MUSIC_DATA_UPDATED);
         LocalBroadcastManager.getInstance(context).registerReceiver(mLocalReceiver, filter);
     }
 
@@ -118,7 +114,7 @@ public class MusicQueryFragment extends MainFragment {
         Context context = getContext();
         NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, this, this);
 
-        String selection = MusicContract._QUERY + "=?";
+        String selection = MusicContract._QUERY + "=? AND " + MusicContract._ID + ">0";
         String[] selectionArgs = new String[]{mQuery};
 
         return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
@@ -127,25 +123,20 @@ public class MusicQueryFragment extends MainFragment {
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
-        boolean hasMusicData = cursor.getCount() > 0;
 
-        if (hasMusicData) {
+        if (cursor.getCount() > 0) {
             mLayoutRecyclerView.setTipsText(null);
+        } else if (mVolleyState == VolleyState.ERROR) {
+            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
+        } else if (mViewRecreating) {
+            mLayoutRecyclerView.setTipsText(mTipsText);
         }
 
-        if (mViewRecreating || mVolleyState != VolleyState.DEFAULT) {
-            if (!hasMusicData) {
-                if (mVolleyState == VolleyState.ERROR) {
-                    mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
-                } else if (mViewRecreating) {
-                    mLayoutRecyclerView.setTipsText(mTipsText);
-                }
-            }
-
+        if (mViewRecreating || mVolleyState != 0) {
             mViewRecreating = false;
             mLayoutRecyclerView.setRefreshing(false);
-            mRefreshState = RefreshState.DEFAULT;
-            mVolleyState = VolleyState.DEFAULT;
+            mRefreshState = 0;
+            mVolleyState = 0;
         }
     }
 
@@ -156,7 +147,7 @@ public class MusicQueryFragment extends MainFragment {
 
     @Override
     public void onScrollStateChanged(int newState) {
-        if (mMusicAdapter.isScrolledToEnd() || mRefreshState != RefreshState.DEFAULT) {
+        if (mMusicAdapter.isScrolledToEnd() || mRefreshState != 0) {
             return;
         }
 
@@ -191,16 +182,20 @@ public class MusicQueryFragment extends MainFragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
-                case Contracts.ACTION_EMPTY_DATA:
-                    mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
-                    getLoaderManager().initLoader(0, null, MusicQueryFragment.this);
-                    break;
-                case Contracts.ACTION_SCROLLED_TO_END:
-                    mMusicAdapter.setScrolledToEnd(true);
-                    mMusicAdapter.notifyItemChanged(mMusicAdapter.getItemCount() - 1);
-                    if (mCurrentPage == 1) {
+                case Contracts.ACTION_MUSIC_DATA_UPDATED:
+                    int updatedState = intent.getIntExtra(
+                            UpdateMusicDataService.EXTRA_MUSIC_DATA_UPDATED_STATE, 0);
+
+                    if (updatedState == MusicDataUpdatedState.SCROLLED_TO_END_UPDATE) {
+                        mMusicAdapter.setScrolledToEnd(true);
+                    } else if (updatedState == MusicDataUpdatedState.SCROLLED_TO_END_NO_UPDATE) {
+                        mMusicAdapter.setScrolledToEnd(true);
+                        getLoaderManager().initLoader(0, null, MusicQueryFragment.this);
+                    } else if (updatedState == MusicDataUpdatedState.EMPTY_DATA) {
+                        mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
                         getLoaderManager().initLoader(0, null, MusicQueryFragment.this);
                     }
+
                     break;
                 default:
             }

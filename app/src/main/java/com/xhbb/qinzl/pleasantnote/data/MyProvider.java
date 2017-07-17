@@ -61,8 +61,10 @@ public class MyProvider extends ContentProvider {
             db.endTransaction();
         }
 
+        int insertedRows = super.bulkInsert(uri, valueses);
         notifyChange(uri);
-        return super.bulkInsert(uri, valueses);
+
+        return insertedRows;
     }
 
     @Override

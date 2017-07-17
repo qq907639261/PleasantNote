@@ -42,16 +42,31 @@ public class BottomPlayFragment extends Fragment
         FragmentBottomPlayBinding binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_bottom_play, container, false);
 
+        mLocalReceiver = new LocalReceiver();
+
         setBindingVariable(binding);
-        registerLocalReceiver();
 
         return binding.getRoot();
     }
 
-    private void registerLocalReceiver() {
-        mLocalReceiver = new LocalReceiver();
-        IntentFilter filter = new IntentFilter(Contracts.ACTION_NEXT_PLAYED);
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mLocalReceiver, filter);
+    @Override
+    public void onStart() {
+        super.onStart();
+        Context context = getContext();
+
+        registerLocalReceiver(context);
+        context.startService(MusicService.newIntent(context, MusicService.ACTION_SEND_MUSIC_DATA));
+    }
+
+    private void registerLocalReceiver(Context context) {
+        IntentFilter filter = new IntentFilter(Contracts.ACTION_PLAYING_MUSIC_UPDATED);
+        LocalBroadcastManager.getInstance(context).registerReceiver(mLocalReceiver, filter);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
     }
 
     private void setBindingVariable(FragmentBottomPlayBinding binding) {
@@ -72,28 +87,24 @@ public class BottomPlayFragment extends Fragment
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
-    }
-
-    @Override
     public void onClickPlayButton() {
+        // TODO: 2017/7/17 判断有没有正在播放的歌曲，如果没有就随机播放一首，貌似到了绑定服务的时候了
         Context context = getContext();
         mFragmentBottomPlay.changePlayButtonDrawable(context);
 
-        Intent intent = MusicService.newIntent(context, Contracts.ACTION_PLAY_PAUSE);
+        Intent intent = MusicService.newIntent(context, MusicService.ACTION_PLAY_OR_PAUSE);
         context.startService(intent);
     }
 
     @Override
     public void onClickNextButton() {
+        // TODO: 2017/7/17 判断有没有正在播放的歌曲，如果没有就随机播放一首，貌似到了绑定服务的时候了
         Context context = getContext();
         if (!mFragmentBottomPlay.isMusicPlaying()) {
             mFragmentBottomPlay.changePlayButtonDrawable(context);
         }
 
-        Intent intent = MusicService.newIntent(context, Contracts.ACTION_NEXT);
+        Intent intent = MusicService.newIntent(context, MusicService.ACTION_PLAY_NEXT);
         context.startService(intent);
     }
 
@@ -102,7 +113,7 @@ public class BottomPlayFragment extends Fragment
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
-                case Contracts.ACTION_NEXT_PLAYED:
+                case Contracts.ACTION_PLAYING_MUSIC_UPDATED:
                     Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
 
                     mFragmentBottomPlay.setImageUrl(music.getSmallPicture());

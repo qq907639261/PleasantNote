@@ -2,7 +2,6 @@ package com.xhbb.qinzl.pleasantnote.common;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.media.MediaPlayer;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
@@ -18,7 +17,6 @@ public class MainSingleton {
 
     private Context mContext;
     private RequestQueue mRequestQueue;
-    private MediaPlayer mMediaPlayer;
 
     public static MainSingleton getInstance(Context context) {
         if (sMainSingleton == null) {
@@ -36,12 +34,5 @@ public class MainSingleton {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
         return mRequestQueue;
-    }
-
-    public MediaPlayer getMediaPlayer() {
-        if (mMediaPlayer == null) {
-            mMediaPlayer = new MediaPlayer();
-        }
-        return mMediaPlayer;
     }
 }

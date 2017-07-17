@@ -6,11 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.xhbb.qinzl.pleasantnote.common.Enums.MusicDataUpdatedState;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
 public class UpdateMusicDataService extends IntentService {
+
+    public static final String EXTRA_MUSIC_DATA_UPDATED_STATE =
+            Contracts.AUTHORITY + ".EXTRA_MUSIC_DATA_UPDATED_STATE";
 
     private static final String TAG = "UpdateMusicDataService";
 
@@ -60,28 +64,27 @@ public class UpdateMusicDataService extends IntentService {
 
     private void updateQueryData(Intent intent, Context context, String musicJson) {
         String query = intent.getStringExtra(EXTRA_QUERY);
-        boolean firstPage = intent.getBooleanExtra(EXTRA_FIRST_PAGE, false);
-
         ContentValues[] musicValueses = JsonUtils.getMusicValueses(musicJson, query);
-        Intent broadcastIntent = null;
+
+        boolean firstPage = intent.getBooleanExtra(EXTRA_FIRST_PAGE, false);
+        Intent broadcastIntent = new Intent(Contracts.ACTION_MUSIC_DATA_UPDATED);
+        int updatedState = 0;
 
         if (musicValueses != null) {
             if (musicValueses.length < NetworkUtils.MAX_COUNT_OF_EACH_PAGE) {
-                broadcastIntent = new Intent(Contracts.ACTION_SCROLLED_TO_END);
+                updatedState = MusicDataUpdatedState.SCROLLED_TO_END_UPDATE;
             }
-
             MainTasks.updateMusicData(context, musicValueses, firstPage);
         } else {
             if (firstPage) {
-                broadcastIntent = new Intent(Contracts.ACTION_EMPTY_DATA);
+                updatedState = MusicDataUpdatedState.EMPTY_DATA;
             } else {
-                broadcastIntent = new Intent(Contracts.ACTION_SCROLLED_TO_END);
+                updatedState = MusicDataUpdatedState.SCROLLED_TO_END_NO_UPDATE;
             }
         }
 
-        if (broadcastIntent != null) {
-            LocalBroadcastManager.getInstance(context).sendBroadcast(broadcastIntent);
-        }
+        broadcastIntent.putExtra(EXTRA_MUSIC_DATA_UPDATED_STATE, updatedState);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(broadcastIntent);
     }
 
     private void updateRankingData(Intent intent, Context context, String musicJson) {

@@ -2,6 +2,8 @@ package com.xhbb.qinzl.pleasantnote.async;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.xhbb.qinzl.pleasantnote.common.MainSingleton;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.model.Music;
@@ -23,10 +24,19 @@ public class MusicService extends Service
 
     public static final String EXTRA_MUSIC = Contracts.AUTHORITY + ".EXTRA_MUSIC";
 
+    public static final String ACTION_PLAY_NEW_MUSIC = Contracts.AUTHORITY + ".ACTION_PLAY_NEW_MUSIC";
+    public static final String ACTION_PLAY_OR_PAUSE = Contracts.AUTHORITY + ".ACTION_PLAY_OR_PAUSE";
+    public static final String ACTION_PLAY_NEXT = Contracts.AUTHORITY + ".ACTION_PLAY_NEXT";
+    public static final String ACTION_SEND_MUSIC_DATA = Contracts.AUTHORITY + ".ACTION_PLAYING_MUSIC_UPDATED";
+
+    public static final int MUSIC_ID_BY_INSERT = 0;
+
     private MediaPlayer mMediaPlayer;
     private Notification mNotification;
+    private Music mMusic;
     private Cursor mCursor;
-    private InitCursorTask mInitCursorTask;
+    private ResetCursorTask mResetCursorTask;
+    private InitMusicTask mInitMusicTask;
 
     public static Intent newIntent(Context context, String action, Music music) {
         return newIntent(context, action)
@@ -49,7 +59,7 @@ public class MusicService extends Service
         Context context = getApplicationContext();
 
         mNotification = NotificationUtils.getForegroundNotification(context);
-        mMediaPlayer = MainSingleton.getInstance(context).getMediaPlayer();
+        mMediaPlayer = new MediaPlayer();
 
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
@@ -63,28 +73,30 @@ public class MusicService extends Service
 
     private void handleIntent(Intent intent) {
         switch (intent.getAction()) {
-            case Contracts.ACTION_RESET:
-                Music music = intent.getParcelableExtra(EXTRA_MUSIC);
-                reset(music.getPlayUrl());
-                initCursor(music);
+            case ACTION_PLAY_NEW_MUSIC:
+                mMusic = intent.getParcelableExtra(EXTRA_MUSIC);
+                playNewMusic();
+                resetCursor();
                 break;
-            case Contracts.ACTION_PLAY_PAUSE:
+            case ACTION_PLAY_OR_PAUSE:
                 playOrPause();
                 break;
-            case Contracts.ACTION_NEXT:
+            case ACTION_PLAY_NEXT:
                 playNext();
+                break;
+            case ACTION_SEND_MUSIC_DATA:
+                sendMusicData();
                 break;
             default:
         }
     }
 
-    private void initCursor(Music music) {
-        if (mInitCursorTask != null) {
-            mInitCursorTask.cancel(true);
+    private void resetCursor() {
+        if (mResetCursorTask != null) {
+            mResetCursorTask.cancel(true);
         }
-
-        mInitCursorTask = new InitCursorTask();
-        mInitCursorTask.execute(music);
+        mResetCursorTask = new ResetCursorTask();
+        mResetCursorTask.execute();
     }
 
     private void playOrPause() {
@@ -97,12 +109,11 @@ public class MusicService extends Service
         }
     }
 
-    private void reset(String playUrl) {
+    private void playNewMusic() {
         try {
             mMediaPlayer.reset();
-            mMediaPlayer.setDataSource(playUrl);
+            mMediaPlayer.setDataSource(mMusic.getPlayUrl());
             mMediaPlayer.prepareAsync();
-
             startForeground(1, mNotification);
         } catch (IOException e) {
             e.printStackTrace();
@@ -112,12 +123,40 @@ public class MusicService extends Service
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        if (mMusic != null) {
+            saveMusicData();
+        }
+
         mMediaPlayer.release();
         mMediaPlayer = null;
-        mInitCursorTask.cancel(true);
+
+        if (mResetCursorTask != null) {
+            mResetCursorTask.cancel(true);
+        }
+
         if (mCursor != null) {
             mCursor.close();
         }
+    }
+
+    private void saveMusicData() {
+        final ContentValues musicValues = mMusic.getMusicValues();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String where = MusicContract._ID + "=" + MUSIC_ID_BY_INSERT;
+
+                ContentResolver contentResolver = getContentResolver();
+                int updatedRows = contentResolver.update(MusicContract.URI, musicValues, where, null);
+
+                if (updatedRows <= 0) {
+                    musicValues.put(MusicContract._ID, MUSIC_ID_BY_INSERT);
+                    contentResolver.insert(MusicContract.URI, musicValues);
+                }
+            }
+        }).start();
     }
 
     @Override
@@ -137,33 +176,70 @@ public class MusicService extends Service
             return;
         }
 
-        Music music = new Music(mCursor);
-        reset(music.getPlayUrl());
-
-        Intent intent = new Intent(Contracts.ACTION_NEXT_PLAYED);
-        intent.putExtra(EXTRA_MUSIC, music);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        mMusic = new Music(mCursor);
+        playNewMusic();
+        sendMusicData();
 
         if (!mCursor.moveToNext()) {
             mCursor.moveToFirst();
         }
     }
 
-    private class InitCursorTask extends AsyncTask<Music, Void, Cursor> {
+    private void sendMusicData() {
+        if (mMusic == null) {
+            initMusic();
+            return;
+        }
+
+        Intent intent = new Intent(Contracts.ACTION_PLAYING_MUSIC_UPDATED);
+        intent.putExtra(EXTRA_MUSIC, mMusic);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+    }
+
+    private void initMusic() {
+        if (mInitMusicTask != null) {
+            mInitMusicTask.cancel(false);
+        }
+        mInitMusicTask = new InitMusicTask();
+        mInitMusicTask.execute();
+    }
+
+    private class InitMusicTask extends AsyncTask<Void, Void, Cursor> {
 
         @Override
-        protected Cursor doInBackground(Music... musics) {
-            Music music = musics[0];
-            String query = music.getQuery();
+        protected Cursor doInBackground(Void... voids) {
+            String selection = MusicContract._ID + "=" + MUSIC_ID_BY_INSERT;
+            return getContentResolver().query(MusicContract.URI, null, selection, null, null);
+        }
+
+        @Override
+        protected void onPostExecute(Cursor cursor) {
+            super.onPostExecute(cursor);
+            if (cursor != null && cursor.moveToFirst()) {
+                mMusic = new Music(cursor);
+                sendMusicData();
+                playNewMusic();
+                resetCursor();
+                cursor.close();
+            }
+        }
+    }
+
+    private class ResetCursorTask extends AsyncTask<Void, Void, Cursor> {
+
+        @Override
+        protected Cursor doInBackground(Void... voids) {
+            String query = mMusic.getQuery();
             String selection;
             String[] selectionArgs;
 
             if (query != null) {
-                selection = MusicContract._QUERY + "=?";
+                selection = MusicContract._QUERY + "=? AND " + MusicContract._ID + ">0";
                 selectionArgs = new String[]{query};
             } else {
-                selection = MusicContract._RANKING_CODE + "=?";
-                selectionArgs = new String[]{String.valueOf(music.getRankingCode())};
+                selection = MusicContract._RANKING_CODE + "=" + mMusic.getRankingCode()
+                        + " AND " + MusicContract._ID + ">0";
+                selectionArgs = null;
             }
 
             Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, selectionArgs, null);
@@ -176,8 +252,8 @@ public class MusicService extends Service
                     return null;
                 }
 
-                long musicId = cursor.getLong(cursor.getColumnIndex(MusicContract._ID));
-                if (musicId == music.getId() || cursor.isLast()) {
+                long musicCode = cursor.getLong(cursor.getColumnIndex(MusicContract._CODE));
+                if (musicCode == mMusic.getCode() || cursor.isLast()) {
                     if (!cursor.moveToNext()) {
                         cursor.moveToFirst();
                     }

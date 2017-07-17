@@ -20,8 +20,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
+import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
-import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ItemMusic;
@@ -40,13 +40,12 @@ public class MainFragment extends Fragment
     private int mRankingCode;
     private Object mRequestTag;
     private OnMainFragmentListener mListener;
-    private boolean mVolleyResponded;
-    private boolean mHasData;
 
     protected LayoutRecyclerView mLayoutRecyclerView;
     protected LinearLayoutManager mLayoutManager;
     protected boolean mViewRecreating;
     protected MusicAdapter mMusicAdapter;
+    protected int mVolleyState;
 
     public static MainFragment newInstance(int rankingCode) {
         Bundle args = new Bundle();
@@ -124,26 +123,24 @@ public class MainFragment extends Fragment
         Context context = getContext();
         NetworkUtils.addRankingRequest(context, mRankingCode, mRequestTag, this, this);
 
-        String selection = MusicContract._RANKING_CODE + "=?";
-        String[] selectionArgs = new String[]{String.valueOf(mRankingCode)};
-
-        return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
+        String selection = MusicContract._RANKING_CODE + "=" + mRankingCode
+                + " AND " + MusicContract._ID + ">0";
+        return new CursorLoader(context, MusicContract.URI, null, selection, null, null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mMusicAdapter.swapCursor(cursor);
-        mHasData = cursor.getCount() > 0;
 
-        if (mHasData) {
+        if (cursor.getCount() > 0) {
             mLayoutRecyclerView.setTipsText(null);
-        } else if (mViewRecreating) {
+        } else if (mViewRecreating || mVolleyState == VolleyState.ERROR) {
             mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
         }
 
-        if (mViewRecreating || mVolleyResponded) {
+        if (mViewRecreating || mVolleyState != 0) {
             mViewRecreating = false;
-            mVolleyResponded = false;
+            mVolleyState = 0;
             mLayoutRecyclerView.setRefreshing(false);
         }
     }
@@ -165,15 +162,13 @@ public class MainFragment extends Fragment
 
     @Override
     public void onErrorResponse(VolleyError error) {
-        mLayoutRecyclerView.setRefreshing(false);
-        if (mHasData) {
-            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
-        }
+        mVolleyState = VolleyState.ERROR;
+        getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
     public void onResponse(String response) {
-        mVolleyResponded = true;
+        mVolleyState = VolleyState.RESPONSE;
         Context context = getContext();
         Intent intent = UpdateMusicDataService.newIntent(context, response, mRankingCode);
         context.startService(intent);
@@ -245,7 +240,7 @@ public class MainFragment extends Fragment
             Music music = new Music(mCursor);
             Context context = getContext();
 
-            Intent intent = MusicService.newIntent(context, Contracts.ACTION_RESET, music);
+            Intent intent = MusicService.newIntent(context, MusicService.ACTION_PLAY_NEW_MUSIC, music);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent);
