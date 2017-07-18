@@ -27,6 +27,11 @@ public abstract class RecyclerViewAdapter extends
         notifyDataSetChanged();
     }
 
+    public void swapCursor(Cursor cursor, int startPosition, int itemCount) {
+        mCursor = cursor;
+        notifyItemRangeChanged(startPosition, itemCount);
+    }
+
     protected void setLayoutRes(int layoutRes) {
         mLayoutRes = layoutRes;
     }

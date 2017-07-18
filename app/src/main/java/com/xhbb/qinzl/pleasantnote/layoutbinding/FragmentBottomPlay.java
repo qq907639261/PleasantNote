@@ -18,22 +18,11 @@ public class FragmentBottomPlay extends BaseObservable {
     private String mImageUrl;
     private String mMusicName;
     private String mSinger;
-    private boolean mMusicPlaying;
     private Drawable mPlayButtonDrawable;
     private OnFragmentBottomPlayListener mListener;
 
     public FragmentBottomPlay(Context context, OnFragmentBottomPlayListener listener) {
         mPlayButtonDrawable = ActivityCompat.getDrawable(context, R.drawable.ic_play);
-        mListener = listener;
-    }
-
-    public FragmentBottomPlay(Context context, String imageUrl, String musicName, String singer,
-                              OnFragmentBottomPlayListener listener) {
-        mMusicPlaying = true;
-        mPlayButtonDrawable = ActivityCompat.getDrawable(context, R.drawable.ic_pause);
-        mImageUrl = imageUrl;
-        mMusicName = musicName;
-        mSinger = singer;
         mListener = listener;
     }
 
@@ -67,18 +56,13 @@ public class FragmentBottomPlay extends BaseObservable {
         notifyPropertyChanged(BR.singer);
     }
 
-    public boolean isMusicPlaying() {
-        return mMusicPlaying;
-    }
-
     @Bindable
     public Drawable getPlayButtonDrawable() {
         return mPlayButtonDrawable;
     }
 
-    public void changePlayButtonDrawable(Context context) {
-        mMusicPlaying = !mMusicPlaying;
-        if (mMusicPlaying) {
+    public void setPlayButtonDrawable(Context context, boolean playing) {
+        if (playing) {
             mPlayButtonDrawable = ActivityCompat.getDrawable(context, R.drawable.ic_pause);
         } else {
             mPlayButtonDrawable = ActivityCompat.getDrawable(context, R.drawable.ic_play);

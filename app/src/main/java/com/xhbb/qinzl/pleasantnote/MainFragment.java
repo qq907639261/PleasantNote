@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -39,7 +38,6 @@ public class MainFragment extends Fragment
 
     private int mRankingCode;
     private Object mRequestTag;
-    private OnMainFragmentListener mListener;
 
     protected LayoutRecyclerView mLayoutRecyclerView;
     protected LinearLayoutManager mLayoutManager;
@@ -92,20 +90,6 @@ public class MainFragment extends Fragment
 
     protected void cancelVolleyRequest() {
         NetworkUtils.cancelAllRequest(getContext(), mRequestTag);
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnMainFragmentListener) {
-            mListener = (OnMainFragmentListener) context;
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     @Override
@@ -238,24 +222,10 @@ public class MainFragment extends Fragment
         public void onClickItem(int itemPosition) {
             mCursor.moveToPosition(itemPosition);
             Music music = new Music(mCursor);
+
             Context context = getContext();
-
             Intent intent = MusicService.newIntent(context, MusicService.ACTION_PLAY_NEW_MUSIC, music);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent);
-            } else {
-                context.startService(intent);
-            }
-
-            if (mListener != null) {
-                mListener.onClickItem(music);
-            }
+            context.startService(intent);
         }
-    }
-
-    interface OnMainFragmentListener {
-
-        void onClickItem(Music music);
     }
 }

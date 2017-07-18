@@ -15,14 +15,13 @@ import android.widget.SearchView;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
-import com.xhbb.qinzl.pleasantnote.model.Music;
 
 public class MainActivity extends AppCompatActivity
-        implements ActivityMain.OnActivityMainListener,
-        MainFragment.OnMainFragmentListener {
+        implements ActivityMain.OnActivityMainListener {
 
     private ActivityMainBinding mBinding;
     private ActivityMain mActivityMain;
+    private boolean mBackPressedBeforeDestroy;
 
     public static Intent newIntent(Context context) {
         return new Intent(context, MainActivity.class);
@@ -40,7 +39,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             fragmentManager.beginTransaction()
-                    .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance(null))
+                    .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
                     .commit();
         } else {
             mActivityMain.setSearchViewCollapsed(true);
@@ -63,21 +62,46 @@ public class MainActivity extends AppCompatActivity
         }
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment fragment = fragmentManager.findFragmentById(R.id.fragment_container);
+        Fragment queryFragment = fragmentManager.findFragmentById(R.id.fragment_container);
 
-        if (fragment != null) {
-            fragmentManager.beginTransaction()
-                    .remove(fragment)
-                    .commit();
-
-            mActivityMain.setViewPagerVisible(true);
-            mActivityMain.setSearchViewCollapsed(true);
-
+        if (queryFragment != null) {
+            removeQueryFragment(fragmentManager, queryFragment);
             return;
         }
 
-        stopService(new Intent(this, MusicService.class));
+        mBackPressedBeforeDestroy = true;
         super.onBackPressed();
+    }
+
+    private void removeQueryFragment(FragmentManager fragmentManager, Fragment queryFragment) {
+        fragmentManager.beginTransaction()
+                .remove(queryFragment)
+                .commit();
+
+        mActivityMain.setViewPagerVisible(true);
+        mActivityMain.setSearchViewCollapsed(true);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startService(MusicService.newIntent(this, MusicService.ACTION_STOP_FOREGROUND));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!mBackPressedBeforeDestroy) {
+            startService(MusicService.newIntent(this, MusicService.ACTION_START_FOREGROUND));
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mBackPressedBeforeDestroy) {
+            stopService(new Intent(this, MusicService.class));
+        }
     }
 
     @Override
@@ -99,13 +123,6 @@ public class MainActivity extends AppCompatActivity
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, MusicQueryFragment.newInstance(s))
-                .commit();
-    }
-
-    @Override
-    public void onClickItem(Music music) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.bottom_fragment_container, BottomPlayFragment.newInstance(music))
                 .commit();
     }
 

@@ -22,47 +22,47 @@ public class MusicService extends Service
         implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener {
 
-    public static final String EXTRA_MUSIC = Contracts.AUTHORITY + ".EXTRA_MUSIC";
-
+    public static final String ACTION_INIT_MUSIC = Contracts.AUTHORITY + ".ACTION_INIT_MUSIC";
+    public static final String ACTION_SEND_MUSIC = Contracts.AUTHORITY + ".ACTION_SEND_MUSIC";
     public static final String ACTION_PLAY_NEW_MUSIC = Contracts.AUTHORITY + ".ACTION_PLAY_NEW_MUSIC";
     public static final String ACTION_PLAY_OR_PAUSE = Contracts.AUTHORITY + ".ACTION_PLAY_OR_PAUSE";
     public static final String ACTION_PLAY_NEXT = Contracts.AUTHORITY + ".ACTION_PLAY_NEXT";
-    public static final String ACTION_SEND_MUSIC_DATA = Contracts.AUTHORITY + ".ACTION_PLAYING_MUSIC_UPDATED";
+    public static final String ACTION_START_FOREGROUND = Contracts.AUTHORITY + ".ACTION_START_FOREGROUND";
+    public static final String ACTION_STOP_FOREGROUND = Contracts.AUTHORITY + ".ACTION_STOP_FOREGROUND";
+
+    public static final String EXTRA_MUSIC = Contracts.AUTHORITY + ".EXTRA_MUSIC";
 
     public static final int MUSIC_ID_BY_INSERT = 0;
 
     private MediaPlayer mMediaPlayer;
-    private Notification mNotification;
     private Music mMusic;
+    private Notification mNotification;
     private Cursor mCursor;
-    private ResetCursorTask mResetCursorTask;
-    private InitMusicTask mInitMusicTask;
-
-    public static Intent newIntent(Context context, String action, Music music) {
-        return newIntent(context, action)
-                .putExtra(EXTRA_MUSIC, music);
-    }
+    private QueryMoreMusicIntoCursorTask mQueryMoreMusicIntoCursorTask;
 
     public static Intent newIntent(Context context, String action) {
         return new Intent(context, MusicService.class)
                 .setAction(action);
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    public static Intent newIntent(Context context, String action, Music music) {
+        return newIntent(context, action).putExtra(EXTRA_MUSIC, music);
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Context context = getApplicationContext();
 
-        mNotification = NotificationUtils.getForegroundNotification(context);
+        mNotification = NotificationUtils.getForegroundNotification(getApplicationContext());
         mMediaPlayer = new MediaPlayer();
 
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
@@ -73,10 +73,14 @@ public class MusicService extends Service
 
     private void handleIntent(Intent intent) {
         switch (intent.getAction()) {
+            case ACTION_INIT_MUSIC:
+                new InitMusicTask().execute();
+                break;
+            case ACTION_SEND_MUSIC:
+                sendMusicData();
+                break;
             case ACTION_PLAY_NEW_MUSIC:
-                mMusic = intent.getParcelableExtra(EXTRA_MUSIC);
-                playNewMusic();
-                resetCursor();
+                playNewMusic(intent);
                 break;
             case ACTION_PLAY_OR_PAUSE:
                 playOrPause();
@@ -84,37 +88,53 @@ public class MusicService extends Service
             case ACTION_PLAY_NEXT:
                 playNext();
                 break;
-            case ACTION_SEND_MUSIC_DATA:
-                sendMusicData();
+            case ACTION_START_FOREGROUND:
+                startForeground(1, mNotification);
+                break;
+            case ACTION_STOP_FOREGROUND:
+                stopForeground(true);
                 break;
             default:
         }
     }
 
-    private void resetCursor() {
-        if (mResetCursorTask != null) {
-            mResetCursorTask.cancel(true);
+    private void playNewMusic(Intent intent) {
+        mMusic = intent.getParcelableExtra(EXTRA_MUSIC);
+        sendMusicData();
+        restartMusic();
+        queryMoreMusicIntoCursor();
+    }
+
+    private void queryMoreMusicIntoCursor() {
+        if (mQueryMoreMusicIntoCursorTask != null) {
+            mQueryMoreMusicIntoCursorTask.cancel(true);
         }
-        mResetCursorTask = new ResetCursorTask();
-        mResetCursorTask.execute();
+        mQueryMoreMusicIntoCursorTask = new QueryMoreMusicIntoCursorTask();
+        mQueryMoreMusicIntoCursorTask.execute();
     }
 
     private void playOrPause() {
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
-            stopForeground(true);
+            sendLocalBroadcast(Contracts.ACTION_MUSIC_STOPPED);
         } else {
             mMediaPlayer.start();
-            startForeground(1, mNotification);
+            sendLocalBroadcast(Contracts.ACTION_MUSIC_PLAYED);
         }
     }
 
-    private void playNewMusic() {
+    private void sendLocalBroadcast(String action) {
+        if (mMusic != null) {
+            Intent intent = new Intent(action);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        }
+    }
+
+    private void restartMusic() {
         try {
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(mMusic.getPlayUrl());
             mMediaPlayer.prepareAsync();
-            startForeground(1, mNotification);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -124,34 +144,29 @@ public class MusicService extends Service
     public void onDestroy() {
         super.onDestroy();
 
-        if (mMusic != null) {
-            saveMusicData();
-        }
-
+        saveCurrentMusicData();
         mMediaPlayer.release();
         mMediaPlayer = null;
-
-        if (mResetCursorTask != null) {
-            mResetCursorTask.cancel(true);
-        }
 
         if (mCursor != null) {
             mCursor.close();
         }
     }
 
-    private void saveMusicData() {
+    private void saveCurrentMusicData() {
+        if (mMusic == null) {
+            return;
+        }
         final ContentValues musicValues = mMusic.getMusicValues();
-
         new Thread(new Runnable() {
             @Override
             public void run() {
-                String where = MusicContract._ID + "=" + MUSIC_ID_BY_INSERT;
-
                 ContentResolver contentResolver = getContentResolver();
+
+                String where = MusicContract._ID + "=" + MUSIC_ID_BY_INSERT;
                 int updatedRows = contentResolver.update(MusicContract.URI, musicValues, where, null);
 
-                if (updatedRows <= 0) {
+                if (updatedRows < 1) {
                     musicValues.put(MusicContract._ID, MUSIC_ID_BY_INSERT);
                     contentResolver.insert(MusicContract.URI, musicValues);
                 }
@@ -173,35 +188,26 @@ public class MusicService extends Service
         if (mCursor == null) {
             mMediaPlayer.seekTo(0);
             mMediaPlayer.start();
-            return;
+        } else {
+            mMusic = new Music(mCursor);
+            restartMusic();
+            moveToNext(mCursor);
         }
-
-        mMusic = new Music(mCursor);
-        playNewMusic();
         sendMusicData();
-
-        if (!mCursor.moveToNext()) {
-            mCursor.moveToFirst();
-        }
     }
 
     private void sendMusicData() {
-        if (mMusic == null) {
-            initMusic();
-            return;
+        if (mMusic != null) {
+            Intent intent = new Intent(Contracts.ACTION_CURRENT_MUSIC_UPDATED);
+            intent.putExtra(EXTRA_MUSIC, mMusic);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
-
-        Intent intent = new Intent(Contracts.ACTION_PLAYING_MUSIC_UPDATED);
-        intent.putExtra(EXTRA_MUSIC, mMusic);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
-    private void initMusic() {
-        if (mInitMusicTask != null) {
-            mInitMusicTask.cancel(false);
+    private void moveToNext(Cursor cursor) {
+        if (!cursor.moveToNext()) {
+            cursor.moveToFirst();
         }
-        mInitMusicTask = new InitMusicTask();
-        mInitMusicTask.execute();
     }
 
     private class InitMusicTask extends AsyncTask<Void, Void, Cursor> {
@@ -215,17 +221,19 @@ public class MusicService extends Service
         @Override
         protected void onPostExecute(Cursor cursor) {
             super.onPostExecute(cursor);
-            if (cursor != null && cursor.moveToFirst()) {
-                mMusic = new Music(cursor);
-                sendMusicData();
-                playNewMusic();
-                resetCursor();
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    mMusic = new Music(cursor);
+                    sendMusicData();
+                    restartMusic();
+                    queryMoreMusicIntoCursor();
+                }
                 cursor.close();
             }
         }
     }
 
-    private class ResetCursorTask extends AsyncTask<Void, Void, Cursor> {
+    private class QueryMoreMusicIntoCursorTask extends AsyncTask<Void, Void, Cursor> {
 
         @Override
         protected Cursor doInBackground(Void... voids) {
@@ -244,19 +252,17 @@ public class MusicService extends Service
 
             Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, selectionArgs, null);
             if (cursor == null || isCancelled()) {
-                return null;
+                return cursor;
             }
 
             while (cursor.moveToNext()) {
                 if (isCancelled()) {
-                    return null;
+                    return cursor;
                 }
 
                 long musicCode = cursor.getLong(cursor.getColumnIndex(MusicContract._CODE));
                 if (musicCode == mMusic.getCode() || cursor.isLast()) {
-                    if (!cursor.moveToNext()) {
-                        cursor.moveToFirst();
-                    }
+                    moveToNext(cursor);
                     break;
                 }
             }

@@ -122,7 +122,13 @@ public class MusicQueryFragment extends MainFragment {
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        mMusicAdapter.swapCursor(cursor);
+        if (mRefreshState == RefreshState.SCROLL) {
+            int startPosition = mMusicAdapter.getItemCount();
+            int itemCount = NetworkUtils.MAX_COUNT_OF_EACH_PAGE;
+            mMusicAdapter.swapCursor(cursor, startPosition, itemCount);
+        } else {
+            mMusicAdapter.swapCursor(cursor);
+        }
 
         if (cursor.getCount() > 0) {
             mLayoutRecyclerView.setTipsText(null);

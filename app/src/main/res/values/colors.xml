@@ -8,6 +8,6 @@
     <color name="tipsText">@android:color/holo_red_light</color>
     <color name="dividingLine">#ebebeb</color>
     <color name="itemPressed">@color/dividingLine</color>
-    <color name="bottomFragmentPressed">@color/colorPrimaryDark</color>
+    <color name="bottomFragmentButtonPressed">@color/colorPrimaryDark</color>
     <color name="selectorDefault">@android:color/transparent</color>
 </resources>

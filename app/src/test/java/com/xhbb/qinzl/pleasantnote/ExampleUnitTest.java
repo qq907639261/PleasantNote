@@ -13,7 +13,7 @@ public class ExampleUnitTest {
 
     @Test
     public void addition_isCorrect() throws Exception {
-        double num = (double) 479 / 60;
+//        double num = (double) 479 / 60;
         assertEquals(7, 479 / 60);
         assertEquals(59, 479 % 60);
     }

@@ -12,11 +12,10 @@
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?colorPrimary"
+        android:layout_height="@dimen/bottomPlayFragmentHeight"
+        android:background="@drawable/selector_bottom_play_fragment"
         android:theme="@style/AppTheme.AppBarOverlay"
-        tools:layout_gravity="bottom"
-        tools:layout_height="56dp">
+        tools:layout_gravity="bottom">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/musicImage"
@@ -65,7 +64,7 @@
             android:id="@+id/playButton"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@drawable/selector_bottom_fragment"
+            android:background="@drawable/selector_bottom_play_fragment_button"
             android:contentDescription="@string/play_or_pause_accessibility"
             android:onClick="@{()->fragmentBottomPlay.onClickPlayButton()}"
             android:src="@{fragmentBottomPlay.playButtonDrawable}"
@@ -80,7 +79,7 @@
             android:id="@+id/nextButton"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@drawable/selector_bottom_fragment"
+            android:background="@drawable/selector_bottom_play_fragment_button"
             android:contentDescription="@string/skip_next_accessibility"
             android:onClick="@{()->fragmentBottomPlay.onClickNextButton()}"
             android:src="@drawable/ic_skip_next"

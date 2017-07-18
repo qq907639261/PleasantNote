@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class NetworkUtils {
 
-    public static final int MAX_COUNT_OF_EACH_PAGE = 20;
+    public static final int MAX_COUNT_OF_EACH_PAGE = 60;
 
     private static final String TAG = "NetworkUtils";
 
