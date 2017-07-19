@@ -18,10 +18,19 @@ public interface Enums {
         int ERROR = 2;
     }
 
-    interface MusicDataUpdatedState {
+    interface DataUpdatedState {
 
         int EMPTY_DATA = 1;
         int SCROLLED_TO_END_UPDATE = 2;
         int SCROLLED_TO_END_NO_UPDATE = 3;
+    }
+
+    interface MusicType {
+
+        int RANKING = 1;
+        int QUERY = 2;
+        int HISTORY = 3;
+        int FAVORITED = 4;
+        int LOCAL = 5;
     }
 }

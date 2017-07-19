@@ -70,6 +70,10 @@ public class FragmentBottomPlay extends BaseObservable {
         notifyPropertyChanged(BR.playButtonDrawable);
     }
 
+    public void onClickBottomPlayFragment() {
+        mListener.onClickBottomPlayFragment();
+    }
+
     public void onClickPlayButton() {
         mListener.onClickPlayButton();
     }
@@ -82,5 +86,6 @@ public class FragmentBottomPlay extends BaseObservable {
 
         void onClickPlayButton();
         void onClickNextButton();
+        void onClickBottomPlayFragment();
     }
 }

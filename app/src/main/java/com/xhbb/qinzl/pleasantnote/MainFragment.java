@@ -19,6 +19,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
+import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
@@ -70,9 +71,8 @@ public class MainFragment extends Fragment
 
         if (savedInstanceState != null) {
             int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
-
-            mViewRecreating = true;
             mLayoutManager.scrollToPosition(itemPosition);
+            mViewRecreating = true;
         }
 
         mMusicAdapter.setScrolledToEnd(true);
@@ -107,8 +107,8 @@ public class MainFragment extends Fragment
         Context context = getContext();
         NetworkUtils.addRankingRequest(context, mRankingCode, mRequestTag, this, this);
 
-        String selection = MusicContract._RANKING_CODE + "=" + mRankingCode
-                + " AND " + MusicContract._ID + ">0";
+        String selection = MusicContract._RANKING_CODE + "=" + mRankingCode + " AND "
+                + MusicContract._TYPE + "=" + MusicType.RANKING;
         return new CursorLoader(context, MusicContract.URI, null, selection, null, null);
     }
 
@@ -224,7 +224,8 @@ public class MainFragment extends Fragment
             Music music = new Music(mCursor);
 
             Context context = getContext();
-            Intent intent = MusicService.newIntent(context, MusicService.ACTION_PLAY_NEW_MUSIC, music);
+            Intent intent = MusicService.newIntent(context, MusicService.ACTION_PLAY_NEW_MUSIC,
+                    music, itemPosition);
             context.startService(intent);
         }
     }

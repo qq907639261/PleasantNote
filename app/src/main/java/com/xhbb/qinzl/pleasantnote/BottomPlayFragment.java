@@ -36,8 +36,11 @@ public class BottomPlayFragment extends Fragment
         mFragmentBottomPlay = new FragmentBottomPlay(getContext(), this);
         mLocalReceiver = new LocalReceiver();
 
+        if (savedInstanceState == null) {
+            startMusicService(MusicService.ACTION_INIT_MUSIC);
+        }
+
         binding.setFragmentBottomPlay(mFragmentBottomPlay);
-        startMusicService(MusicService.ACTION_INIT_MUSIC);
 
         return binding.getRoot();
     }
@@ -77,6 +80,11 @@ public class BottomPlayFragment extends Fragment
     @Override
     public void onClickNextButton() {
         startMusicService(MusicService.ACTION_PLAY_NEXT);
+    }
+
+    @Override
+    public void onClickBottomPlayFragment() {
+        PlayActivity.start(getContext());
     }
 
     private class LocalReceiver extends BroadcastReceiver {

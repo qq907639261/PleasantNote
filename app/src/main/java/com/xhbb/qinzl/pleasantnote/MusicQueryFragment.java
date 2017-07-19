@@ -17,7 +17,8 @@ import android.view.ViewGroup;
 
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
-import com.xhbb.qinzl.pleasantnote.common.Enums.MusicDataUpdatedState;
+import com.xhbb.qinzl.pleasantnote.common.Enums.DataUpdatedState;
+import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
@@ -114,10 +115,8 @@ public class MusicQueryFragment extends MainFragment {
         Context context = getContext();
         NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, this, this);
 
-        String selection = MusicContract._QUERY + "=? AND " + MusicContract._ID + ">0";
-        String[] selectionArgs = new String[]{mQuery};
-
-        return new CursorLoader(context, MusicContract.URI, null, selection, selectionArgs, null);
+        String selection = MusicContract._TYPE + "=" + MusicType.QUERY;
+        return new CursorLoader(context, MusicContract.URI, null, selection, null, null);
     }
 
     @Override
@@ -178,7 +177,7 @@ public class MusicQueryFragment extends MainFragment {
 
         Context context = getContext();
         boolean firstPage = mCurrentPage == 1;
-        Intent intent = UpdateMusicDataService.newIntent(context, response, mQuery, firstPage);
+        Intent intent = UpdateMusicDataService.newIntent(context, response, firstPage);
 
         context.startService(intent);
     }
@@ -190,14 +189,14 @@ public class MusicQueryFragment extends MainFragment {
             switch (intent.getAction()) {
                 case Contracts.ACTION_MUSIC_DATA_UPDATED:
                     int updatedState = intent.getIntExtra(
-                            UpdateMusicDataService.EXTRA_MUSIC_DATA_UPDATED_STATE, 0);
+                            UpdateMusicDataService.EXTRA_DATA_UPDATED_STATE, 0);
 
-                    if (updatedState == MusicDataUpdatedState.SCROLLED_TO_END_UPDATE) {
+                    if (updatedState == DataUpdatedState.SCROLLED_TO_END_UPDATE) {
                         mMusicAdapter.setScrolledToEnd(true);
-                    } else if (updatedState == MusicDataUpdatedState.SCROLLED_TO_END_NO_UPDATE) {
+                    } else if (updatedState == DataUpdatedState.SCROLLED_TO_END_NO_UPDATE) {
                         mMusicAdapter.setScrolledToEnd(true);
                         getLoaderManager().initLoader(0, null, MusicQueryFragment.this);
-                    } else if (updatedState == MusicDataUpdatedState.EMPTY_DATA) {
+                    } else if (updatedState == DataUpdatedState.EMPTY_DATA) {
                         mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
                         getLoaderManager().initLoader(0, null, MusicQueryFragment.this);
                     }

@@ -6,21 +6,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.xhbb.qinzl.pleasantnote.common.Enums.MusicDataUpdatedState;
+import com.xhbb.qinzl.pleasantnote.common.Enums.DataUpdatedState;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
 public class UpdateMusicDataService extends IntentService {
 
-    public static final String EXTRA_MUSIC_DATA_UPDATED_STATE =
-            Contracts.AUTHORITY + ".EXTRA_MUSIC_DATA_UPDATED_STATE";
+    public static final String EXTRA_DATA_UPDATED_STATE = Contracts.AUTHORITY + ".EXTRA_DATA_UPDATED_STATE";
 
     private static final String TAG = "UpdateMusicDataService";
 
     private static final String EXTRA_MUSIC_JSON = Contracts.AUTHORITY + ".EXTRA_MUSIC_JSON";
     private static final String EXTRA_RANKING_CODE = Contracts.AUTHORITY + ".EXTRA_RANKING_CODE";
-    private static final String EXTRA_QUERY = Contracts.AUTHORITY + ".EXTRA_QUERY";
     private static final String EXTRA_FIRST_PAGE = Contracts.AUTHORITY + ".EXTRA_FIRST_PAGE";
 
     private static final String ACTION_RANKING = Contracts.AUTHORITY + ".ACTION_RANKING";
@@ -33,11 +31,9 @@ public class UpdateMusicDataService extends IntentService {
                 .setAction(ACTION_RANKING);
     }
 
-    public static Intent newIntent(Context context, String musicJson, String query,
-                                   boolean firstPage) {
+    public static Intent newIntent(Context context, String musicJson, boolean firstPage) {
         return new Intent(context, UpdateMusicDataService.class)
                 .putExtra(EXTRA_MUSIC_JSON, musicJson)
-                .putExtra(EXTRA_QUERY, query)
                 .putExtra(EXTRA_FIRST_PAGE, firstPage)
                 .setAction(ACTION_QUERY);
     }
@@ -63,8 +59,7 @@ public class UpdateMusicDataService extends IntentService {
     }
 
     private void updateQueryData(Intent intent, Context context, String musicJson) {
-        String query = intent.getStringExtra(EXTRA_QUERY);
-        ContentValues[] musicValueses = JsonUtils.getMusicValueses(musicJson, query);
+        ContentValues[] musicValueses = JsonUtils.getMusicValuesesByQuery(musicJson);
 
         boolean firstPage = intent.getBooleanExtra(EXTRA_FIRST_PAGE, false);
         Intent broadcastIntent = new Intent(Contracts.ACTION_MUSIC_DATA_UPDATED);
@@ -72,18 +67,18 @@ public class UpdateMusicDataService extends IntentService {
 
         if (musicValueses != null) {
             if (musicValueses.length < NetworkUtils.MAX_COUNT_OF_EACH_PAGE) {
-                updatedState = MusicDataUpdatedState.SCROLLED_TO_END_UPDATE;
+                updatedState = DataUpdatedState.SCROLLED_TO_END_UPDATE;
             }
-            MainTasks.updateMusicData(context, musicValueses, firstPage);
+            MainTasks.updateMusicDataByQuery(context, musicValueses, firstPage);
         } else {
             if (firstPage) {
-                updatedState = MusicDataUpdatedState.EMPTY_DATA;
+                updatedState = DataUpdatedState.EMPTY_DATA;
             } else {
-                updatedState = MusicDataUpdatedState.SCROLLED_TO_END_NO_UPDATE;
+                updatedState = DataUpdatedState.SCROLLED_TO_END_NO_UPDATE;
             }
         }
 
-        broadcastIntent.putExtra(EXTRA_MUSIC_DATA_UPDATED_STATE, updatedState);
+        broadcastIntent.putExtra(EXTRA_DATA_UPDATED_STATE, updatedState);
         LocalBroadcastManager.getInstance(context).sendBroadcast(broadcastIntent);
     }
 

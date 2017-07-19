@@ -3,6 +3,7 @@ package com.xhbb.qinzl.pleasantnote.server;
 import android.content.ContentValues;
 
 import com.google.gson.Gson;
+import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 
 /**
@@ -19,6 +20,7 @@ public class JsonUtils {
         ContentValues[] musicValueses = new ContentValues[songs.length];
         for (int i = 0; i < songs.length; i++) {
             musicValueses[i] = new ContentValues();
+            musicValueses[i].put(MusicContract._TYPE, MusicType.RANKING);
             musicValueses[i].put(MusicContract._RANKING_CODE, rankingCode);
             musicValueses[i].put(MusicContract._NAME, songs[i].songname);
             musicValueses[i].put(MusicContract._SECONDS, songs[i].seconds);
@@ -32,7 +34,7 @@ public class JsonUtils {
         return musicValueses;
     }
 
-    public static ContentValues[] getMusicValueses(String json, String query) {
+    public static ContentValues[] getMusicValuesesByQuery(String json) {
         MusicByQueryJson music = new Gson().fromJson(json, MusicByQueryJson.class);
         MusicByQueryJson.ShowApiResBody.PageBean pagebean = music.showapi_res_body.pagebean;
 
@@ -44,7 +46,7 @@ public class JsonUtils {
         ContentValues[] musicValueses = new ContentValues[contents.length];
         for (int i = 0; i < contents.length; i++) {
             musicValueses[i] = new ContentValues();
-            musicValueses[i].put(MusicContract._QUERY, query);
+            musicValueses[i].put(MusicContract._TYPE, MusicType.QUERY);
             musicValueses[i].put(MusicContract._SINGER, contents[i].singername);
             musicValueses[i].put(MusicContract._DOWNLOAD_URL, contents[i].downUrl);
             musicValueses[i].put(MusicContract._BIG_PICTURE, contents[i].albumpic_big);

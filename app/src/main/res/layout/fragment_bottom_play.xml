@@ -14,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/bottomPlayFragmentHeight"
         android:background="@drawable/selector_bottom_play_fragment"
+        android:onClick="@{()->fragmentBottomPlay.onClickBottomPlayFragment()}"
         android:theme="@style/AppTheme.AppBarOverlay"
         tools:layout_gravity="bottom">
 

@@ -8,7 +8,7 @@ import android.content.Context;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 
-import com.xhbb.qinzl.pleasantnote.MainActivity;
+import com.xhbb.qinzl.pleasantnote.PlayActivity;
 import com.xhbb.qinzl.pleasantnote.R;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
@@ -23,8 +23,8 @@ class NotificationUtils {
     private static final String CHANNEL_ID_FOREGROUND = "channel_id_01";
 
     static Notification getForegroundNotification(Context context) {
-        PendingIntent pendingIntent = PendingIntent.getActivity(context,
-                0, MainActivity.newIntent(context), PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+                PlayActivity.newIntent(context), PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

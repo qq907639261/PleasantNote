@@ -1,6 +1,7 @@
 package com.xhbb.qinzl.pleasantnote;
 
-import android.content.Context;
+import android.app.Activity;
+import android.app.Application;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -12,43 +13,49 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.SearchView;
 
+import com.xhbb.qinzl.pleasantnote.async.DeleteHistoryDataJob;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
+import com.xhbb.qinzl.pleasantnote.common.MainSingleton;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
 
 public class MainActivity extends AppCompatActivity
-        implements ActivityMain.OnActivityMainListener {
+        implements ActivityMain.OnActivityMainListener,
+        Application.ActivityLifecycleCallbacks {
 
     private ActivityMainBinding mBinding;
     private ActivityMain mActivityMain;
-    private boolean mBackPressedBeforeDestroy;
-
-    public static Intent newIntent(Context context) {
-        return new Intent(context, MainActivity.class);
-    }
+    private Activity mStartedActivity;
+    private boolean mPreviousActivityPausing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(fragmentManager);
+        MainSingleton.getInstance(this);
+        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(getSupportFragmentManager());
 
         mActivityMain = new ActivityMain(this, pagerAdapter, this);
 
         if (savedInstanceState == null) {
-            fragmentManager.beginTransaction()
-                    .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
-                    .commit();
+            addBottomPlayFragment();
         } else {
             mActivityMain.setSearchViewCollapsed(true);
-            if (fragmentManager.findFragmentById(R.id.fragment_container) != null) {
+            if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) != null) {
                 mActivityMain.setViewPagerVisible(false);
             }
         }
 
         mBinding.setActivityMain(mActivityMain);
+        DeleteHistoryDataJob.scheduleJob();
+        getApplication().registerActivityLifecycleCallbacks(this);
+    }
+
+    private void addBottomPlayFragment() {
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
+                .commit();
     }
 
     @Override
@@ -69,7 +76,6 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        mBackPressedBeforeDestroy = true;
         super.onBackPressed();
     }
 
@@ -83,25 +89,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        startService(MusicService.newIntent(this, MusicService.ACTION_STOP_FOREGROUND));
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (!mBackPressedBeforeDestroy) {
-            startService(MusicService.newIntent(this, MusicService.ACTION_START_FOREGROUND));
-        }
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mBackPressedBeforeDestroy) {
+        if (isFinishing()) {
             stopService(new Intent(this, MusicService.class));
         }
+        getApplication().unregisterActivityLifecycleCallbacks(this);
     }
 
     @Override
@@ -124,6 +117,48 @@ public class MainActivity extends AppCompatActivity
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, MusicQueryFragment.newInstance(s))
                 .commit();
+    }
+
+    @Override
+    public void onActivityCreated(Activity activity, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
+        if (!mPreviousActivityPausing) {
+            startService(MusicService.newIntent(this, MusicService.ACTION_STOP_FOREGROUND));
+        }
+        mStartedActivity = activity;
+        mPreviousActivityPausing = false;
+    }
+
+    @Override
+    public void onActivityResumed(Activity activity) {
+
+    }
+
+    @Override
+    public void onActivityPaused(Activity activity) {
+        mPreviousActivityPausing = true;
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+        mPreviousActivityPausing = false;
+        if (activity == mStartedActivity) {
+            startService(MusicService.newIntent(this, MusicService.ACTION_START_FOREGROUND));
+        }
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
+
     }
 
     private class MusicRankingAdapter extends FragmentStatePagerAdapter {

@@ -13,7 +13,6 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 
 public class Music implements Parcelable {
 
-    private long mId;
     private String mName;
     private int mSeconds;
     private long mCode;
@@ -23,10 +22,9 @@ public class Music implements Parcelable {
     private String mPlayUrl;
     private String mDownloadUrl;
     private int mRankingCode;
-    private String mQuery;
+    private int mMusicType;
 
     public Music(Cursor cursor) {
-        mId = cursor.getLong(cursor.getColumnIndex(MusicContract._ID));
         mName = cursor.getString(cursor.getColumnIndex(MusicContract._NAME));
         mSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._SECONDS));
         mCode = cursor.getLong(cursor.getColumnIndex(MusicContract._CODE));
@@ -36,11 +34,10 @@ public class Music implements Parcelable {
         mPlayUrl = cursor.getString(cursor.getColumnIndex(MusicContract._PLAY_URL));
         mDownloadUrl = cursor.getString(cursor.getColumnIndex(MusicContract._DOWNLOAD_URL));
         mRankingCode = cursor.getInt(cursor.getColumnIndex(MusicContract._RANKING_CODE));
-        mQuery = cursor.getString(cursor.getColumnIndex(MusicContract._QUERY));
+        mMusicType = cursor.getInt(cursor.getColumnIndex(MusicContract._TYPE));
     }
 
     private Music(Parcel in) {
-        mId = in.readLong();
         mName = in.readString();
         mSeconds = in.readInt();
         mCode = in.readLong();
@@ -50,12 +47,11 @@ public class Music implements Parcelable {
         mPlayUrl = in.readString();
         mDownloadUrl = in.readString();
         mRankingCode = in.readInt();
-        mQuery = in.readString();
+        mMusicType = in.readInt();
     }
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeLong(mId);
         parcel.writeString(mName);
         parcel.writeInt(mSeconds);
         parcel.writeLong(mCode);
@@ -65,7 +61,7 @@ public class Music implements Parcelable {
         parcel.writeString(mPlayUrl);
         parcel.writeString(mDownloadUrl);
         parcel.writeInt(mRankingCode);
-        parcel.writeString(mQuery);
+        parcel.writeInt(mMusicType);
     }
 
     public ContentValues getMusicValues() {
@@ -79,7 +75,6 @@ public class Music implements Parcelable {
         musicValues.put(MusicContract._SMALL_PICTURE, mSmallPicture);
         musicValues.put(MusicContract._BIG_PICTURE, mBigPicture);
         musicValues.put(MusicContract._SINGER, mSinger);
-        musicValues.put(MusicContract._QUERY, mQuery);
         musicValues.put(MusicContract._RANKING_CODE, mRankingCode);
 
         return musicValues;
@@ -121,12 +116,8 @@ public class Music implements Parcelable {
         return mRankingCode;
     }
 
-    public String getQuery() {
-        return mQuery;
-    }
-
-    public long getId() {
-        return mId;
+    public int getMusicType() {
+        return mMusicType;
     }
 
     @Override
