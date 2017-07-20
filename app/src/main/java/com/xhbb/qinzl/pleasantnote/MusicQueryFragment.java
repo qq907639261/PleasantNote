@@ -104,6 +104,20 @@ public class MusicQueryFragment extends MainFragment {
     public void onDestroyView() {
         super.onDestroyView();
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
+        if (isRemoving() || getActivity().isFinishing()) {
+            deleteQueryMusic();
+        }
+    }
+
+    private void deleteQueryMusic() {
+        final Context context = getContext();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String where = MusicContract._TYPE + "=" + MusicType.QUERY;
+                context.getContentResolver().delete(MusicContract.URI, where, null);
+            }
+        }).start();
     }
 
     @Override

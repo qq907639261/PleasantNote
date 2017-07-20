@@ -82,9 +82,7 @@ public class MusicService extends Service
                 initMusic();
                 break;
             case ACTION_SEND_MUSIC:
-                if (mMusic != null) {
-                    sendMusicData();
-                }
+                sendMusicData();
                 break;
             case ACTION_PLAY_NEW_MUSIC:
                 playNewMusic(intent);
@@ -163,8 +161,8 @@ public class MusicService extends Service
     public void onDestroy() {
         super.onDestroy();
 
-        DeleteHistoryDataJob.cancelJob();
-        deleteHistoryMusicIfOutRange();
+        CleanUpHistoryMusicJob.cancelJob();
+        cleanUpHistoryMusic();
         mMediaPlayer.release();
         mMediaPlayer = null;
 
@@ -173,11 +171,11 @@ public class MusicService extends Service
         }
     }
 
-    private void deleteHistoryMusicIfOutRange() {
+    private void cleanUpHistoryMusic() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                MainTasks.deleteHistoryMusicIfOutRange(getApplicationContext());
+                MainTasks.cleanUpHistoryMusic(getApplicationContext());
             }
         }).start();
     }
@@ -190,7 +188,7 @@ public class MusicService extends Service
 
     private void saveCurrentMusic() {
         final ContentValues musicValues = mMusic.getMusicValues();
-        final long musicCode = mMusic.getCode();
+        final int musicCode = mMusic.getCode();
         musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
         final ContentResolver contentResolver = getContentResolver();
 
@@ -234,9 +232,11 @@ public class MusicService extends Service
     }
 
     private void sendMusicData() {
-        Intent intent = new Intent(Contracts.ACTION_CURRENT_MUSIC_UPDATED);
-        intent.putExtra(EXTRA_MUSIC, mMusic);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        if (mMusic != null) {
+            Intent intent = new Intent(Contracts.ACTION_CURRENT_MUSIC_UPDATED);
+            intent.putExtra(EXTRA_MUSIC, mMusic);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        }
     }
 
     private class InitMusicTask extends AsyncTask<Void, Void, Cursor> {

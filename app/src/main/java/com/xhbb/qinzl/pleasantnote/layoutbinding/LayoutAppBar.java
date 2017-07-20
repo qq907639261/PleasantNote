@@ -2,6 +2,7 @@ package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
+import android.support.v7.app.AppCompatActivity;
 import android.view.inputmethod.EditorInfo;
 import android.widget.SearchView;
 
@@ -16,9 +17,15 @@ public class LayoutAppBar extends BaseObservable {
     private boolean mTabLayoutVisible;
     private OnLayoutAppBarListener mListener;
     private boolean mSearchViewCollapsed;
+    private AppCompatActivity mActivity;
 
-    LayoutAppBar(OnLayoutAppBarListener listener) {
+    LayoutAppBar(AppCompatActivity activity, OnLayoutAppBarListener listener) {
         mListener = listener;
+        mActivity = activity;
+    }
+
+    public AppCompatActivity getActivity() {
+        return mActivity;
     }
 
     public void onDrawerOpened(SearchView searchView) {

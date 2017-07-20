@@ -30,7 +30,7 @@
         <android.support.v7.widget.Toolbar
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:actionBarSetted="@{true}"
+            android:activity="@{layoutAppBar.activity}"
             android:drawerLayout="@{drawerLayout}"
             android:onDrawerOpened="@{()->layoutAppBar.onDrawerOpened(searchView)}"
             android:title="@string/app_name"

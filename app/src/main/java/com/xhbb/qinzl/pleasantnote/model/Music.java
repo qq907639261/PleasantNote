@@ -15,7 +15,7 @@ public class Music implements Parcelable {
 
     private String mName;
     private int mSeconds;
-    private long mCode;
+    private int mCode;
     private String mSinger;
     private String mBigPicture;
     private String mSmallPicture;
@@ -27,7 +27,7 @@ public class Music implements Parcelable {
     public Music(Cursor cursor) {
         mName = cursor.getString(cursor.getColumnIndex(MusicContract._NAME));
         mSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._SECONDS));
-        mCode = cursor.getLong(cursor.getColumnIndex(MusicContract._CODE));
+        mCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));
         mSinger = cursor.getString(cursor.getColumnIndex(MusicContract._SINGER));
         mBigPicture = cursor.getString(cursor.getColumnIndex(MusicContract._BIG_PICTURE));
         mSmallPicture = cursor.getString(cursor.getColumnIndex(MusicContract._SMALL_PICTURE));
@@ -40,7 +40,7 @@ public class Music implements Parcelable {
     private Music(Parcel in) {
         mName = in.readString();
         mSeconds = in.readInt();
-        mCode = in.readLong();
+        mCode = in.readInt();
         mSinger = in.readString();
         mBigPicture = in.readString();
         mSmallPicture = in.readString();
@@ -54,7 +54,7 @@ public class Music implements Parcelable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(mName);
         parcel.writeInt(mSeconds);
-        parcel.writeLong(mCode);
+        parcel.writeInt(mCode);
         parcel.writeString(mSinger);
         parcel.writeString(mBigPicture);
         parcel.writeString(mSmallPicture);
@@ -76,6 +76,7 @@ public class Music implements Parcelable {
         musicValues.put(MusicContract._BIG_PICTURE, mBigPicture);
         musicValues.put(MusicContract._SINGER, mSinger);
         musicValues.put(MusicContract._RANKING_CODE, mRankingCode);
+        musicValues.put(MusicContract._TYPE, mMusicType);
 
         return musicValues;
     }
@@ -88,7 +89,7 @@ public class Music implements Parcelable {
         return mSeconds;
     }
 
-    public long getCode() {
+    public int getCode() {
         return mCode;
     }
 

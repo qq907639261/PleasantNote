@@ -1,11 +1,11 @@
 package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.databinding.BindingAdapter;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -23,39 +23,42 @@ import com.xhbb.qinzl.pleasantnote.common.GlideApp;
 
 public class ViewSetters {
 
-    @BindingAdapter(value = {"android:actionBarSetted", "android:drawerLayout",
-            "android:onDrawerOpened"}, requireAll = false)
-    public static void setToolbar(Toolbar toolbar, boolean actionBarSetted,
-                                  DrawerLayout drawerLayout,
-                                  final OnDrawerOpenedListener onDrawerOpenedListener) {
-        if (!actionBarSetted) {
+    @BindingAdapter(value = {"android:activity", "android:displayHomeAsUpEnabled",
+            "android:drawerLayout", "android:onDrawerOpened"}, requireAll = false)
+    public static void setToolbar(Toolbar toolbar, AppCompatActivity activity,
+                                  boolean displayHomeAsUpEnabled, DrawerLayout drawerLayout,
+                                  OnDrawerOpenedListener onDrawerOpenedListener) {
+        if (activity == null) {
             return;
         }
-
-        Context context = toolbar.getContext();
-        if (context instanceof ContextWrapper) {
-            context = ((ContextWrapper) context).getBaseContext();
-        }
-
-        @SuppressWarnings("ConstantConditions")
-        AppCompatActivity activity = (AppCompatActivity) context;
         activity.setSupportActionBar(toolbar);
 
-        if (drawerLayout != null) {
-            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(activity, drawerLayout, toolbar,
-                    R.string.open_drawer_accessibility, R.string.close_drawer_accessibility) {
-                @Override
-                public void onDrawerOpened(View drawerView) {
-                    super.onDrawerOpened(drawerView);
-                    if (onDrawerOpenedListener != null) {
-                        onDrawerOpenedListener.onDrawerOpened();
-                    }
-                }
-            };
+        ActionBar actionBar = activity.getSupportActionBar();
+        assert actionBar != null;
 
-            drawerLayout.addDrawerListener(toggle);
-            toggle.syncState();
+        actionBar.setDisplayHomeAsUpEnabled(displayHomeAsUpEnabled);
+
+        setDrawerLayout(drawerLayout, toolbar, activity, onDrawerOpenedListener);
+    }
+
+    private static void setDrawerLayout(DrawerLayout drawerLayout, Toolbar toolbar,
+                                        AppCompatActivity activity,
+                                        final OnDrawerOpenedListener onDrawerOpenedListener) {
+        if (drawerLayout == null) {
+            return;
         }
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(activity, drawerLayout, toolbar,
+                R.string.open_drawer_accessibility, R.string.close_drawer_accessibility) {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                if (onDrawerOpenedListener != null) {
+                    onDrawerOpenedListener.onDrawerOpened();
+                }
+            }
+        };
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
     }
 
     @BindingAdapter(value = {"android:url", "android:errorRes"}, requireAll = false)
@@ -64,7 +67,6 @@ public class ViewSetters {
         if (errorRes == null) {
             errorRes = R.drawable.empty_image;
         }
-
         GlideApp.with(context)
                 .load(url)
                 .error(errorRes)
@@ -102,7 +104,6 @@ public class ViewSetters {
         if (onQueryTextSubmitListener == null) {
             return;
         }
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
@@ -123,7 +124,6 @@ public class ViewSetters {
         if (onScrollStateChangedListener == null) {
             return;
         }
-
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {

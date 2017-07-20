@@ -25,7 +25,7 @@ public class NetworkUtils {
 
     private static final String TAG = "NetworkUtils";
 
-    public static void addRankingRequest(Context context, int rankingCode, @Nullable Object tag,
+    public static void addRankingRequest(Context context, int rankingCode, Object requestTag,
                                          Response.Listener<String> listener,
                                          Response.ErrorListener errorListener) {
         String url = Uri.parse("http://ali-qqmusic.showapi.com/top")
@@ -33,7 +33,7 @@ public class NetworkUtils {
                 .appendQueryParameter("topid", String.valueOf(rankingCode))
                 .build().toString();
 
-        addRequest(context, url, tag, listener, errorListener);
+        addRequest(context, url, requestTag, listener, errorListener);
     }
 
     public static void addQueryRequest(Context context, String query, int currentPage,
@@ -45,14 +45,34 @@ public class NetworkUtils {
                 .appendQueryParameter("page", String.valueOf(currentPage))
                 .build().toString();
 
+        addRequest(context, url, listener, errorListener);
+    }
+
+    public static void addLyricsRequest(Context context, int musicCode,
+                                        Response.Listener<String> listener,
+                                        Response.ErrorListener errorListener) {
+        @SuppressWarnings("SpellCheckingInspection")
+        String url = Uri.parse("http://ali-qqmusic.showapi.com/song-word")
+                .buildUpon()
+                .appendQueryParameter("musicid", String.valueOf(musicCode))
+                .build().toString();
+
+        addRequest(context, url, listener, errorListener);
+    }
+
+    public static void cancelAllRequest(Context context, @Nullable Object requestTag) {
+        MainSingleton.getInstance(context)
+                .getRequestQueue()
+                .cancelAll(requestTag == null ? TAG : requestTag);
+    }
+
+    private static void addRequest(Context context, String url,
+                                   Response.Listener<String> listener,
+                                   Response.ErrorListener errorListener) {
         addRequest(context, url, null, listener, errorListener);
     }
 
-    public static void cancelAllRequest(Context context, @Nullable Object tag) {
-        MainSingleton.getInstance(context).getRequestQueue().cancelAll(tag == null ? TAG : tag);
-    }
-
-    private static void addRequest(final Context context, String url, @Nullable Object tag,
+    private static void addRequest(final Context context, String url, Object requestTag,
                                    Response.Listener<String> listener,
                                    Response.ErrorListener errorListener) {
         StringRequest request = new StringRequest(Request.Method.GET, url, listener, errorListener) {
@@ -63,7 +83,7 @@ public class NetworkUtils {
                 return headers;
             }
         };
-        request.setTag(tag == null ? TAG : tag);
+        request.setTag(requestTag == null ? TAG : requestTag);
 
         RequestQueue queue = MainSingleton.getInstance(context).getRequestQueue();
         queue.add(request);

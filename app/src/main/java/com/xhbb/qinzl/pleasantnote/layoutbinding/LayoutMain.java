@@ -1,9 +1,9 @@
 package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
-import android.content.Context;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.support.v4.view.PagerAdapter;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.xhbb.qinzl.pleasantnote.BR;
@@ -20,13 +20,13 @@ public class LayoutMain extends BaseObservable {
     private int mViewPagerVisibility;
     private LayoutAppBar mLayoutAppBar;
 
-    LayoutMain(Context context, PagerAdapter pagerAdapter,
+    LayoutMain(AppCompatActivity activity, PagerAdapter pagerAdapter,
                LayoutAppBar.OnLayoutAppBarListener onLayoutAppBarListener) {
-        mBottomFragmentHeight = context.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
+        mBottomFragmentHeight = activity.getResources().getDimension(R.dimen.bottomPlayFragmentHeight);
         mPagerAdapter = pagerAdapter;
         mViewPagerVisibility = View.VISIBLE;
 
-        mLayoutAppBar = new LayoutAppBar(onLayoutAppBarListener);
+        mLayoutAppBar = new LayoutAppBar(activity, onLayoutAppBarListener);
         mLayoutAppBar.setTabLayoutVisible(true);
     }
 

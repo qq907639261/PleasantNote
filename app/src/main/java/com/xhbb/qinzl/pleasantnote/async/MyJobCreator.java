@@ -12,8 +12,8 @@ public class MyJobCreator implements JobCreator {
     @Override
     public Job create(String tag) {
         switch (tag) {
-            case DeleteHistoryDataJob.TAG:
-                return new DeleteHistoryDataJob();
+            case CleanUpHistoryMusicJob.TAG:
+                return new CleanUpHistoryMusicJob();
             default:
                 return null;
         }

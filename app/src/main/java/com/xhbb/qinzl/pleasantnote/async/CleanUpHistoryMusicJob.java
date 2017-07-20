@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
  * Created by qinzl on 2017/7/19.
  */
 
-public class DeleteHistoryDataJob extends Job {
+public class CleanUpHistoryMusicJob extends Job {
 
-    public static final String TAG = "DeleteHistoryDataJob";
+    public static final String TAG = "CleanUpHistoryMusicJob";
 
     public static void scheduleJob() {
         new JobRequest.Builder(TAG)
@@ -31,7 +31,7 @@ public class DeleteHistoryDataJob extends Job {
     @NonNull
     @Override
     protected Result onRunJob(Params params) {
-        MainTasks.deleteHistoryMusicIfOutRange(getContext());
+        MainTasks.cleanUpHistoryMusic(getContext());
         return Result.SUCCESS;
     }
 }

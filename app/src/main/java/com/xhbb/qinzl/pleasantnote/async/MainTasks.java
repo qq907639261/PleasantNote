@@ -36,7 +36,7 @@ class MainTasks {
         contentResolver.bulkInsert(MusicContract.URI, musicValueses);
     }
 
-    static void deleteHistoryMusicIfOutRange(Context context) {
+    static void cleanUpHistoryMusic(Context context) {
         String[] projection = {"COUNT(*)"};
         String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
         ContentResolver contentResolver = context.getContentResolver();

@@ -1,9 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.xhbb.qinzl.pleasantnote.PlayActivity">
+<!--suppress AndroidUnknownAttribute -->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-</android.support.constraint.ConstraintLayout>
+    <data>
+
+        <variable
+            name="activityPlay"
+            type="com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityPlay"/>
+    </data>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:keepScreenOn="true">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:activity="@{activityPlay.activity}"
+                android:displayHomeAsUpEnabled="@{true}"/>
+        </android.support.design.widget.AppBarLayout>
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <android.support.v4.widget.NestedScrollView
+                android:id="@+id/body"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@{activityPlay.bigPicture}"
+                android:padding="8dp"
+                tools:background="@drawable/empty_image">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:lineSpacingExtra="16sp"
+                    android:text="@{activityPlay.lyrics}"
+                    android:textSize="20sp"
+                    tools:text="歌词"/>
+            </android.support.v4.widget.NestedScrollView>
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:clickable="true"
+            android:src="@drawable/ic_no_favorited"
+            android:tint="@color/floatingButtonSrc"
+            app:fabSize="mini"
+            app:layout_anchor="@id/body"
+            app:layout_anchorGravity="bottom|end"/>
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_anchor="@id/body"
+            app:layout_anchorGravity="bottom">
+
+        </android.support.constraint.ConstraintLayout>
+    </android.support.design.widget.CoordinatorLayout>
+</layout>

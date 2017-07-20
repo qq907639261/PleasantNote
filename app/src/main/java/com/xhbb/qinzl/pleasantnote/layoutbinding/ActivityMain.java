@@ -1,9 +1,9 @@
 package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
-import android.content.Context;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.SearchView;
 
@@ -18,10 +18,10 @@ public class ActivityMain implements LayoutAppBar.OnLayoutAppBarListener {
     private LayoutMain mLayoutMain;
     private OnActivityMainListener mListener;
 
-    public ActivityMain(Context context, PagerAdapter pagerAdapter,
+    public ActivityMain(AppCompatActivity activity, PagerAdapter pagerAdapter,
                         OnActivityMainListener listener) {
         mListener = listener;
-        mLayoutMain = new LayoutMain(context, pagerAdapter, this);
+        mLayoutMain = new LayoutMain(activity, pagerAdapter, this);
     }
 
     public void setViewPagerVisible(boolean viewPagerVisible) {

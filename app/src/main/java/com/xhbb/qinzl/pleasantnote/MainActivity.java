@@ -13,7 +13,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.SearchView;
 
-import com.xhbb.qinzl.pleasantnote.async.DeleteHistoryDataJob;
+import com.xhbb.qinzl.pleasantnote.async.CleanUpHistoryMusicJob;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.common.MainSingleton;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         mBinding.setActivityMain(mActivityMain);
-        DeleteHistoryDataJob.scheduleJob();
+        CleanUpHistoryMusicJob.scheduleJob();
         getApplication().registerActivityLifecycleCallbacks(this);
     }
 
