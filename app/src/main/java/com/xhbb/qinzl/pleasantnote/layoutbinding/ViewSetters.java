@@ -23,14 +23,15 @@ import com.xhbb.qinzl.pleasantnote.common.GlideApp;
 
 public class ViewSetters {
 
-    @BindingAdapter(value = {"android:activity", "android:displayHomeAsUpEnabled",
+    @BindingAdapter(value = {"android:context", "android:displayHomeAsUpEnabled",
             "android:drawerLayout", "android:onDrawerOpened"}, requireAll = false)
-    public static void setToolbar(Toolbar toolbar, AppCompatActivity activity,
+    public static void setToolbar(Toolbar toolbar, Context context,
                                   boolean displayHomeAsUpEnabled, DrawerLayout drawerLayout,
                                   OnDrawerOpenedListener onDrawerOpenedListener) {
-        if (activity == null) {
+        if (context == null || !(context instanceof AppCompatActivity)) {
             return;
         }
+        AppCompatActivity activity = (AppCompatActivity) context;
         activity.setSupportActionBar(toolbar);
 
         ActionBar actionBar = activity.getSupportActionBar();

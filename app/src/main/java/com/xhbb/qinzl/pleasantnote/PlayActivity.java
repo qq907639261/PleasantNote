@@ -23,6 +23,8 @@ public class PlayActivity extends AppCompatActivity
         implements Response.Listener<String>,
         Response.ErrorListener {
 
+    private static final Object REQUEST_TAG = "PlayActivity";
+
     private ActivityPlay mActivityPlay;
     private LocalReceiver mLocalReceiver;
 
@@ -69,34 +71,45 @@ public class PlayActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        NetworkUtils.cancelAllRequest(this, null);
+        NetworkUtils.cancelAllRequest(this, REQUEST_TAG);
     }
 
     @Override
     public void onErrorResponse(VolleyError error) {
-
+        mActivityPlay.setLyrics(getString(R.string.search_lyrics_failed_text));
+        mActivityPlay.setLyricsColor(this, true);
     }
 
     @Override
     public void onResponse(String response) {
-        String lyrics = JsonUtils.getLyrics(response);
-        mActivityPlay.setLyrics(lyrics);
+        setLyrics(response);
+    }
+
+    private void setLyrics(final String response) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String lyrics = JsonUtils.getLyrics(response);
+                mActivityPlay.setLyrics(lyrics.trim());
+                mActivityPlay.setLyricsColor(PlayActivity.this, false);
+            }
+        }).start();
     }
 
     private class LocalReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            handleIntent(intent);
+            handleReceive(intent);
         }
     }
 
-    private void handleIntent(Intent intent) {
+    private void handleReceive(Intent intent) {
         switch (intent.getAction()) {
             case Contracts.ACTION_CURRENT_MUSIC_UPDATED:
                 Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
                 mActivityPlay.setBigPicture(this, music.getBigPicture());
-                NetworkUtils.addLyricsRequest(this, music.getCode(), this, this);
+                NetworkUtils.addLyricsRequest(this, music.getCode(), REQUEST_TAG, this, this);
                 break;
             case Contracts.ACTION_MUSIC_PLAYED:
 

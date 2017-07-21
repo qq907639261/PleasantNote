@@ -32,7 +32,7 @@ public class MusicService extends Service
     public static final String ACTION_STOP_FOREGROUND = Contracts.AUTHORITY + ".ACTION_STOP_FOREGROUND";
 
     public static final String EXTRA_MUSIC = Contracts.AUTHORITY + ".EXTRA_MUSIC";
-    public static final int MAX_COUNT_OF_HISTORY_MUSIC = 50;
+    public static final int LIMIT_VALUE_OF_HISTORY_MUSIC = 50;
 
     private static final String EXTRA_DATA_POSITION = Contracts.AUTHORITY + ".EXTRA_DATA_POSITION";
 
@@ -105,7 +105,7 @@ public class MusicService extends Service
 
     private void initMusic() {
         if (mInitMusicTask != null) {
-            mInitMusicTask.cancel(false);
+            mInitMusicTask.cancel(true);
         }
         mInitMusicTask = new InitMusicTask();
         mInitMusicTask.execute();
@@ -120,7 +120,7 @@ public class MusicService extends Service
 
     private void queryMoreMusic() {
         if (mQueryMoreMusicTask != null) {
-            mQueryMoreMusicTask.cancel(false);
+            mQueryMoreMusicTask.cancel(true);
         }
         mQueryMoreMusicTask = new QueryMoreMusicTask();
         mQueryMoreMusicTask.execute();
@@ -147,6 +147,7 @@ public class MusicService extends Service
         if (mMusic == null) {
             return;
         }
+
         try {
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(mMusic.getPlayUrl());
@@ -161,11 +162,17 @@ public class MusicService extends Service
     public void onDestroy() {
         super.onDestroy();
 
+        if (mInitMusicTask != null) {
+            mInitMusicTask.cancel(true);
+        }
+        if (mQueryMoreMusicTask != null) {
+            mQueryMoreMusicTask.cancel(true);
+        }
+
         CleanUpHistoryMusicJob.cancelJob();
         cleanUpHistoryMusic();
-        mMediaPlayer.release();
-        mMediaPlayer = null;
 
+        mMediaPlayer.release();
         if (mCursor != null) {
             mCursor.close();
         }
@@ -183,18 +190,18 @@ public class MusicService extends Service
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         mediaPlayer.start();
-        saveCurrentMusic();
+        saveCurrentMusic(mMusic);
     }
 
-    private void saveCurrentMusic() {
-        final ContentValues musicValues = mMusic.getMusicValues();
-        final int musicCode = mMusic.getCode();
-        musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
-        final ContentResolver contentResolver = getContentResolver();
-
+    private void saveCurrentMusic(final Music music) {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                ContentResolver contentResolver = getContentResolver();
+                ContentValues musicValues = music.getMusicValues();
+                musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
+
+                int musicCode = music.getCode();
                 String where = MusicContract._CODE + "=" + musicCode + " AND "
                         + MusicContract._TYPE + "=" + MusicType.HISTORY;
 
@@ -244,8 +251,12 @@ public class MusicService extends Service
         @Override
         protected Cursor doInBackground(Void... voids) {
             String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
-            String sortOrder = MusicContract._ID + " DESC LIMIT " + MAX_COUNT_OF_HISTORY_MUSIC;
-            return getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+            String sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
+
+            Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+            cursor = handleCancelled(isCancelled(), cursor);
+
+            return cursor;
         }
 
         @Override
@@ -268,10 +279,13 @@ public class MusicService extends Service
             if (musicType == MusicType.RANKING) {
                 selection += " AND " + MusicContract._RANKING_CODE + "=" + mMusic.getRankingCode();
             } else if (musicType == MusicType.HISTORY) {
-                sortOrder = MusicContract._ID + " DESC LIMIT " + MAX_COUNT_OF_HISTORY_MUSIC;
+                sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
             }
 
-            return getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+            Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+            cursor = handleCancelled(isCancelled(), cursor);
+
+            return cursor;
         }
 
         @Override
@@ -281,18 +295,26 @@ public class MusicService extends Service
         }
     }
 
+    private Cursor handleCancelled(boolean cancelled, Cursor cursor) {
+        if (cancelled && cursor != null) {
+            cursor.close();
+            cursor = null;
+        }
+        return cursor;
+    }
+
     private void setCursor(Cursor cursor) {
         if (cursor == null) {
             return;
-        }
-
-        if (cursor.moveToPosition(mDataPosition)) {
-            mMusic = new Music(cursor);
         }
 
         if (mCursor != null) {
             mCursor.close();
         }
         mCursor = cursor;
+
+        if (mCursor.moveToPosition(mDataPosition)) {
+            mMusic = new Music(mCursor);
+        }
     }
 }

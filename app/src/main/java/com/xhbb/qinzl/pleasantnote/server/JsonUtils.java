@@ -13,8 +13,8 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 public class JsonUtils {
 
     public static ContentValues[] getMusicValueses(String json, int rankingCode) {
-        MusicJson music = new Gson().fromJson(json, MusicJson.class);
-        MusicJson.ShowApiResBody.PageBean.Song[] songs =
+        MusicRankingJson music = new Gson().fromJson(json, MusicRankingJson.class);
+        MusicRankingJson.ShowApiResBody.PageBean.Song[] songs =
                 music.showapi_res_body.pagebean.songlist;
 
         ContentValues[] musicValueses = new ContentValues[songs.length];
@@ -35,14 +35,14 @@ public class JsonUtils {
     }
 
     public static ContentValues[] getMusicValuesesByQuery(String json) {
-        MusicJson music = new Gson().fromJson(json, MusicJson.class);
-        MusicJson.ShowApiResBody.PageBean pagebean = music.showapi_res_body.pagebean;
+        MusicQueryJson music = new Gson().fromJson(json, MusicQueryJson.class);
+        MusicQueryJson.ShowApiResBody.PageBean pagebean = music.showapi_res_body.pagebean;
 
         if (pagebean.currentPage > pagebean.allPages) {
             return null;
         }
 
-        MusicJson.ShowApiResBody.PageBean.Content[] contents = pagebean.contentlist;
+        MusicQueryJson.ShowApiResBody.PageBean.Content[] contents = pagebean.contentlist;
         ContentValues[] musicValueses = new ContentValues[contents.length];
         for (int i = 0; i < contents.length; i++) {
             musicValueses[i] = new ContentValues();
@@ -59,25 +59,21 @@ public class JsonUtils {
     }
 
     public static String getLyrics(String json) {
-        return new Gson().fromJson(json, MusicJson.class).showapi_res_body.lyric;
+        return new Gson().fromJson(json, MusicLyricsJson.class).showapi_res_body.lyric;
     }
 
-    private class MusicJson {
+    private class MusicRankingJson {
 
         ShowApiResBody showapi_res_body;
 
         class ShowApiResBody {
 
             PageBean pagebean;
-            String lyric;
 
             @SuppressWarnings("SpellCheckingInspection")
             class PageBean {
 
-                int allPages;
-                int currentPage;
                 Song[] songlist;
-                Content[] contentlist;
 
                 class Song {
 
@@ -90,7 +86,25 @@ public class JsonUtils {
                     String url;
                     String singername;
                 }
+            }
+        }
+    }
 
+    private class MusicQueryJson {
+
+        ShowApiResBody showapi_res_body;
+
+        class ShowApiResBody {
+
+            PageBean pagebean;
+
+            class PageBean {
+
+                int allPages;
+                int currentPage;
+                Content[] contentlist;
+
+                @SuppressWarnings("SpellCheckingInspection")
                 class Content {
 
                     String m4a;
@@ -102,6 +116,16 @@ public class JsonUtils {
                     String albumpic_small;
                 }
             }
+        }
+    }
+
+    private class MusicLyricsJson {
+
+        ShowApiResBody showapi_res_body;
+
+        class ShowApiResBody {
+
+            String lyric;
         }
     }
 }

@@ -11,4 +11,5 @@
     <color name="bottomFragmentButtonPressed">@color/colorPrimaryDark</color>
     <color name="selectorDefault">@android:color/transparent</color>
     <color name="floatingButtonSrc">@android:color/white</color>
+    <color name="lyrics">@android:color/holo_blue_dark</color>
 </resources>

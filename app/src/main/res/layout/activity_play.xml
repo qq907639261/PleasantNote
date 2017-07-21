@@ -24,32 +24,39 @@
             <android.support.v7.widget.Toolbar
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:activity="@{activityPlay.activity}"
+                android:context="@{activityPlay.context}"
                 android:displayHomeAsUpEnabled="@{true}"/>
         </android.support.design.widget.AppBarLayout>
 
         <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/body"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            android:background="@{activityPlay.bigPicture}"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:background="@drawable/empty_image">
 
-            <android.support.v4.widget.NestedScrollView
-                android:id="@+id/body"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@{activityPlay.bigPicture}"
-                android:padding="8dp"
-                tools:background="@drawable/empty_image">
+                android:layout_height="match_parent">
 
-                <TextView
+                <android.support.v4.widget.NestedScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:lineSpacingExtra="16sp"
-                    android:text="@{activityPlay.lyrics}"
-                    android:textSize="20sp"
-                    tools:text="歌词"/>
-            </android.support.v4.widget.NestedScrollView>
+                    android:layout_gravity="center">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:lineSpacingExtra="20sp"
+                        android:padding="8dp"
+                        android:text="@{activityPlay.lyrics}"
+                        android:textColor="@{activityPlay.lyricsColor}"
+                        android:textSize="20sp"
+                        tools:text="歌词"/>
+                </android.support.v4.widget.NestedScrollView>
+            </FrameLayout>
         </android.support.v4.widget.SwipeRefreshLayout>
 
         <android.support.design.widget.FloatingActionButton

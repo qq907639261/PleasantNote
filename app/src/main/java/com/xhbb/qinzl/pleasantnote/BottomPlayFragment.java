@@ -91,22 +91,26 @@ public class BottomPlayFragment extends Fragment
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
-                case Contracts.ACTION_CURRENT_MUSIC_UPDATED:
-                    Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
-                    mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
-                    mFragmentBottomPlay.setMusicName(music.getName());
-                    mFragmentBottomPlay.setSinger(music.getSinger());
-                    mFragmentBottomPlay.setPlayButtonDrawable(getContext(), true);
-                    break;
-                case Contracts.ACTION_MUSIC_PLAYED:
-                    mFragmentBottomPlay.setPlayButtonDrawable(getContext(), true);
-                    break;
-                case Contracts.ACTION_MUSIC_STOPPED:
-                    mFragmentBottomPlay.setPlayButtonDrawable(getContext(), false);
-                    break;
-                default:
-            }
+            handleReceive(intent);
+        }
+    }
+
+    private void handleReceive(Intent intent) {
+        switch (intent.getAction()) {
+            case Contracts.ACTION_CURRENT_MUSIC_UPDATED:
+                Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
+                mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
+                mFragmentBottomPlay.setMusicName(music.getName());
+                mFragmentBottomPlay.setSinger(music.getSinger());
+                mFragmentBottomPlay.setPlayButtonDrawable(getContext(), true);
+                break;
+            case Contracts.ACTION_MUSIC_PLAYED:
+                mFragmentBottomPlay.setPlayButtonDrawable(getContext(), true);
+                break;
+            case Contracts.ACTION_MUSIC_STOPPED:
+                mFragmentBottomPlay.setPlayButtonDrawable(getContext(), false);
+                break;
+            default:
         }
     }
 }

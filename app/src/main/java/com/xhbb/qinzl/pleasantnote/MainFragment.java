@@ -69,7 +69,9 @@ public class MainFragment extends Fragment
         mRankingCode = getArguments().getInt(ARG_RANKING_CODE);
         mRequestTag = mRankingCode;
 
-        if (savedInstanceState != null) {
+        if (savedInstanceState == null) {
+            NetworkUtils.addRankingRequest(context, mRankingCode, mRequestTag, this, this);
+        } else {
             int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
             mLayoutManager.scrollToPosition(itemPosition);
             mViewRecreating = true;
@@ -104,12 +106,10 @@ public class MainFragment extends Fragment
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Context context = getContext();
-        NetworkUtils.addRankingRequest(context, mRankingCode, mRequestTag, this, this);
-
         String selection = MusicContract._RANKING_CODE + "=" + mRankingCode + " AND "
                 + MusicContract._TYPE + "=" + MusicType.RANKING;
-        return new CursorLoader(context, MusicContract.URI, null, selection, null, null);
+
+        return new CursorLoader(getContext(), MusicContract.URI, null, selection, null, null);
     }
 
     @Override

@@ -20,7 +20,6 @@ class MainTasks {
 
         if (firstPage) {
             String where = MusicContract._TYPE + "=" + MusicType.QUERY;
-
             contentResolver.delete(MusicContract.URI, where, null);
         }
         contentResolver.bulkInsert(MusicContract.URI, musicValueses);
@@ -46,7 +45,7 @@ class MainTasks {
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 int currentCount = cursor.getInt(0);
-                int differenceCount = currentCount - MusicService.MAX_COUNT_OF_HISTORY_MUSIC;
+                int differenceCount = currentCount - MusicService.LIMIT_VALUE_OF_HISTORY_MUSIC;
 
                 if (differenceCount > 0) {
                     String where = MusicContract._ID + " IN (SELECT " + MusicContract._ID

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.graphics.drawable.Drawable;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.ActivityCompat;
 
 import com.xhbb.qinzl.pleasantnote.BR;
 import com.xhbb.qinzl.pleasantnote.R;
@@ -20,10 +20,11 @@ public class ActivityPlay extends BaseObservable {
 
     private String mLyrics;
     private Drawable mBigPicture;
-    private AppCompatActivity mActivity;
+    private Context mContext;
+    private int mLyricsColor;
 
-    public ActivityPlay(AppCompatActivity activity) {
-        mActivity = activity;
+    public ActivityPlay(Context context) {
+        mContext = context;
     }
 
     @Bindable
@@ -34,6 +35,20 @@ public class ActivityPlay extends BaseObservable {
     public void setLyrics(String lyrics) {
         mLyrics = lyrics;
         notifyPropertyChanged(BR.lyrics);
+    }
+
+    @Bindable
+    public int getLyricsColor() {
+        return mLyricsColor;
+    }
+
+    public void setLyricsColor(Context context, boolean searchLyricsFailed) {
+        if (searchLyricsFailed) {
+            mLyricsColor = ActivityCompat.getColor(context, R.color.tipsText);
+        } else {
+            mLyricsColor = ActivityCompat.getColor(context, R.color.lyrics);
+        }
+        notifyPropertyChanged(BR.lyricsColor);
     }
 
     @Bindable
@@ -62,7 +77,7 @@ public class ActivityPlay extends BaseObservable {
         }).start();
     }
 
-    public AppCompatActivity getActivity() {
-        return mActivity;
+    public Context getContext() {
+        return mContext;
     }
 }
