@@ -255,7 +255,7 @@ public class MusicService extends Service
 
             Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
             cursor = handleCancelled(isCancelled(), cursor);
-
+          
             return cursor;
         }
 

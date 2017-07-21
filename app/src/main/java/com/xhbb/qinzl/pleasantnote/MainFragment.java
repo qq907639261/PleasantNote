@@ -1,132 +1,52 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
-import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
-import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
-import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.common.RecyclerViewAdapter;
-import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
-import com.xhbb.qinzl.pleasantnote.databinding.LayoutRecyclerViewBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ItemMusic;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.LayoutRecyclerView;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
-public class MainFragment extends Fragment
+public abstract class MainFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor>,
         Response.Listener<String>, Response.ErrorListener,
         LayoutRecyclerView.OnLayoutRecyclerViewListener {
 
-    private static final String ARG_RANKING_CODE = "ARG_RANKING_CODE";
-    private static final String ARG_ITEM_POSITION = "ARG_ITEM_POSITION";
-
-    private int mRankingCode;
-    private Object mRequestTag;
+    protected static final String ARG_ITEM_POSITION = "ARG_ITEM_POSITION";
 
     protected LayoutRecyclerView mLayoutRecyclerView;
     protected LinearLayoutManager mLayoutManager;
     protected boolean mViewRecreating;
     protected MusicAdapter mMusicAdapter;
     protected int mVolleyState;
-
-    public static MainFragment newInstance(int rankingCode) {
-        Bundle args = new Bundle();
-        args.putInt(ARG_RANKING_CODE, rankingCode);
-
-        MainFragment fragment = new MainFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
+    protected Object mRequestsTag;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        LayoutRecyclerViewBinding binding = DataBindingUtil.inflate(
-                inflater, R.layout.layout_recycler_view, container, false);
-
-        Context context = getContext();
-
-        mLayoutManager = new LinearLayoutManager(context);
-        mMusicAdapter = new MusicAdapter(R.layout.item_music);
-        mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
-        mRankingCode = getArguments().getInt(ARG_RANKING_CODE);
-        mRequestTag = mRankingCode;
-
-        if (savedInstanceState == null) {
-            NetworkUtils.addRankingRequest(context, mRankingCode, mRequestTag, this, this);
-        } else {
-            int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
-            mLayoutManager.scrollToPosition(itemPosition);
-            mViewRecreating = true;
+    public void onDestroyView() {
+        super.onDestroyView();
+        Activity activity = getActivity();
+        if (!activity.isChangingConfigurations()) {
+            NetworkUtils.cancelRequests(activity, mRequestsTag);
         }
-
-        mMusicAdapter.setScrolledToEnd(true);
-        binding.setLayoutRecyclerView(mLayoutRecyclerView);
-        getLoaderManager().initLoader(0, null, this);
-
-        return binding.getRoot();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        cancelVolleyRequest();
-    }
-
-    protected void cancelVolleyRequest() {
-        NetworkUtils.cancelAllRequest(getContext(), mRequestTag);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        saveInstanceState(outState);
-    }
-
-    protected void saveInstanceState(Bundle outState) {
         outState.putInt(ARG_ITEM_POSITION, mLayoutManager.findFirstVisibleItemPosition());
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String selection = MusicContract._RANKING_CODE + "=" + mRankingCode + " AND "
-                + MusicContract._TYPE + "=" + MusicType.RANKING;
-
-        return new CursorLoader(getContext(), MusicContract.URI, null, selection, null, null);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        mMusicAdapter.swapCursor(cursor);
-
-        if (cursor.getCount() > 0) {
-            mLayoutRecyclerView.setTipsText(null);
-        } else if (mViewRecreating || mVolleyState == VolleyState.ERROR) {
-            mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
-        }
-
-        if (mViewRecreating || mVolleyState != 0) {
-            mViewRecreating = false;
-            mVolleyState = 0;
-            mLayoutRecyclerView.setRefreshing(false);
-        }
     }
 
     @Override
@@ -134,31 +54,8 @@ public class MainFragment extends Fragment
         mMusicAdapter.swapCursor(null);
     }
 
-    @Override
-    public void onSwipeRefresh() {
-        NetworkUtils.addRankingRequest(getContext(), mRankingCode, mRequestTag, this, this);
-    }
-
-    @Override
-    public void onScrollStateChanged(int newState) {
-
-    }
-
-    @Override
-    public void onErrorResponse(VolleyError error) {
-        mVolleyState = VolleyState.ERROR;
-        getLoaderManager().initLoader(0, null, this);
-    }
-
-    @Override
-    public void onResponse(String response) {
-        mVolleyState = VolleyState.RESPONSE;
-        Context context = getContext();
-        Intent intent = UpdateMusicDataService.newIntent(context, response, mRankingCode);
-        context.startService(intent);
-    }
-
-    class MusicAdapter extends RecyclerViewAdapter
+    @SuppressWarnings("WeakerAccess")
+    protected class MusicAdapter extends RecyclerViewAdapter
             implements ItemMusic.OnItemMusicListener {
 
         private static final int TYPE_DEFAULT_ITEM = 0;

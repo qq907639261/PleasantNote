@@ -1,7 +1,7 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -33,9 +33,7 @@ public class MusicQueryFragment extends MainFragment {
     private static final String ARG_QUERY = "ARG_QUERY";
     private static final String ARG_CURRENT_PAGE = "ARG_CURRENT_PAGE";
     private static final String ARG_SCROLLED_TO_END = "ARG_SCROLLED_TO_END";
-    private static final String ARG_ITEM_POSITION = "ARG_ITEM_POSITION";
     private static final String ARG_TIPS_TEXT = "ARG_TIPS_TEXT";
-    private static final Object REQUEST_TAG = "MusicQueryFragment";
 
     private String mQuery;
     private int mCurrentPage;
@@ -60,28 +58,28 @@ public class MusicQueryFragment extends MainFragment {
 
         Context context = getContext();
 
-        mLocalReceiver = new LocalReceiver();
         mLayoutManager = new LinearLayoutManager(context);
         mMusicAdapter = new MusicAdapter(R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
+        mLocalReceiver = new LocalReceiver();
         mQuery = getArguments().getString(ARG_QUERY);
+        mRequestsTag = getClass().getSimpleName();
 
-        if (savedInstanceState == null) {
-            NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, REQUEST_TAG, this, this);
-        } else {
-            int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
+        registerLocalBroadcast(context);
+
+        if (savedInstanceState != null) {
             boolean scrolledToEnd = savedInstanceState.getBoolean(ARG_SCROLLED_TO_END);
+            int itemPosition = savedInstanceState.getInt(ARG_ITEM_POSITION);
 
             mViewRecreating = true;
+            mLayoutManager.scrollToPosition(itemPosition);
             mTipsText = savedInstanceState.getString(ARG_TIPS_TEXT);
             mCurrentPage = savedInstanceState.getInt(ARG_CURRENT_PAGE);
-            mLayoutManager.scrollToPosition(itemPosition);
             mMusicAdapter.setScrolledToEnd(scrolledToEnd);
         }
 
         binding.setLayoutRecyclerView(mLayoutRecyclerView);
         getLoaderManager().initLoader(0, null, this);
-        registerLocalBroadcast(context);
 
         return binding.getRoot();
     }
@@ -92,14 +90,9 @@ public class MusicQueryFragment extends MainFragment {
     }
 
     @Override
-    protected void cancelVolleyRequest() {
-        NetworkUtils.cancelAllRequest(getContext(), REQUEST_TAG);
-    }
-
-    @Override
-    protected void saveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
         outState.putInt(ARG_CURRENT_PAGE, mCurrentPage);
-        outState.putInt(ARG_ITEM_POSITION, mLayoutManager.findFirstVisibleItemPosition());
         outState.putBoolean(ARG_SCROLLED_TO_END, mMusicAdapter.isScrolledToEnd());
         outState.putString(ARG_TIPS_TEXT, mLayoutRecyclerView.getTipsText());
     }
@@ -107,19 +100,20 @@ public class MusicQueryFragment extends MainFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
-        if (isRemoving() || getActivity().isFinishing()) {
-            deleteQueryMusic();
+        Activity activity = getActivity();
+        LocalBroadcastManager.getInstance(activity).unregisterReceiver(mLocalReceiver);
+
+        if (!activity.isChangingConfigurations()) {
+            deleteQueryMusic(activity);
         }
     }
 
-    private void deleteQueryMusic() {
-        final ContentResolver contentResolver = getContext().getContentResolver();
-        final String where = MusicContract._TYPE + "=" + MusicType.QUERY;
+    private void deleteQueryMusic(final Context context) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                contentResolver.delete(MusicContract.URI, where, null);
+                String where = MusicContract._TYPE + "=" + MusicType.QUERY;
+                context.getContentResolver().delete(MusicContract.URI, where, null);
             }
         }).start();
     }
@@ -129,9 +123,12 @@ public class MusicQueryFragment extends MainFragment {
         mCurrentPage = 1;
         mMusicAdapter.setScrolledToEnd(false);
         mRefreshState = RefreshState.SWIPE;
+        Context context = getContext();
+
+        NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, mRequestsTag, this, this);
 
         String selection = MusicContract._TYPE + "=" + MusicType.QUERY;
-        return new CursorLoader(getContext(), MusicContract.URI, null, selection, null, null);
+        return new CursorLoader(context, MusicContract.URI, null, selection, null, null);
     }
 
     @Override
@@ -176,7 +173,7 @@ public class MusicQueryFragment extends MainFragment {
 
         if (lastVisibleItemPosition > refreshPosition) {
             mRefreshState = RefreshState.SCROLL;
-            NetworkUtils.addQueryRequest(getContext(), mQuery, ++mCurrentPage, REQUEST_TAG, this, this);
+            NetworkUtils.addQueryRequest(getContext(), mQuery, ++mCurrentPage, mRequestsTag, this, this);
         }
     }
 
@@ -197,14 +194,6 @@ public class MusicQueryFragment extends MainFragment {
         context.startService(intent);
     }
 
-    private class LocalReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            handleReceive(intent);
-        }
-    }
-
     private void handleReceive(Intent intent) {
         switch (intent.getAction()) {
             case Contracts.ACTION_MUSIC_DATA_UPDATED:
@@ -222,6 +211,14 @@ public class MusicQueryFragment extends MainFragment {
                 }
                 break;
             default:
+        }
+    }
+
+    private class LocalReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            handleReceive(intent);
         }
     }
 }

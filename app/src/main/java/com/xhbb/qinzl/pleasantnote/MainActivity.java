@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public Fragment getItem(int position) {
             int rankingCode = mRankingCodes[position];
-            return MainFragment.newInstance(rankingCode);
+            return MusicRankingFragment.newInstance(rankingCode);
         }
 
         @Override

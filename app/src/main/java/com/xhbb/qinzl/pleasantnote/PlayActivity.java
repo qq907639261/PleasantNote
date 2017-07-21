@@ -23,7 +23,7 @@ public class PlayActivity extends AppCompatActivity
         implements Response.Listener<String>,
         Response.ErrorListener {
 
-    private static final Object REQUEST_TAG = "PlayActivity";
+    private static final Object REQUESTS_TAG = PlayActivity.class.getSimpleName();
 
     private ActivityPlay mActivityPlay;
     private LocalReceiver mLocalReceiver;
@@ -59,6 +59,7 @@ public class PlayActivity extends AppCompatActivity
         filter.addAction(Contracts.ACTION_MUSIC_STOPPED);
         filter.addAction(Contracts.ACTION_MUSIC_PLAYED);
         filter.addAction(Contracts.ACTION_CURRENT_MUSIC_UPDATED);
+
         LocalBroadcastManager.getInstance(this).registerReceiver(mLocalReceiver, filter);
     }
 
@@ -71,7 +72,7 @@ public class PlayActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        NetworkUtils.cancelAllRequest(this, REQUEST_TAG);
+        NetworkUtils.cancelRequests(this, REQUESTS_TAG);
     }
 
     @Override
@@ -90,18 +91,10 @@ public class PlayActivity extends AppCompatActivity
             @Override
             public void run() {
                 String lyrics = JsonUtils.getLyrics(response);
-                mActivityPlay.setLyrics(lyrics.trim());
+                mActivityPlay.setLyrics(lyrics);
                 mActivityPlay.setLyricsColor(PlayActivity.this, false);
             }
         }).start();
-    }
-
-    private class LocalReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            handleReceive(intent);
-        }
     }
 
     private void handleReceive(Intent intent) {
@@ -109,7 +102,7 @@ public class PlayActivity extends AppCompatActivity
             case Contracts.ACTION_CURRENT_MUSIC_UPDATED:
                 Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
                 mActivityPlay.setBigPicture(this, music.getBigPicture());
-                NetworkUtils.addLyricsRequest(this, music.getCode(), REQUEST_TAG, this, this);
+                NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
                 break;
             case Contracts.ACTION_MUSIC_PLAYED:
 
@@ -118,6 +111,14 @@ public class PlayActivity extends AppCompatActivity
 
                 break;
             default:
+        }
+    }
+
+    private class LocalReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            handleReceive(intent);
         }
     }
 }

@@ -59,7 +59,8 @@ public class JsonUtils {
     }
 
     public static String getLyrics(String json) {
-        return new Gson().fromJson(json, MusicLyricsJson.class).showapi_res_body.lyric;
+        MusicLyricsJson music = new Gson().fromJson(json, MusicLyricsJson.class);
+        return music.showapi_res_body.lyric_txt.trim();
     }
 
     private class MusicRankingJson {
@@ -125,7 +126,7 @@ public class JsonUtils {
 
         class ShowApiResBody {
 
-            String lyric;
+            String lyric_txt;
         }
     }
 }

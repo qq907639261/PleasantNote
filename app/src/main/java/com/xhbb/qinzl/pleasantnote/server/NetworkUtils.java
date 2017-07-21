@@ -58,10 +58,10 @@ public class NetworkUtils {
         addRequest(context, url, requestTag, listener, errorListener);
     }
 
-    public static void cancelAllRequest(Context context, Object requestTag) {
+    public static void cancelRequests(Context context, Object requestsTag) {
         MainSingleton.getInstance(context)
                 .getRequestQueue()
-                .cancelAll(requestTag);
+                .cancelAll(requestsTag);
     }
 
     private static void addRequest(Context context, String url, Object requestTag,

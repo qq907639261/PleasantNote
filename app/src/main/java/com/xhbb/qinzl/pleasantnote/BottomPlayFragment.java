@@ -87,14 +87,6 @@ public class BottomPlayFragment extends Fragment
         PlayActivity.start(getContext());
     }
 
-    private class LocalReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            handleReceive(intent);
-        }
-    }
-
     private void handleReceive(Intent intent) {
         switch (intent.getAction()) {
             case Contracts.ACTION_CURRENT_MUSIC_UPDATED:
@@ -111,6 +103,14 @@ public class BottomPlayFragment extends Fragment
                 mFragmentBottomPlay.setPlayButtonDrawable(getContext(), false);
                 break;
             default:
+        }
+    }
+
+    private class LocalReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            handleReceive(intent);
         }
     }
 }
