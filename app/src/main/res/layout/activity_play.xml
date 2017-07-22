@@ -50,11 +50,14 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:lineSpacingExtra="16dp"
-                        android:padding="8dp"
+                        android:paddingBottom="156dp"
+                        android:paddingLeft="8dp"
+                        android:paddingRight="8dp"
+                        android:paddingTop="32dp"
                         android:text="@{activityPlay.lyrics}"
                         android:textColor="@{activityPlay.lyricsColor}"
                         android:textSize="20sp"
-                        tools:text="歌词\n歌词"/>
+                        tools:text="第一行\n第二行"/>
                 </android.support.v4.widget.NestedScrollView>
             </FrameLayout>
         </android.support.v4.widget.SwipeRefreshLayout>

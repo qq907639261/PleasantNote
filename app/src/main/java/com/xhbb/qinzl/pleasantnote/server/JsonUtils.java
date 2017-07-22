@@ -62,10 +62,16 @@ public class JsonUtils {
         MusicLyricsJson music = new Gson().fromJson(json, MusicLyricsJson.class);
         String lyrics = music.showapi_res_body.lyric.trim();
 
-        return lyrics.replace("&#58;", ":").replace("&#32;", " ").replace("&#40;", "(")
-                .replace("&#41;", ")").replace("&#10;", "\n").replace("&#38;", "&")
-                .replace("&#45;", "-").replace("&#46;", ".").replace("&#39;", "'")
-                .replace("&#34;", "\"").replace("&#124;", "|");
+        lyrics = lyrics.substring(
+                lyrics.indexOf(
+                        "]", lyrics.indexOf("[offset")) + 1);
+
+        lyrics = lyrics.replace("&#10;", "\n").replace("&#32;", " ").replace("&#34;", "\"")
+                .replace("&#38;", "&").replace("&#39;", "'").replace("&#40;", "(")
+                .replace("&#41;", ")").replace("&#45;", "-").replace("&#46;", ".")
+                .replace("&#58;", ":").replace("&#124;", "|");
+
+        return lyrics.replaceAll("\\[(\\d{2,}):[0-5]\\d\\.\\d{2}\\]", "").trim();
     }
 
     private class MusicRankingJson {
