@@ -26,12 +26,14 @@ public class MusicService extends Service
     public static final String ACTION_INIT_MUSIC = Contracts.AUTHORITY + ".ACTION_INIT_MUSIC";
     public static final String ACTION_SEND_MUSIC = Contracts.AUTHORITY + ".ACTION_SEND_MUSIC";
     public static final String ACTION_PLAY_NEW_MUSIC = Contracts.AUTHORITY + ".ACTION_PLAY_NEW_MUSIC";
-    public static final String ACTION_PLAY_OR_PAUSE = Contracts.AUTHORITY + ".ACTION_PLAY_OR_PAUSE";
+    public static final String ACTION_PLAY = Contracts.AUTHORITY + ".ACTION_PLAY";
+    public static final String ACTION_PAUSE = Contracts.AUTHORITY + ".ACTION_PAUSE";
     public static final String ACTION_PLAY_NEXT = Contracts.AUTHORITY + ".ACTION_PLAY_NEXT";
     public static final String ACTION_START_FOREGROUND = Contracts.AUTHORITY + ".ACTION_START_FOREGROUND";
     public static final String ACTION_STOP_FOREGROUND = Contracts.AUTHORITY + ".ACTION_STOP_FOREGROUND";
 
     public static final String EXTRA_MUSIC = Contracts.AUTHORITY + ".EXTRA_MUSIC";
+    public static final String EXTRA_PLAYED = Contracts.AUTHORITY + ".EXTRA_PLAYED";
     public static final int LIMIT_VALUE_OF_HISTORY_MUSIC = 50;
 
     private static final String EXTRA_DATA_POSITION = Contracts.AUTHORITY + ".EXTRA_DATA_POSITION";
@@ -43,6 +45,7 @@ public class MusicService extends Service
     private QueryMoreMusicTask mQueryMoreMusicTask;
     private int mDataPosition;
     private InitMusicTask mInitMusicTask;
+    private boolean mPlayed;
 
     public static Intent newIntent(Context context, String action) {
         return new Intent(context, MusicService.class)
@@ -87,8 +90,11 @@ public class MusicService extends Service
             case ACTION_PLAY_NEW_MUSIC:
                 playNewMusic(intent);
                 break;
-            case ACTION_PLAY_OR_PAUSE:
-                playOrPause();
+            case ACTION_PLAY:
+                play();
+                break;
+            case ACTION_PAUSE:
+                pause();
                 break;
             case ACTION_PLAY_NEXT:
                 playNext();
@@ -103,6 +109,19 @@ public class MusicService extends Service
         }
     }
 
+    private void pause() {
+        mPlayed = false;
+        mMediaPlayer.pause();
+    }
+
+    private void play() {
+        mMediaPlayer.start();
+        if (mMediaPlayer.isPlaying()) {
+            mPlayed = true;
+            sendLocalBroadcast(Contracts.ACTION_MUSIC_PLAYED);
+        }
+    }
+
     private void initMusic() {
         if (mInitMusicTask != null) {
             mInitMusicTask.cancel(true);
@@ -114,7 +133,7 @@ public class MusicService extends Service
     private void playNewMusic(Intent intent) {
         mMusic = intent.getParcelableExtra(EXTRA_MUSIC);
         mDataPosition = intent.getIntExtra(EXTRA_DATA_POSITION, 0);
-        restartMusic();
+        resetMusic();
         queryMoreMusic();
     }
 
@@ -126,24 +145,12 @@ public class MusicService extends Service
         mQueryMoreMusicTask.execute();
     }
 
-    private void playOrPause() {
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.pause();
-            sendLocalBroadcast(Contracts.ACTION_MUSIC_STOPPED);
-        } else {
-            mMediaPlayer.start();
-            if (mMediaPlayer.isPlaying()) {
-                sendLocalBroadcast(Contracts.ACTION_MUSIC_PLAYED);
-            }
-        }
-    }
-
     private void sendLocalBroadcast(String action) {
         Intent intent = new Intent(action);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
-    private void restartMusic() {
+    private void resetMusic() {
         if (mMusic == null) {
             return;
         }
@@ -152,6 +159,7 @@ public class MusicService extends Service
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(mMusic.getPlayUrl());
             mMediaPlayer.prepareAsync();
+            mPlayed = true;
             sendMusicData();
         } catch (IOException e) {
             e.printStackTrace();
@@ -214,7 +222,7 @@ public class MusicService extends Service
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
         if (noCursorData()) {
-            sendLocalBroadcast(Contracts.ACTION_MUSIC_STOPPED);
+            mediaPlayer.start();
         } else {
             playNext();
         }
@@ -231,7 +239,7 @@ public class MusicService extends Service
         }
 
         mMusic = new Music(mCursor);
-        restartMusic();
+        resetMusic();
     }
 
     private boolean noCursorData() {
@@ -240,8 +248,9 @@ public class MusicService extends Service
 
     private void sendMusicData() {
         if (mMusic != null) {
-            Intent intent = new Intent(Contracts.ACTION_CURRENT_MUSIC_UPDATED);
+            Intent intent = new Intent(Contracts.ACTION_CURRENT_MUSIC_SENT);
             intent.putExtra(EXTRA_MUSIC, mMusic);
+            intent.putExtra(EXTRA_PLAYED, mPlayed);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
     }
@@ -255,7 +264,7 @@ public class MusicService extends Service
 
             Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
             cursor = handleCancelled(isCancelled(), cursor);
-          
+
             return cursor;
         }
 
@@ -263,7 +272,7 @@ public class MusicService extends Service
         protected void onPostExecute(Cursor cursor) {
             super.onPostExecute(cursor);
             setCursor(cursor);
-            restartMusic();
+            resetMusic();
         }
     }
 

@@ -56,9 +56,8 @@ public class PlayActivity extends AppCompatActivity
 
     private void registerLocalReceiver() {
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Contracts.ACTION_MUSIC_STOPPED);
         filter.addAction(Contracts.ACTION_MUSIC_PLAYED);
-        filter.addAction(Contracts.ACTION_CURRENT_MUSIC_UPDATED);
+        filter.addAction(Contracts.ACTION_CURRENT_MUSIC_SENT);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLocalReceiver, filter);
     }
@@ -99,15 +98,12 @@ public class PlayActivity extends AppCompatActivity
 
     private void handleReceive(Intent intent) {
         switch (intent.getAction()) {
-            case Contracts.ACTION_CURRENT_MUSIC_UPDATED:
+            case Contracts.ACTION_CURRENT_MUSIC_SENT:
                 Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
                 mActivityPlay.setBigPicture(this, music.getBigPicture());
                 NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
                 break;
             case Contracts.ACTION_MUSIC_PLAYED:
-
-                break;
-            case Contracts.ACTION_MUSIC_STOPPED:
 
                 break;
             default:

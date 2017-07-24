@@ -1,13 +1,9 @@
 package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
-import android.content.Context;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
-import android.graphics.drawable.Drawable;
-import android.support.v4.app.ActivityCompat;
 
 import com.xhbb.qinzl.pleasantnote.BR;
-import com.xhbb.qinzl.pleasantnote.R;
 
 /**
  * Created by qinzl on 2017/7/13.
@@ -18,12 +14,21 @@ public class FragmentBottomPlay extends BaseObservable {
     private String mImageUrl;
     private String mMusicName;
     private String mSinger;
-    private Drawable mPlayButtonDrawable;
+    private int mPlaySwitcherDisplayedChild;
     private OnFragmentBottomPlayListener mListener;
 
-    public FragmentBottomPlay(Context context, OnFragmentBottomPlayListener listener) {
-        mPlayButtonDrawable = ActivityCompat.getDrawable(context, R.drawable.ic_play);
+    public FragmentBottomPlay(OnFragmentBottomPlayListener listener) {
         mListener = listener;
+    }
+
+    @Bindable
+    public int getPlaySwitcherDisplayedChild() {
+        return mPlaySwitcherDisplayedChild;
+    }
+
+    public void setPlaySwitcherDisplayedChild(boolean played) {
+        mPlaySwitcherDisplayedChild = played ? 1 : 0;
+        notifyPropertyChanged(BR.playSwitcherDisplayedChild);
     }
 
     @Bindable
@@ -56,26 +61,16 @@ public class FragmentBottomPlay extends BaseObservable {
         notifyPropertyChanged(BR.singer);
     }
 
-    @Bindable
-    public Drawable getPlayButtonDrawable() {
-        return mPlayButtonDrawable;
-    }
-
-    public void setPlayButtonDrawable(Context context, boolean playing) {
-        if (playing) {
-            mPlayButtonDrawable = ActivityCompat.getDrawable(context, R.drawable.ic_pause);
-        } else {
-            mPlayButtonDrawable = ActivityCompat.getDrawable(context, R.drawable.ic_play);
-        }
-        notifyPropertyChanged(BR.playButtonDrawable);
-    }
-
     public void onClickBottomPlayFragment() {
         mListener.onClickBottomPlayFragment();
     }
 
     public void onClickPlayButton() {
         mListener.onClickPlayButton();
+    }
+
+    public void onClickPauseButton() {
+        mListener.onClickPauseButton();
     }
 
     public void onClickNextButton() {
@@ -85,6 +80,7 @@ public class FragmentBottomPlay extends BaseObservable {
     public interface OnFragmentBottomPlayListener {
 
         void onClickPlayButton();
+        void onClickPauseButton();
         void onClickNextButton();
         void onClickBottomPlayFragment();
     }

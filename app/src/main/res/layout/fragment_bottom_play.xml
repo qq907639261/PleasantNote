@@ -35,14 +35,16 @@
             android:id="@+id/musicName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:maxLines="1"
             android:text="@{fragmentBottomPlay.musicName}"
             android:textAppearance="@android:style/TextAppearance.Widget.TextView"
             app:layout_constraintBottom_toTopOf="@+id/singerName"
             app:layout_constraintLeft_toRightOf="@+id/musicImage"
-            app:layout_constraintRight_toLeftOf="@+id/playButton"
+            app:layout_constraintRight_toLeftOf="@+id/playSwitcher"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="海阔天空"/>
@@ -61,20 +63,34 @@
             app:layout_constraintTop_toBottomOf="@+id/musicName"
             tools:text="Beyond"/>
 
-        <ImageButton
-            android:id="@+id/playButton"
+        <ViewSwitcher
+            android:id="@+id/playSwitcher"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@drawable/selector_bottom_play_fragment_button"
-            android:contentDescription="@string/play_or_pause_accessibility"
-            android:onClick="@{()->fragmentBottomPlay.onClickPlayButton()}"
-            android:src="@{fragmentBottomPlay.playButtonDrawable}"
-            android:tint="@color/appBarContent"
+            android:displayedChild="@{fragmentBottomPlay.playSwitcherDisplayedChild}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintRight_toLeftOf="@+id/nextButton"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/ic_play"/>
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/selector_bottom_play_fragment_button"
+                android:contentDescription="@string/play_accessibility"
+                android:onClick="@{()->fragmentBottomPlay.onClickPlayButton()}"
+                android:src="@drawable/ic_play"
+                android:tint="@color/appBarContent"/>
+
+            <ImageButton
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/selector_bottom_play_fragment_button"
+                android:contentDescription="@string/pause_accessibility"
+                android:onClick="@{()->fragmentBottomPlay.onClickPauseButton()}"
+                android:src="@drawable/ic_pause"
+                android:tint="@color/appBarContent"/>
+        </ViewSwitcher>
 
         <ImageButton
             android:id="@+id/nextButton"

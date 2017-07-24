@@ -33,7 +33,7 @@ public class BottomPlayFragment extends Fragment
         FragmentBottomPlayBinding binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_bottom_play, container, false);
 
-        mFragmentBottomPlay = new FragmentBottomPlay(getContext(), this);
+        mFragmentBottomPlay = new FragmentBottomPlay(this);
         mLocalReceiver = new LocalReceiver();
 
         if (savedInstanceState == null) {
@@ -55,8 +55,7 @@ public class BottomPlayFragment extends Fragment
     private void registerLocalReceiver() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Contracts.ACTION_MUSIC_PLAYED);
-        filter.addAction(Contracts.ACTION_MUSIC_STOPPED);
-        filter.addAction(Contracts.ACTION_CURRENT_MUSIC_UPDATED);
+        filter.addAction(Contracts.ACTION_CURRENT_MUSIC_SENT);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mLocalReceiver, filter);
     }
 
@@ -74,7 +73,13 @@ public class BottomPlayFragment extends Fragment
 
     @Override
     public void onClickPlayButton() {
-        startMusicService(MusicService.ACTION_PLAY_OR_PAUSE);
+        startMusicService(MusicService.ACTION_PLAY);
+    }
+
+    @Override
+    public void onClickPauseButton() {
+        startMusicService(MusicService.ACTION_PAUSE);
+        mFragmentBottomPlay.setPlaySwitcherDisplayedChild(false);
     }
 
     @Override
@@ -89,18 +94,17 @@ public class BottomPlayFragment extends Fragment
 
     private void handleReceive(Intent intent) {
         switch (intent.getAction()) {
-            case Contracts.ACTION_CURRENT_MUSIC_UPDATED:
+            case Contracts.ACTION_CURRENT_MUSIC_SENT:
                 Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
+                boolean played = intent.getBooleanExtra(MusicService.EXTRA_PLAYED, false);
+
                 mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
                 mFragmentBottomPlay.setMusicName(music.getName());
                 mFragmentBottomPlay.setSinger(music.getSinger());
-                mFragmentBottomPlay.setPlayButtonDrawable(getContext(), true);
+                mFragmentBottomPlay.setPlaySwitcherDisplayedChild(played);
                 break;
             case Contracts.ACTION_MUSIC_PLAYED:
-                mFragmentBottomPlay.setPlayButtonDrawable(getContext(), true);
-                break;
-            case Contracts.ACTION_MUSIC_STOPPED:
-                mFragmentBottomPlay.setPlayButtonDrawable(getContext(), false);
+                mFragmentBottomPlay.setPlaySwitcherDisplayedChild(true);
                 break;
             default:
         }
