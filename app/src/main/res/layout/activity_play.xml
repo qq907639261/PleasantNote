@@ -13,8 +13,7 @@
 
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true">
+        android:layout_height="match_parent">
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
@@ -84,98 +83,127 @@
             app:layout_anchorGravity="bottom">
 
             <Chronometer
-                android:id="@+id/chronometer2"
+                android:id="@+id/playChrononmeter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:layout_marginStart="16dp"
-                android:format="00:00:00"
-                app:layout_constraintLeft_toLeftOf="parent"
-                tools:layout_editor_absoluteY="59dp"/>
-
-            <ProgressBar
-                android:id="@+id/progressBar2"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:layout_editor_absoluteX="152dp"
-                tools:layout_editor_absoluteY="59dp"/>
-
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:layout_marginRight="16dp"
                 android:layout_marginTop="8dp"
-                android:text="TextView"
-                app:layout_constraintRight_toRightOf="parent"
+                android:format="00:00"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:textSize="16sp"
+                app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
 
-            <View
+            <ProgressBar
+                android:id="@+id/playProgress"
+                style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:background="@color/dividingLine"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/playChrononmeter"
+                app:layout_constraintLeft_toRightOf="@+id/playChrononmeter"
+                app:layout_constraintRight_toLeftOf="@+id/playDuration"
+                app:layout_constraintTop_toTopOf="@+id/playChrononmeter"/>
+
+            <TextView
+                android:id="@+id/playDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:textAppearance="@android:style/TextAppearance.Widget.TextView"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="@+id/playChrononmeter"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/playChrononmeter"
+                tools:text="03:14"/>
+
+            <View
+                android:id="@+id/dividingView"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="8dp"
+                android:background="@color/colorPrimaryDark"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"/>
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/playChrononmeter"/>
 
             <Spinner
-                android:id="@+id/spinner"
+                android:id="@+id/playSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adapter="@{activityPlay.playSpinnerAdater}"
+                android:popupBackground="@color/colorPrimary"
+                android:selection="@{activityPlay.spinnerSelection}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/dividingView"/>
+
+            <ImageButton
+                android:id="@+id/playPreviousButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                tools:layout_editor_absoluteX="8dp"
-                tools:layout_editor_absoluteY="25dp"/>
-
-            <ImageButton
-                android:id="@+id/imageButton2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:background="@drawable/selector_bottom_play_fragment_button"
+                android:contentDescription="@string/previous_song_accessibility"
                 android:src="@drawable/ic_skip_previous"
-                tools:layout_editor_absoluteX="96dp"
-                tools:layout_editor_absoluteY="90dp"/>
-
-            <ImageButton
-                android:id="@+id/imageButton3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_skip_next"
-                tools:layout_editor_absoluteX="216dp"
-                tools:layout_editor_absoluteY="90dp"/>
-
-            <ImageButton
-                android:id="@+id/imageButton4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:layout_marginRight="16dp"
-                android:src="@drawable/ic_file_download"
-                app:layout_constraintRight_toRightOf="parent"
-                tools:layout_editor_absoluteY="99dp"/>
+                android:tint="@color/appBarContent"
+                app:layout_constraintBottom_toBottomOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintRight_toLeftOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintTop_toTopOf="@+id/playOrPauseSwitcher"/>
 
             <ViewSwitcher
+                android:id="@+id/playOrPauseSwitcher"
                 android:layout_width="0dp"
-                android:layout_height="80dp"
-                tools:layout_editor_absoluteX="8dp"
-                tools:layout_editor_absoluteY="33dp">
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/dividingView">
 
                 <ImageButton
-                    android:id="@+id/imageButton"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/selector_bottom_play_fragment_button"
+                    android:contentDescription="@string/play_accessibility"
                     android:src="@drawable/ic_play_circle"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    tools:layout_editor_absoluteY="99dp"/>
+                    android:tint="@color/appBarContent"/>
 
                 <ImageButton
-                    android:id="@+id/imageButton"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/selector_bottom_play_fragment_button"
+                    android:contentDescription="@string/pause_accessibility"
+                    android:keepScreenOn="true"
                     android:src="@drawable/ic_pause_circle"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    tools:layout_editor_absoluteY="99dp"/>
+                    android:tint="@color/appBarContent"/>
             </ViewSwitcher>
+
+            <ImageButton
+                android:id="@+id/playNextButton"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/selector_bottom_play_fragment_button"
+                android:contentDescription="@string/next_song_accessibility"
+                android:src="@drawable/ic_skip_next"
+                android:tint="@color/appBarContent"
+                app:layout_constraintBottom_toBottomOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintLeft_toRightOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintTop_toTopOf="@+id/playOrPauseSwitcher"/>
+
+            <ImageButton
+                android:id="@+id/downloadButton"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/selector_bottom_play_fragment_button"
+                android:contentDescription="@string/download_music_accessibility"
+                android:src="@drawable/ic_file_download"
+                android:tint="@color/appBarContent"
+                app:layout_constraintBottom_toBottomOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/playOrPauseSwitcher"/>
         </android.support.constraint.ConstraintLayout>
     </android.support.design.widget.CoordinatorLayout>
 </layout>

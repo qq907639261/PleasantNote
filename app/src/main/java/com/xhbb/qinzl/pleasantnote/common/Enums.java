@@ -33,4 +33,11 @@ public interface Enums {
         int FAVORITED = 4;
         int LOCAL = 5;
     }
+
+    interface LoopType {
+
+        int LIST = 0;
+        int RANDOM = 1;
+        int SINGLE = 2;
+    }
 }

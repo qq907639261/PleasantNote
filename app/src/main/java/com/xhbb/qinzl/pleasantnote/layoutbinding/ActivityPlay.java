@@ -5,6 +5,7 @@ import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.ActivityCompat;
+import android.widget.BaseAdapter;
 
 import com.xhbb.qinzl.pleasantnote.BR;
 import com.xhbb.qinzl.pleasantnote.R;
@@ -22,9 +23,22 @@ public class ActivityPlay extends BaseObservable {
     private Drawable mBigPicture;
     private Context mContext;
     private int mLyricsColor;
+    private BaseAdapter mPlaySpinnerAdater;
+    private int mSpinnerSelection;
 
-    public ActivityPlay(Context context) {
+    public ActivityPlay(Context context, BaseAdapter playSpinnerAdater) {
         mContext = context;
+        mPlaySpinnerAdater = playSpinnerAdater;
+    }
+
+    @Bindable
+    public int getSpinnerSelection() {
+        return mSpinnerSelection;
+    }
+
+    public void setSpinnerSelection(int spinnerSelection) {
+        mSpinnerSelection = spinnerSelection;
+        notifyPropertyChanged(BR.spinnerSelection);
     }
 
     @Bindable
@@ -35,6 +49,10 @@ public class ActivityPlay extends BaseObservable {
     public void setLyrics(String lyrics) {
         mLyrics = lyrics;
         notifyPropertyChanged(BR.lyrics);
+    }
+
+    public BaseAdapter getPlaySpinnerAdater() {
+        return mPlaySpinnerAdater;
     }
 
     @Bindable

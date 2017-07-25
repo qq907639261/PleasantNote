@@ -8,12 +8,18 @@ import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
+import com.xhbb.qinzl.pleasantnote.common.Enums.LoopType;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityPlayBinding;
+import com.xhbb.qinzl.pleasantnote.databinding.LayoutOneImageBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityPlay;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
@@ -41,7 +47,9 @@ public class PlayActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         ActivityPlayBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_play);
 
-        mActivityPlay = new ActivityPlay(this);
+        PlaySpinnerAdapter playSpinnerAdapter = new PlaySpinnerAdapter();
+
+        mActivityPlay = new ActivityPlay(this, playSpinnerAdapter);
         mLocalReceiver = new LocalReceiver();
 
         binding.setActivityPlay(mActivityPlay);
@@ -115,6 +123,69 @@ public class PlayActivity extends AppCompatActivity
         @Override
         public void onReceive(Context context, Intent intent) {
             handleReceive(intent);
+        }
+    }
+
+    private class PlaySpinnerAdapter extends BaseAdapter {
+
+        @Override
+        public int getCount() {
+            return 3;
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public View getView(int loopType, View view, ViewGroup viewGroup) {
+            ViewHolder viewHolder;
+            if (view == null) {
+                LayoutOneImageBinding binding = DataBindingUtil.inflate(getLayoutInflater(),
+                        R.layout.layout_one_image, viewGroup, false);
+
+                view = binding.getRoot();
+                viewHolder = new ViewHolder();
+
+                viewHolder.mImageView = binding.imageView;
+                view.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) view.getTag();
+            }
+
+            setImageViewByLoopType(loopType, viewHolder);
+
+            return view;
+        }
+
+        private void setImageViewByLoopType(int loopType, ViewHolder viewHolder) {
+            ImageView imageView = viewHolder.mImageView;
+            switch (loopType) {
+                case LoopType.LIST:
+                    imageView.setImageResource(R.drawable.ic_list_loop);
+                    imageView.setContentDescription(getString(R.string.list_loop_accessibility));
+                    break;
+                case LoopType.RANDOM:
+                    imageView.setImageResource(R.drawable.ic_random_play);
+                    imageView.setContentDescription(getString(R.string.random_play_accessibility));
+                    break;
+                case LoopType.SINGLE:
+                    imageView.setImageResource(R.drawable.ic_single_cycle);
+                    imageView.setContentDescription(getString(R.string.single_cycle_accessibility));
+                    break;
+                default:
+            }
+        }
+
+        private class ViewHolder {
+
+            private ImageView mImageView;
         }
     }
 }

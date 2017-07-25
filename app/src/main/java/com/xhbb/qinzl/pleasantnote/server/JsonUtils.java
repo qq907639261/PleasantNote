@@ -66,10 +66,10 @@ public class JsonUtils {
                 lyrics.indexOf(
                         "]", lyrics.indexOf("[offset")) + 1);
 
-        lyrics = lyrics.replace("&#10;", "\n").replace("&#32;", " ").replace("&#34;", "\"")
-                .replace("&#38;", "&").replace("&#39;", "'").replace("&#40;", "(")
-                .replace("&#41;", ")").replace("&#45;", "-").replace("&#46;", ".")
-                .replace("&#58;", ":").replace("&#124;", "|");
+        lyrics = lyrics.replace("&#10;", "\n").replace("&#13;", "\n").replace("&#32;", " ")
+                .replace("&#34;", "\"").replace("&#38;", "&").replace("&#39;", "'")
+                .replace("&#40;", "(").replace("&#41;", ")").replace("&#45;", "-")
+                .replace("&#46;", ".").replace("&#58;", ":").replace("&#124;", "|");
 
         return lyrics.replaceAll("\\[(\\d{2,}):[0-5]\\d\\.\\d{2}\\]", "").trim();
     }

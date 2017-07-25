@@ -21,10 +21,11 @@
     <string name="open_drawer_accessibility">打开导航抽屉</string>
     <string name="close_drawer_accessibility">关闭导航抽屉</string>
     <string name="music_image_accessibility">音乐图片</string>
-    <string name="skip_previous_accessibility">上一首</string>
-    <string name="skip_next_accessibility">下一首</string>
+    <string name="previous_song_accessibility">上一首歌曲</string>
+    <string name="next_song_accessibility">下一首歌曲</string>
     <string name="pause_accessibility">暂停</string>
     <string name="play_accessibility">播放</string>
+    <string name="download_music_accessibility">下载音乐</string>
 
     <string name="search_menu">搜索</string>
     <string name="music_search_hint">歌曲/歌手</string>
@@ -35,4 +36,7 @@
     <string name="music_playing_notification_content">正在播放音乐</string>
     <string name="play_music_tips_channel">音乐播放提示</string>
     <string name="search_lyrics_failed_text">搜索歌词失败。</string>
+    <string name="list_loop_accessibility">列表循环</string>
+    <string name="random_play_accessibility">随机播放</string>
+    <string name="single_cycle_accessibility">单曲循环</string>
 </resources>
