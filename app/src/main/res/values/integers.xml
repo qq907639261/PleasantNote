@@ -9,4 +9,8 @@
     <integer name="ballad_ranking_code">18</integer>
     <integer name="rocking_ranking_code">19</integer>
     <integer name="sales_ranking_code">23</integer>
+
+    <integer name="play_spinner_list_loop">1</integer>
+    <integer name="play_spinner_random_play">2</integer>
+    <integer name="play_spinner_single_cycle">3</integer>
 </resources>

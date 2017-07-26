@@ -85,7 +85,10 @@ public class MusicRankingFragment extends MainFragment {
 
         if (cursor.getCount() > 0) {
             mLayoutRecyclerView.setTipsText(null);
-        } else if (mViewRecreating || mVolleyState == VolleyState.ERROR) {
+        } else if (mViewRecreating) {
+            getLoaderManager().restartLoader(0, null, this);
+            mViewRecreating = false;
+        } else if (mVolleyState == VolleyState.ERROR) {
             mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
         }
 
@@ -98,7 +101,7 @@ public class MusicRankingFragment extends MainFragment {
 
     @Override
     public void onSwipeRefresh() {
-        NetworkUtils.addRankingRequest(getContext(), mRankingCode, mRequestsTag, this, this);
+        getLoaderManager().restartLoader(0, null, this);
     }
 
     @Override

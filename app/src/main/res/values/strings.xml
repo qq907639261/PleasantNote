@@ -3,6 +3,8 @@
 
     <string name="format_music_duration" translatable="false">%1$d′%2$02d″</string>
 
+    <string name="key_play_spinner_value" translatable="false">key_play_spinner_value</string>
+
     <string name="popular_song_tab">热歌</string>
     <string name="western_countries_tab">欧美</string>
     <string name="mainland_tab">大陆</string>

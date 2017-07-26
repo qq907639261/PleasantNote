@@ -26,19 +26,14 @@ public class ActivityPlay extends BaseObservable {
     private BaseAdapter mPlaySpinnerAdater;
     private int mSpinnerSelection;
 
-    public ActivityPlay(Context context, BaseAdapter playSpinnerAdater) {
+    public ActivityPlay(Context context, BaseAdapter playSpinnerAdater, int spinnerSelection) {
         mContext = context;
         mPlaySpinnerAdater = playSpinnerAdater;
+        mSpinnerSelection = spinnerSelection;
     }
 
-    @Bindable
     public int getSpinnerSelection() {
         return mSpinnerSelection;
-    }
-
-    public void setSpinnerSelection(int spinnerSelection) {
-        mSpinnerSelection = spinnerSelection;
-        notifyPropertyChanged(BR.spinnerSelection);
     }
 
     @Bindable

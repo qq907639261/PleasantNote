@@ -28,9 +28,9 @@
         </android.support.design.widget.AppBarLayout>
 
         <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/body"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginBottom="16dp"
             android:background="@{activityPlay.bigPicture}"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:background="@drawable/empty_image">
@@ -49,7 +49,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:lineSpacingExtra="16dp"
-                        android:paddingBottom="252dp"
+                        android:paddingBottom="160dp"
                         android:paddingLeft="8dp"
                         android:paddingRight="8dp"
                         android:paddingTop="32dp"
@@ -61,33 +61,23 @@
             </FrameLayout>
         </android.support.v4.widget.SwipeRefreshLayout>
 
-        <android.support.design.widget.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="112dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:clickable="true"
-            android:src="@drawable/ic_no_favorited"
-            android:tint="@color/floatingButtonSrc"
-            app:fabSize="mini"
-            app:layout_anchor="@id/body"
-            app:layout_anchorGravity="bottom|end"/>
-
         <android.support.constraint.ConstraintLayout
+            android:id="@+id/bottom"
             android:layout_width="match_parent"
-            android:layout_height="96dp"
+            android:layout_height="128dp"
             android:background="@color/colorPrimary"
             android:theme="@style/AppTheme.AppBarOverlay"
-            app:layout_anchor="@id/body"
-            app:layout_anchorGravity="bottom">
+            app:behavior_hideable="false"
+            app:behavior_peekHeight="16dp"
+            app:layout_behavior="@string/bottom_sheet_behavior">
 
             <Chronometer
                 android:id="@+id/playChrononmeter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="32dp"
                 android:format="00:00"
+                android:maxHeight="30dp"
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
                 android:textSize="16sp"
@@ -99,6 +89,7 @@
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:maxHeight="30dp"
                 app:layout_constraintBottom_toBottomOf="@+id/playChrononmeter"
                 app:layout_constraintLeft_toRightOf="@+id/playChrononmeter"
                 app:layout_constraintRight_toLeftOf="@+id/playDuration"
@@ -108,6 +99,7 @@
                 android:id="@+id/playDuration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:maxHeight="30dp"
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
                 android:textAppearance="@android:style/TextAppearance.Widget.TextView"
@@ -205,5 +197,16 @@
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/playOrPauseSwitcher"/>
         </android.support.constraint.ConstraintLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:clickable="true"
+            android:src="@drawable/ic_no_favorited"
+            android:tint="@color/floatingButtonSrc"
+            app:fabSize="mini"
+            app:layout_anchor="@id/bottom"
+            app:layout_anchorGravity="top|end"/>
     </android.support.design.widget.CoordinatorLayout>
 </layout>

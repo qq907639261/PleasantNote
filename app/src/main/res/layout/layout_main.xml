@@ -45,6 +45,7 @@
             android:id="@+id/bottom_fragment_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_behavior="@string/bottom_sheet_behavior"/>
+            app:layout_anchor="@id/fragment_container"
+            app:layout_anchorGravity="bottom|end"/>
     </android.support.design.widget.CoordinatorLayout>
 </layout>

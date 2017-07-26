@@ -33,12 +33,10 @@ public class MusicQueryFragment extends MainFragment {
     private static final String ARG_QUERY = "ARG_QUERY";
     private static final String ARG_CURRENT_PAGE = "ARG_CURRENT_PAGE";
     private static final String ARG_SCROLLED_TO_END = "ARG_SCROLLED_TO_END";
-    private static final String ARG_TIPS_TEXT = "ARG_TIPS_TEXT";
 
     private String mQuery;
     private int mCurrentPage;
     private int mRefreshState;
-    private String mTipsText;
     private LocalReceiver mLocalReceiver;
 
     public static MusicQueryFragment newInstance(String query) {
@@ -73,7 +71,6 @@ public class MusicQueryFragment extends MainFragment {
 
             mViewRecreating = true;
             mLayoutManager.scrollToPosition(itemPosition);
-            mTipsText = savedInstanceState.getString(ARG_TIPS_TEXT);
             mCurrentPage = savedInstanceState.getInt(ARG_CURRENT_PAGE);
             mMusicAdapter.setScrolledToEnd(scrolledToEnd);
         }
@@ -94,7 +91,6 @@ public class MusicQueryFragment extends MainFragment {
         super.onSaveInstanceState(outState);
         outState.putInt(ARG_CURRENT_PAGE, mCurrentPage);
         outState.putBoolean(ARG_SCROLLED_TO_END, mMusicAdapter.isScrolledToEnd());
-        outState.putString(ARG_TIPS_TEXT, mLayoutRecyclerView.getTipsText());
     }
 
     @Override
@@ -143,10 +139,11 @@ public class MusicQueryFragment extends MainFragment {
 
         if (cursor.getCount() > 0) {
             mLayoutRecyclerView.setTipsText(null);
+        } else if (mViewRecreating) {
+            getLoaderManager().restartLoader(0, null, this);
+            mViewRecreating = false;
         } else if (mVolleyState == VolleyState.ERROR) {
             mLayoutRecyclerView.setTipsText(getString(R.string.network_error_text));
-        } else if (mViewRecreating) {
-            mLayoutRecyclerView.setTipsText(mTipsText);
         }
 
         if (mViewRecreating || mVolleyState != 0) {

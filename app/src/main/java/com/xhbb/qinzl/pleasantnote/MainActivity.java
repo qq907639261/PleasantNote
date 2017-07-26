@@ -163,8 +163,8 @@ public class MainActivity extends AppCompatActivity
 
     private class MusicRankingAdapter extends FragmentStatePagerAdapter {
 
-        int[] mRankingCodes = getResources().getIntArray(R.array.music_ranking_code);
-        String[] mTabTitles = getResources().getStringArray(R.array.music_ranking);
+        int[] mRankingCodes = getResources().getIntArray(R.array.music_ranking_codes);
+        String[] mTabTitles = getResources().getStringArray(R.array.music_rankings);
 
         MusicRankingAdapter(FragmentManager fm) {
             super(fm);

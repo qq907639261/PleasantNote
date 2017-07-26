@@ -37,10 +37,7 @@ public abstract class MainFragment extends Fragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Activity activity = getActivity();
-        if (!activity.isChangingConfigurations()) {
-            NetworkUtils.cancelRequests(activity, mRequestsTag);
-        }
+        NetworkUtils.cancelRequests(getContext(), mRequestsTag);
     }
 
     @Override

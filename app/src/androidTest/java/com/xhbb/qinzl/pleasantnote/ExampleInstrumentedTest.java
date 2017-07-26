@@ -1,6 +1,7 @@
 package com.xhbb.qinzl.pleasantnote;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
@@ -20,6 +21,8 @@ public class ExampleInstrumentedTest {
         Context appContext = InstrumentationRegistry.getTargetContext();
         assertEquals(BuildConfig.APPLICATION_ID, appContext.getPackageName());
 
-        Log.i(TAG, "useAppContext: " + appContext.getPackageName());
+        TypedArray typedArray = appContext.getResources().obtainTypedArray(R.array.play_spinner_drawables);
+        Log.i(TAG, "useAppContext: " + typedArray.length());
+        typedArray.recycle();
     }
 }
