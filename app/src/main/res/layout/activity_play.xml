@@ -62,7 +62,7 @@
         </android.support.v4.widget.SwipeRefreshLayout>
 
         <android.support.constraint.ConstraintLayout
-            android:id="@+id/bottom"
+            android:id="@+id/bottomLayout"
             android:layout_width="match_parent"
             android:layout_height="128dp"
             android:background="@color/colorPrimary"
@@ -154,6 +154,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/dividingView">
 
                 <ImageButton
+                    android:id="@+id/playButton"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/selector_bottom_play_fragment_button"
@@ -162,6 +163,7 @@
                     android:tint="@color/appBarContent"/>
 
                 <ImageButton
+                    android:id="@+id/pauseButton"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/selector_bottom_play_fragment_button"
@@ -206,7 +208,7 @@
             android:src="@drawable/ic_no_favorited"
             android:tint="@color/floatingButtonSrc"
             app:fabSize="mini"
-            app:layout_anchor="@id/bottom"
+            app:layout_anchor="@id/bottomLayout"
             app:layout_anchorGravity="top|end"/>
     </android.support.design.widget.CoordinatorLayout>
 </layout>

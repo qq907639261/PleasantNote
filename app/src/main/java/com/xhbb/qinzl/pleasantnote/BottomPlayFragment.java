@@ -96,12 +96,12 @@ public class BottomPlayFragment extends Fragment
         switch (intent.getAction()) {
             case Contracts.ACTION_CURRENT_MUSIC_SENT:
                 Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
-                boolean played = intent.getBooleanExtra(MusicService.EXTRA_PLAYED, false);
+                boolean musicPlayed = intent.getBooleanExtra(MusicService.EXTRA_MUSIC_PLAYED, false);
 
                 mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
                 mFragmentBottomPlay.setMusicName(music.getName());
                 mFragmentBottomPlay.setSinger(music.getSinger());
-                mFragmentBottomPlay.setPlaySwitcherDisplayedChild(played);
+                mFragmentBottomPlay.setPlaySwitcherDisplayedChild(musicPlayed);
                 break;
             case Contracts.ACTION_MUSIC_PLAYED:
                 mFragmentBottomPlay.setPlaySwitcherDisplayedChild(true);

@@ -12,12 +12,17 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.xhbb.qinzl.pleasantnote.R;
 import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
+import com.xhbb.qinzl.pleasantnote.data.PrefrencesUtils;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class MusicService extends Service
         implements MediaPlayer.OnPreparedListener,
@@ -29,11 +34,12 @@ public class MusicService extends Service
     public static final String ACTION_PLAY = Contracts.AUTHORITY + ".ACTION_PLAY";
     public static final String ACTION_PAUSE = Contracts.AUTHORITY + ".ACTION_PAUSE";
     public static final String ACTION_PLAY_NEXT = Contracts.AUTHORITY + ".ACTION_PLAY_NEXT";
+    public static final String ACTION_PLAY_PREVIOUS = Contracts.AUTHORITY + ".ACTION_PLAY_PREVIOUS";
     public static final String ACTION_START_FOREGROUND = Contracts.AUTHORITY + ".ACTION_START_FOREGROUND";
     public static final String ACTION_STOP_FOREGROUND = Contracts.AUTHORITY + ".ACTION_STOP_FOREGROUND";
 
     public static final String EXTRA_MUSIC = Contracts.AUTHORITY + ".EXTRA_MUSIC";
-    public static final String EXTRA_PLAYED = Contracts.AUTHORITY + ".EXTRA_PLAYED";
+    public static final String EXTRA_MUSIC_PLAYED = Contracts.AUTHORITY + ".EXTRA_MUSIC_PLAYED";
     public static final int LIMIT_VALUE_OF_HISTORY_MUSIC = 50;
 
     private static final String EXTRA_DATA_POSITION = Contracts.AUTHORITY + ".EXTRA_DATA_POSITION";
@@ -46,6 +52,9 @@ public class MusicService extends Service
     private int mDataPosition;
     private InitMusicTask mInitMusicTask;
     private boolean mPlayed;
+    private int[] mPlaySpinnerValues;
+    private List<Integer> mPreviousMusicPositions;
+    private Random mRandom;
 
     public static Intent newIntent(Context context, String action) {
         return new Intent(context, MusicService.class)
@@ -61,6 +70,8 @@ public class MusicService extends Service
     public void onCreate() {
         super.onCreate();
 
+        mPreviousMusicPositions = new ArrayList<>();
+        mPlaySpinnerValues = getResources().getIntArray(R.array.play_spinner_values);
         mNotification = NotificationUtils.getForegroundNotification(getApplicationContext());
         mMediaPlayer = new MediaPlayer();
 
@@ -99,6 +110,9 @@ public class MusicService extends Service
             case ACTION_PLAY_NEXT:
                 playNext();
                 break;
+            case ACTION_PLAY_PREVIOUS:
+                playPrevious();
+                break;
             case ACTION_START_FOREGROUND:
                 startForeground(1, mNotification);
                 break;
@@ -133,7 +147,7 @@ public class MusicService extends Service
     private void playNewMusic(Intent intent) {
         mMusic = intent.getParcelableExtra(EXTRA_MUSIC);
         mDataPosition = intent.getIntExtra(EXTRA_DATA_POSITION, 0);
-        resetMusic();
+        resetAndPlay();
         queryMoreMusic();
     }
 
@@ -150,7 +164,7 @@ public class MusicService extends Service
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
-    private void resetMusic() {
+    private void resetAndPlay() {
         if (mMusic == null) {
             return;
         }
@@ -230,16 +244,57 @@ public class MusicService extends Service
 
     private void playNext() {
         if (noCursorData()) {
+            resetAndPlay();
             return;
         }
 
-        if (!mCursor.moveToPosition(++mDataPosition)) {
-            mCursor.moveToFirst();
-            mDataPosition = 0;
+        addPreviousMusicPosition();
+
+        int spinnerSelection = PrefrencesUtils.getPlaySpinnerSelection(getApplicationContext());
+        if (mPlaySpinnerValues[spinnerSelection] == getResources().getInteger(R.integer.play_spinner_list_loop)) {
+            if (++mDataPosition >= mCursor.getCount()) {
+                mDataPosition = 0;
+            }
+        } else if (mPlaySpinnerValues[spinnerSelection] == getResources().getInteger(R.integer.play_spinner_random_play)) {
+            if (mRandom == null) {
+                mRandom = new Random();
+            }
+            mDataPosition = mRandom.nextInt(mCursor.getCount());
         }
 
+        moveCursorAndChangeMusic();
+    }
+
+    private void moveCursorAndChangeMusic() {
+        mCursor.moveToPosition(mDataPosition);
         mMusic = new Music(mCursor);
-        resetMusic();
+        resetAndPlay();
+    }
+
+    private void addPreviousMusicPosition() {
+        int previousPositionsSize = mPreviousMusicPositions.size();
+        if (previousPositionsSize > 0 &&
+                mPreviousMusicPositions.get(previousPositionsSize - 1) != mDataPosition) {
+            mPreviousMusicPositions.add(mDataPosition);
+        } else if (mPreviousMusicPositions.isEmpty()) {
+            mPreviousMusicPositions.add(mDataPosition);
+        }
+
+        if (previousPositionsSize > 10) {
+            mPreviousMusicPositions.remove(0);
+        }
+    }
+
+    private void playPrevious() {
+        if (mPreviousMusicPositions.isEmpty()) {
+            resetAndPlay();
+            return;
+        }
+
+        int i = mPreviousMusicPositions.size() - 1;
+        mDataPosition = mPreviousMusicPositions.get(i);
+        moveCursorAndChangeMusic();
+        mPreviousMusicPositions.remove(i);
     }
 
     private boolean noCursorData() {
@@ -250,7 +305,7 @@ public class MusicService extends Service
         if (mMusic != null) {
             Intent intent = new Intent(Contracts.ACTION_CURRENT_MUSIC_SENT);
             intent.putExtra(EXTRA_MUSIC, mMusic);
-            intent.putExtra(EXTRA_PLAYED, mPlayed);
+            intent.putExtra(EXTRA_MUSIC_PLAYED, mPlayed);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
     }
@@ -272,7 +327,7 @@ public class MusicService extends Service
         protected void onPostExecute(Cursor cursor) {
             super.onPostExecute(cursor);
             setCursor(cursor);
-            resetMusic();
+            resetAndPlay();
         }
     }
 

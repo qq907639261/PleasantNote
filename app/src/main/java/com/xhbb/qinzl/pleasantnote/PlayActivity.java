@@ -32,14 +32,15 @@ import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 public class PlayActivity extends AppCompatActivity
         implements Response.Listener<String>,
         Response.ErrorListener,
-        AdapterView.OnItemSelectedListener {
+        AdapterView.OnItemSelectedListener,
+        View.OnClickListener {
 
     private static final Object REQUESTS_TAG = "PlayActivity";
 
     private ActivityPlay mActivityPlay;
     private LocalReceiver mLocalReceiver;
     private PlaySpinnerAdapter mPlaySpinnerAdapter;
-    private boolean mCreating;
+    private ActivityPlayBinding mBinding;
 
     public static void start(Context context) {
         context.startActivity(newIntent(context));
@@ -52,31 +53,37 @@ public class PlayActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActivityPlayBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_play);
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_play);
 
         int playSpinnerSelection = PrefrencesUtils.getPlaySpinnerSelection(this);
 
-        mCreating = true;
         mPlaySpinnerAdapter = new PlaySpinnerAdapter();
         mActivityPlay = new ActivityPlay(this, mPlaySpinnerAdapter, playSpinnerSelection);
         mLocalReceiver = new LocalReceiver();
 
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            BottomSheetBehavior.from(binding.bottom).setState(BottomSheetBehavior.STATE_EXPANDED);
+        if (isPortraitOrientation()) {
+            BottomSheetBehavior.from(mBinding.bottomLayout)
+                    .setState(BottomSheetBehavior.STATE_EXPANDED);
         }
 
-        binding.playSpinner.setOnItemSelectedListener(this);
-        mPlaySpinnerAdapter.obtainPlaySpinnerIcons();
-        binding.setActivityPlay(mActivityPlay);
+        mBinding.playNextButton.setOnClickListener(this);
+        mBinding.playPreviousButton.setOnClickListener(this);
+        mBinding.playButton.setOnClickListener(this);
+        mBinding.pauseButton.setOnClickListener(this);
+        mBinding.playSpinner.setOnItemSelectedListener(this);
+        mBinding.setActivityPlay(mActivityPlay);
+    }
+
+    private boolean isPortraitOrientation() {
+        int orientation = getResources().getConfiguration().orientation;
+        return orientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (!mCreating) {
-            mPlaySpinnerAdapter.obtainPlaySpinnerIcons();
-        }
-        mCreating = false;
+        mPlaySpinnerAdapter.obtainPlaySpinnerIcons();
+        mPlaySpinnerAdapter.notifyDataSetChanged();
         registerLocalReceiver();
         startService(MusicService.newIntent(this, MusicService.ACTION_SEND_MUSIC));
     }
@@ -124,20 +131,6 @@ public class PlayActivity extends AppCompatActivity
         }).start();
     }
 
-    private void handleReceive(Intent intent) {
-        switch (intent.getAction()) {
-            case Contracts.ACTION_CURRENT_MUSIC_SENT:
-                Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
-                mActivityPlay.setBigPicture(this, music.getBigPicture());
-                NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
-                break;
-            case Contracts.ACTION_MUSIC_PLAYED:
-
-                break;
-            default:
-        }
-    }
-
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
         PrefrencesUtils.savePlaySpinnerSelection(this, i);
@@ -146,6 +139,50 @@ public class PlayActivity extends AppCompatActivity
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
 
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.playButton:
+                startMusicService(MusicService.ACTION_PLAY);
+                break;
+            case R.id.pauseButton:
+                startMusicService(MusicService.ACTION_PAUSE);
+                mBinding.playOrPauseSwitcher.setDisplayedChild(0);
+                break;
+            case R.id.playNextButton:
+                startMusicService(MusicService.ACTION_PLAY_NEXT);
+                break;
+            case R.id.playPreviousButton:
+                startMusicService(MusicService.ACTION_PLAY_PREVIOUS);
+                break;
+            default:
+        }
+    }
+
+    private void startMusicService(String action) {
+        Intent service = MusicService.newIntent(this, action);
+        startService(service);
+    }
+
+    private void handleReceive(Intent intent) {
+        switch (intent.getAction()) {
+            case Contracts.ACTION_CURRENT_MUSIC_SENT:
+                Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
+                boolean musicPlayed = intent.getBooleanExtra(MusicService.EXTRA_MUSIC_PLAYED, false);
+
+                mActivityPlay.setBigPicture(this, music.getBigPicture());
+                NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
+                if (musicPlayed) {
+                    mBinding.playOrPauseSwitcher.setDisplayedChild(1);
+                }
+                break;
+            case Contracts.ACTION_MUSIC_PLAYED:
+                mBinding.playOrPauseSwitcher.setDisplayedChild(1);
+                break;
+            default:
+        }
     }
 
     private class LocalReceiver extends BroadcastReceiver {
