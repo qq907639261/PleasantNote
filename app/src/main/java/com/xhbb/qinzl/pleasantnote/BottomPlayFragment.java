@@ -1,28 +1,28 @@
 package com.xhbb.qinzl.pleasantnote;
 
-import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
-import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.databinding.FragmentBottomPlayBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.FragmentBottomPlay;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 
 public class BottomPlayFragment extends Fragment
-        implements FragmentBottomPlay.OnFragmentBottomPlayListener {
+        implements FragmentBottomPlay.OnFragmentBottomPlayListener, ServiceConnection,
+        MusicService.OnMusicServiceListener {
 
     private FragmentBottomPlay mFragmentBottomPlay;
-    private LocalReceiver mLocalReceiver;
+    private MusicService mMusicService;
 
     public static BottomPlayFragment newInstance() {
         return new BottomPlayFragment();
@@ -34,11 +34,6 @@ public class BottomPlayFragment extends Fragment
                 inflater, R.layout.fragment_bottom_play, container, false);
 
         mFragmentBottomPlay = new FragmentBottomPlay(this);
-        mLocalReceiver = new LocalReceiver();
-
-        if (savedInstanceState == null) {
-            startMusicService(MusicService.ACTION_INIT_MUSIC);
-        }
 
         binding.setFragmentBottomPlay(mFragmentBottomPlay);
 
@@ -48,43 +43,38 @@ public class BottomPlayFragment extends Fragment
     @Override
     public void onStart() {
         super.onStart();
-        registerLocalReceiver();
-        startMusicService(MusicService.ACTION_SEND_MUSIC);
+        bindMusicService();
     }
 
-    private void registerLocalReceiver() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Contracts.ACTION_MUSIC_PLAYED);
-        filter.addAction(Contracts.ACTION_CURRENT_MUSIC_SENT);
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mLocalReceiver, filter);
-    }
-
-    private void startMusicService(String action) {
+    private void bindMusicService() {
         Context context = getContext();
-        Intent intent = MusicService.newIntent(context, action);
-        context.startService(intent);
+        Intent musicService = new Intent(context, MusicService.class);
+        context.bindService(musicService, this, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mLocalReceiver);
+        if (mMusicService != null) {
+            getContext().unbindService(this);
+        }
     }
 
     @Override
     public void onClickPlayButton() {
-        startMusicService(MusicService.ACTION_PLAY);
+        mMusicService.play();
+        mFragmentBottomPlay.setPlaySwitcherDisplayedChild(mMusicService.isPlaying());
     }
 
     @Override
     public void onClickPauseButton() {
-        startMusicService(MusicService.ACTION_PAUSE);
+        mMusicService.pause();
         mFragmentBottomPlay.setPlaySwitcherDisplayedChild(false);
     }
 
     @Override
     public void onClickNextButton() {
-        startMusicService(MusicService.ACTION_PLAY_NEXT);
+        mMusicService.playNext();
     }
 
     @Override
@@ -92,29 +82,37 @@ public class BottomPlayFragment extends Fragment
         PlayActivity.start(getContext());
     }
 
-    private void handleReceive(Intent intent) {
-        switch (intent.getAction()) {
-            case Contracts.ACTION_CURRENT_MUSIC_SENT:
-                Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
-                boolean musicPlayed = intent.getBooleanExtra(MusicService.EXTRA_MUSIC_PLAYED, false);
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        mMusicService = ((MusicService.MusicBinder) iBinder).getService();
+        mMusicService.setOnMusicServiceListener(this);
 
-                mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
-                mFragmentBottomPlay.setMusicName(music.getName());
-                mFragmentBottomPlay.setSinger(music.getSinger());
-                mFragmentBottomPlay.setPlaySwitcherDisplayedChild(musicPlayed);
-                break;
-            case Contracts.ACTION_MUSIC_PLAYED:
-                mFragmentBottomPlay.setPlaySwitcherDisplayedChild(true);
-                break;
-            default:
+        Music music = mMusicService.getMusic();
+        if (music != null) {
+            displayCurrentMusicData(music);
+            mFragmentBottomPlay.setPlaySwitcherDisplayedChild(mMusicService.isPlaying());
         }
     }
 
-    private class LocalReceiver extends BroadcastReceiver {
+    private void displayCurrentMusicData(Music music) {
+        mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
+        mFragmentBottomPlay.setMusicName(music.getName());
+        mFragmentBottomPlay.setSinger(music.getSinger());
+    }
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            handleReceive(intent);
-        }
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+        mMusicService = null;
+    }
+
+    @Override
+    public void onMediaPlayerStarted() {
+
+    }
+
+    @Override
+    public void onMediaPlayerPreparing() {
+        displayCurrentMusicData(mMusicService.getMusic());
+        mFragmentBottomPlay.setPlaySwitcherDisplayedChild(true);
     }
 }

@@ -15,8 +15,6 @@ public interface Contracts {
     String CONTENT_AUTHORITY = "content://" + AUTHORITY + "/";
 
     String ACTION_MUSIC_DATA_UPDATED = AUTHORITY + ".ACTION_MUSIC_DATA_UPDATED";
-    String ACTION_CURRENT_MUSIC_SENT = AUTHORITY + ".ACTION_CURRENT_MUSIC_SENT";
-    String ACTION_MUSIC_PLAYED = AUTHORITY + ".ACTION_MUSIC_PLAYED";
 
     interface MusicContract extends BaseColumns {
 

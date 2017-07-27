@@ -2,7 +2,7 @@ package com.xhbb.qinzl.pleasantnote.layoutbinding;
 
 import android.content.Context;
 
-import com.xhbb.qinzl.pleasantnote.R;
+import com.xhbb.qinzl.pleasantnote.common.DateTimeUtils;
 
 /**
  * Created by qinzl on 2017/7/6.
@@ -26,14 +26,8 @@ public class ItemMusic {
         mListener = listener;
 
         if (seconds != 0) {
-            setDuration(context, seconds);
+            mDuration = DateTimeUtils.getPlayDuration(context, seconds);
         }
-    }
-
-    private void setDuration(Context context, int seconds) {
-        int minutes = seconds / 60;
-        int secondOfMinute = seconds % 60;
-        mDuration = context.getString(R.string.format_music_duration, minutes, secondOfMinute);
     }
 
     public void onClickItem() {

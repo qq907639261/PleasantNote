@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             addBottomPlayFragment();
+            startService(MusicService.newIntent(this, MusicService.ACTION_INIT_MUSIC));
         } else {
             mActivityMain.setSearchViewCollapsed(true);
             if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) != null) {

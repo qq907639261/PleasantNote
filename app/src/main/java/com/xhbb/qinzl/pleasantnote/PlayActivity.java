@@ -1,15 +1,16 @@
 package com.xhbb.qinzl.pleasantnote;
 
-import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,27 +21,24 @@ import android.widget.ImageView;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
-import com.xhbb.qinzl.pleasantnote.data.Contracts;
+import com.xhbb.qinzl.pleasantnote.common.DateTimeUtils;
 import com.xhbb.qinzl.pleasantnote.data.PrefrencesUtils;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityPlayBinding;
-import com.xhbb.qinzl.pleasantnote.databinding.LayoutImageViewBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityPlay;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
-public class PlayActivity extends AppCompatActivity
-        implements Response.Listener<String>,
-        Response.ErrorListener,
-        AdapterView.OnItemSelectedListener,
-        View.OnClickListener {
+public class PlayActivity extends AppCompatActivity implements Response.Listener<String>,
+        Response.ErrorListener, AdapterView.OnItemSelectedListener, View.OnClickListener,
+        ServiceConnection, MusicService.OnMusicServiceListener {
 
     private static final Object REQUESTS_TAG = "PlayActivity";
 
     private ActivityPlay mActivityPlay;
-    private LocalReceiver mLocalReceiver;
     private PlaySpinnerAdapter mPlaySpinnerAdapter;
     private ActivityPlayBinding mBinding;
+    private MusicService mMusicService;
 
     public static void start(Context context) {
         context.startActivity(newIntent(context));
@@ -59,7 +57,6 @@ public class PlayActivity extends AppCompatActivity
 
         mPlaySpinnerAdapter = new PlaySpinnerAdapter();
         mActivityPlay = new ActivityPlay(this, mPlaySpinnerAdapter, playSpinnerSelection);
-        mLocalReceiver = new LocalReceiver();
 
         if (isPortraitOrientation()) {
             BottomSheetBehavior.from(mBinding.bottomLayout)
@@ -82,25 +79,23 @@ public class PlayActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
+        bindMusicService();
         mPlaySpinnerAdapter.obtainPlaySpinnerIcons();
         mPlaySpinnerAdapter.notifyDataSetChanged();
-        registerLocalReceiver();
-        startService(MusicService.newIntent(this, MusicService.ACTION_SEND_MUSIC));
     }
 
-    private void registerLocalReceiver() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Contracts.ACTION_MUSIC_PLAYED);
-        filter.addAction(Contracts.ACTION_CURRENT_MUSIC_SENT);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(mLocalReceiver, filter);
+    private void bindMusicService() {
+        Intent service = new Intent(this, MusicService.class);
+        bindService(service, this, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         mPlaySpinnerAdapter.recyclePlaySpinnerIcons();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLocalReceiver);
+        if (mMusicService != null) {
+            unbindService(this);
+        }
     }
 
     @Override
@@ -145,52 +140,78 @@ public class PlayActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.playButton:
-                startMusicService(MusicService.ACTION_PLAY);
+                mMusicService.play();
+                if (mMusicService.isPlaying()) {
+                    mBinding.playOrPauseSwitcher.setDisplayedChild(1);
+                    startPlayChrononmeter();
+                }
                 break;
             case R.id.pauseButton:
-                startMusicService(MusicService.ACTION_PAUSE);
+                mMusicService.pause();
+                mBinding.playChrononmeter.stop();
                 mBinding.playOrPauseSwitcher.setDisplayedChild(0);
                 break;
             case R.id.playNextButton:
-                startMusicService(MusicService.ACTION_PLAY_NEXT);
+                mMusicService.playNext();
                 break;
             case R.id.playPreviousButton:
-                startMusicService(MusicService.ACTION_PLAY_PREVIOUS);
+                mMusicService.playPrevious();
                 break;
             default:
         }
     }
 
-    private void startMusicService(String action) {
-        Intent service = MusicService.newIntent(this, action);
-        startService(service);
+    private void startPlayChrononmeter() {
+        setPlayChrononmeterBase();
+        mBinding.playChrononmeter.start();
     }
 
-    private void handleReceive(Intent intent) {
-        switch (intent.getAction()) {
-            case Contracts.ACTION_CURRENT_MUSIC_SENT:
-                Music music = intent.getParcelableExtra(MusicService.EXTRA_MUSIC);
-                boolean musicPlayed = intent.getBooleanExtra(MusicService.EXTRA_MUSIC_PLAYED, false);
+    private void setPlayChrononmeterBase() {
+        int currentPlayMillis = mMusicService.getCurrentPosition();
+        mBinding.playChrononmeter.setBase(SystemClock.elapsedRealtime() - currentPlayMillis);
+    }
 
-                mActivityPlay.setBigPicture(this, music.getBigPicture());
-                NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
-                if (musicPlayed) {
-                    mBinding.playOrPauseSwitcher.setDisplayedChild(1);
-                }
-                break;
-            case Contracts.ACTION_MUSIC_PLAYED:
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        mMusicService = ((MusicService.MusicBinder) iBinder).getService();
+        mMusicService.setOnMusicServiceListener(this);
+
+        Music music = mMusicService.getMusic();
+        if (music != null) {
+            displayCurrentMusicData(music);
+
+            if (mMusicService.isPlaying()) {
                 mBinding.playOrPauseSwitcher.setDisplayedChild(1);
-                break;
-            default:
+                startPlayChrononmeter();
+            } else {
+                setPlayChrononmeterBase();
+            }
         }
     }
 
-    private class LocalReceiver extends BroadcastReceiver {
+    private void displayCurrentMusicData(Music music) {
+        NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            handleReceive(intent);
-        }
+        String playDuration = DateTimeUtils.getPlayDuration(this, music.getSeconds());
+
+        mBinding.playDuration.setText(playDuration);
+        mActivityPlay.setBigPicture(this, music.getBigPicture());
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+        mMusicService = null;
+    }
+
+    @Override
+    public void onMediaPlayerStarted() {
+        startPlayChrononmeter();
+    }
+
+    @Override
+    public void onMediaPlayerPreparing() {
+        displayCurrentMusicData(mMusicService.getMusic());
+        mBinding.playOrPauseSwitcher.setDisplayedChild(1);
     }
 
     private class PlaySpinnerAdapter extends BaseAdapter {
@@ -230,13 +251,11 @@ public class PlayActivity extends AppCompatActivity
         public View getView(int i, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
             if (view == null) {
-                LayoutImageViewBinding binding = DataBindingUtil.inflate(getLayoutInflater(),
-                        R.layout.layout_image_view, viewGroup, false);
+                view = getLayoutInflater().inflate(R.layout.layout_image_view, viewGroup, false);
 
-                view = binding.getRoot();
                 viewHolder = new ViewHolder();
+                viewHolder.mImageView = view.findViewById(R.id.imageView);
 
-                viewHolder.mImageView = binding.imageView;
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
