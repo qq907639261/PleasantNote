@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:padding="8dp"
-        android:tint="@color/appBarContent"
-        tools:background="@color/colorPrimary"
-        tools:ignore="ContentDescription"
-        tools:layout_gravity="bottom"
-        tools:src="@drawable/ic_random_play"/>
-</layout>
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/imageView"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:padding="8dp"
+    android:tint="@color/appBarContent"
+    tools:background="@color/colorPrimary"
+    tools:ignore="ContentDescription"
+    tools:layout_gravity="bottom"
+    tools:src="@drawable/ic_random_play"/>

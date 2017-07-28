@@ -11,6 +11,7 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.annotation.Nullable;
 
 import com.xhbb.qinzl.pleasantnote.R;
 import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
@@ -121,10 +122,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public Music getMusic() {
         return mMusic;
-    }
-
-    public void setOnMusicServiceListener(OnMusicServiceListener listener) {
-        mListener = listener;
     }
 
     @Override
@@ -324,7 +321,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public class MusicBinder extends Binder {
 
-        public MusicService getService() {
+        public MusicService getService(@Nullable OnMusicServiceListener listener) {
+            mListener = listener;
             return MusicService.this;
         }
     }

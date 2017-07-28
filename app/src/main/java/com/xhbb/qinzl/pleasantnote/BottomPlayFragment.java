@@ -84,8 +84,7 @@ public class BottomPlayFragment extends Fragment
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        mMusicService = ((MusicService.MusicBinder) iBinder).getService();
-        mMusicService.setOnMusicServiceListener(this);
+        mMusicService = ((MusicService.MusicBinder) iBinder).getService(this);
 
         Music music = mMusicService.getMusic();
         if (music != null) {

@@ -121,6 +121,10 @@ public class Music implements Parcelable {
         return mMusicType;
     }
 
+    public void setMusicType(int musicType) {
+        mMusicType = musicType;
+    }
+
     @Override
     public int describeContents() {
         return 0;

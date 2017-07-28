@@ -27,7 +27,7 @@
                 android:displayHomeAsUpEnabled="@{true}"/>
         </android.support.design.widget.AppBarLayout>
 
-        <android.support.v4.widget.SwipeRefreshLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginBottom="16dp"
@@ -35,31 +35,26 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:background="@drawable/empty_image">
 
-            <FrameLayout
+            <android.support.v4.widget.NestedScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
 
-                <android.support.v4.widget.NestedScrollView
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:lineSpacingExtra="16dp"
-                        android:paddingBottom="160dp"
-                        android:paddingLeft="8dp"
-                        android:paddingRight="8dp"
-                        android:paddingTop="32dp"
-                        android:text="@{activityPlay.lyrics}"
-                        android:textColor="@{activityPlay.lyricsColor}"
-                        android:textSize="20sp"
-                        tools:text="第一行\n第二行"/>
-                </android.support.v4.widget.NestedScrollView>
-            </FrameLayout>
-        </android.support.v4.widget.SwipeRefreshLayout>
+                    android:gravity="center"
+                    android:lineSpacingExtra="16dp"
+                    android:paddingBottom="160dp"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:paddingTop="32dp"
+                    android:text="@{activityPlay.lyrics}"
+                    android:textColor="@{activityPlay.lyricsColor}"
+                    android:textSize="20sp"
+                    tools:text="第一行\n第二行"/>
+            </android.support.v4.widget.NestedScrollView>
+        </FrameLayout>
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/bottomLayout"
@@ -137,13 +132,13 @@
                 android:contentDescription="@string/previous_song_accessibility"
                 android:src="@drawable/ic_skip_previous"
                 android:tint="@color/appBarContent"
-                app:layout_constraintBottom_toBottomOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintBottom_toBottomOf="@+id/playSwitcher"
                 app:layout_constraintDimensionRatio="1:1"
-                app:layout_constraintRight_toLeftOf="@+id/playOrPauseSwitcher"
-                app:layout_constraintTop_toTopOf="@+id/playOrPauseSwitcher"/>
+                app:layout_constraintRight_toLeftOf="@+id/playSwitcher"
+                app:layout_constraintTop_toTopOf="@+id/playSwitcher"/>
 
             <ViewSwitcher
-                android:id="@+id/playOrPauseSwitcher"
+                android:id="@+id/playSwitcher"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -180,10 +175,10 @@
                 android:contentDescription="@string/next_song_accessibility"
                 android:src="@drawable/ic_skip_next"
                 android:tint="@color/appBarContent"
-                app:layout_constraintBottom_toBottomOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintBottom_toBottomOf="@+id/playSwitcher"
                 app:layout_constraintDimensionRatio="1:1"
-                app:layout_constraintLeft_toRightOf="@+id/playOrPauseSwitcher"
-                app:layout_constraintTop_toTopOf="@+id/playOrPauseSwitcher"/>
+                app:layout_constraintLeft_toRightOf="@+id/playSwitcher"
+                app:layout_constraintTop_toTopOf="@+id/playSwitcher"/>
 
             <ImageButton
                 android:id="@+id/downloadButton"
@@ -193,21 +188,37 @@
                 android:contentDescription="@string/download_music_accessibility"
                 android:src="@drawable/ic_file_download"
                 android:tint="@color/appBarContent"
-                app:layout_constraintBottom_toBottomOf="@+id/playOrPauseSwitcher"
+                app:layout_constraintBottom_toBottomOf="@+id/playSwitcher"
                 app:layout_constraintDimensionRatio="1:1"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/playOrPauseSwitcher"/>
+                app:layout_constraintTop_toTopOf="@+id/playSwitcher"/>
         </android.support.constraint.ConstraintLayout>
 
-        <android.support.design.widget.FloatingActionButton
+        <ViewSwitcher
+            android:id="@+id/favoritedSwitcher"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:clickable="true"
-            android:src="@drawable/ic_no_favorited"
-            android:tint="@color/floatingButtonSrc"
-            app:fabSize="mini"
             app:layout_anchor="@id/bottomLayout"
-            app:layout_anchorGravity="top|end"/>
+            app:layout_anchorGravity="top|end">
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/noFavoritedFab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:src="@drawable/ic_no_favorited"
+                android:tint="@color/floatingButtonSrc"
+                app:fabSize="mini"/>
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/alreadyFavoritedFab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:src="@drawable/ic_favorited"
+                android:tint="@color/floatingButtonSrc"
+                app:fabSize="mini"/>
+        </ViewSwitcher>
     </android.support.design.widget.CoordinatorLayout>
 </layout>
