@@ -19,7 +19,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Chronometer;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -34,9 +36,12 @@ import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
+import java.util.concurrent.TimeUnit;
+
 public class PlayActivity extends AppCompatActivity implements Response.Listener<String>,
         Response.ErrorListener, AdapterView.OnItemSelectedListener, View.OnClickListener,
-        ServiceConnection, MusicService.OnMusicServiceListener {
+        ServiceConnection, MusicService.OnMusicServiceListener,
+        Chronometer.OnChronometerTickListener, SeekBar.OnSeekBarChangeListener {
 
     private static final Object REQUESTS_TAG = "PlayActivity";
 
@@ -77,6 +82,8 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         mBinding.playSpinner.setOnItemSelectedListener(this);
         mBinding.alreadyFavoritedFab.setOnClickListener(this);
         mBinding.noFavoritedFab.setOnClickListener(this);
+        mBinding.playChrononmeter.setOnChronometerTickListener(this);
+        mBinding.playSeekBar.setOnSeekBarChangeListener(this);
 
         mBinding.setActivityPlay(mActivityPlay);
     }
@@ -197,7 +204,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     private void setPlayChrononmeterBase() {
-        int currentPlayMillis = mMusicService.getCurrentPosition();
+        int currentPlayMillis = mMusicService.getPlayedMillis();
         mBinding.playChrononmeter.setBase(SystemClock.elapsedRealtime() - currentPlayMillis);
     }
 
@@ -230,8 +237,11 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         refreshFavoritedSwitcher(music);
         NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
 
-        String playDuration = DateTimeUtils.getPlayDuration(this, music.getSeconds());
+        String playDuration = DateTimeUtils.getFormattedTime(this, music.getSeconds());
+        int progress = (int) TimeUnit.MILLISECONDS.toSeconds(mMusicService.getPlayedMillis());
 
+        mBinding.playSeekBar.setMax(music.getSeconds());
+        mBinding.playSeekBar.setProgress(progress);
         mBinding.playDuration.setText(playDuration);
         mActivityPlay.setBigPicture(this, music.getBigPicture());
     }
@@ -274,6 +284,37 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                     }
                 }
             }).start();
+        }
+    }
+
+    @Override
+    public void onChronometerTick(Chronometer chronometer) {
+        int progress = (int) TimeUnit.MILLISECONDS.toSeconds(mMusicService.getPlayedMillis());
+        mBinding.playSeekBar.setProgress(progress);
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (fromUser) {
+            String formattedTime = DateTimeUtils.getFormattedTime(this, progress);
+            mBinding.playChrononmeter.setText(formattedTime);
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        mBinding.playChrononmeter.stop();
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+        int progressOfMillis = (int) TimeUnit.SECONDS.toMillis(seekBar.getProgress());
+
+        mMusicService.seekTo(progressOfMillis);
+        mBinding.playChrononmeter.setBase(SystemClock.elapsedRealtime() - progressOfMillis);
+
+        if (mMusicService.isPlaying()) {
+            mBinding.playChrononmeter.start();
         }
     }
 

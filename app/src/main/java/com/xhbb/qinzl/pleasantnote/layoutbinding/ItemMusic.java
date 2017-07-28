@@ -26,7 +26,7 @@ public class ItemMusic {
         mListener = listener;
 
         if (seconds != 0) {
-            mDuration = DateTimeUtils.getPlayDuration(context, seconds);
+            mDuration = DateTimeUtils.getFormattedTime(context, seconds);
         }
     }
 

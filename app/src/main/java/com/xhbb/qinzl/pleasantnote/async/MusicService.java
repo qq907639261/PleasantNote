@@ -116,8 +116,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mMediaPlayer.pause();
     }
 
-    public int getCurrentPosition() {
+    public int getPlayedMillis() {
         return mMediaPlayer.getCurrentPosition();
+    }
+
+    public void seekTo(int millis) {
+        mMediaPlayer.seekTo(millis);
     }
 
     public Music getMusic() {

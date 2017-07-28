@@ -70,32 +70,32 @@
                 android:id="@+id/playChrononmeter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="32dp"
                 android:maxHeight="30dp"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
                 android:textSize="16sp"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent"
+                tools:format="00:00"/>
 
-            <ProgressBar
-                android:id="@+id/playProgress"
-                style="?android:attr/progressBarStyleHorizontal"
+            <SeekBar
+                android:id="@+id/playSeekBar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:maxHeight="30dp"
                 app:layout_constraintBottom_toBottomOf="@+id/playChrononmeter"
                 app:layout_constraintLeft_toRightOf="@+id/playChrononmeter"
                 app:layout_constraintRight_toLeftOf="@+id/playDuration"
-                app:layout_constraintTop_toTopOf="@+id/playChrononmeter"/>
+                app:layout_constraintTop_toTopOf="@+id/playChrononmeter"
+                tools:progress="50"/>
 
             <TextView
                 android:id="@+id/playDuration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
                 android:maxHeight="30dp"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
                 android:textAppearance="@android:style/TextAppearance.Widget.TextView"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toBottomOf="@+id/playChrononmeter"
