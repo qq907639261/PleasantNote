@@ -1,19 +1,28 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.Manifest;
+import android.app.DownloadManager;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +31,7 @@ import android.widget.BaseAdapter;
 import android.widget.Chronometer;
 import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -36,6 +46,7 @@ import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public class PlayActivity extends AppCompatActivity implements Response.Listener<String>,
@@ -49,8 +60,9 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     private PlaySpinnerAdapter mPlaySpinnerAdapter;
     private ActivityPlayBinding mBinding;
     private MusicService mMusicService;
-    private CheckFavoritedTask mCheckFavoritedTask;
+    private AsyncTask<Music, Void, Boolean> mInitFavoritedTask;
     private Music mFavoritedChangedMusic;
+    private AsyncTask<Void, Void, String> mLoadLyricsTask;
 
     public static void start(Context context) {
         context.startActivity(newIntent(context));
@@ -84,6 +96,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         mBinding.noFavoritedFab.setOnClickListener(this);
         mBinding.playChrononmeter.setOnChronometerTickListener(this);
         mBinding.playSeekBar.setOnSeekBarChangeListener(this);
+        mBinding.downloadButton.setOnClickListener(this);
 
         mBinding.setActivityPlay(mActivityPlay);
     }
@@ -111,13 +124,10 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         super.onStop();
         updateFavoritedData();
         mPlaySpinnerAdapter.recyclePlaySpinnerIcons();
+        mBinding.playChrononmeter.stop();
 
         if (mMusicService != null) {
             unbindService(this);
-        }
-
-        if (mCheckFavoritedTask != null) {
-            mCheckFavoritedTask.cancel(false);
         }
     }
 
@@ -125,6 +135,14 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     protected void onDestroy() {
         super.onDestroy();
         NetworkUtils.cancelRequests(this, REQUESTS_TAG);
+
+        if (mLoadLyricsTask != null) {
+            mLoadLyricsTask.cancel(false);
+        }
+
+        if (mInitFavoritedTask != null) {
+            mInitFavoritedTask.cancel(false);
+        }
     }
 
     @Override
@@ -139,14 +157,23 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     private void setLyrics(final String response) {
-        new Thread(new Runnable() {
+        if (mLoadLyricsTask != null) {
+            mLoadLyricsTask.cancel(false);
+        }
+
+        mLoadLyricsTask = new AsyncTask<Void, Void, String>() {
             @Override
-            public void run() {
-                String lyrics = JsonUtils.getLyrics(response);
+            protected String doInBackground(Void... voids) {
+                return JsonUtils.getLyrics(response);
+            }
+
+            @Override
+            protected void onPostExecute(String lyrics) {
+                super.onPostExecute(lyrics);
                 mActivityPlay.setLyrics(lyrics);
                 mActivityPlay.setLyricsColor(PlayActivity.this, false);
             }
-        }).start();
+        }.execute();
     }
 
     @Override
@@ -163,16 +190,10 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.playButton:
-                mMusicService.play();
-                if (mMusicService.isPlaying()) {
-                    mBinding.playSwitcher.setDisplayedChild(1);
-                    startPlayChrononmeter();
-                }
+                playMusic();
                 break;
             case R.id.pauseButton:
-                mMusicService.pause();
-                mBinding.playChrononmeter.stop();
-                mBinding.playSwitcher.setDisplayedChild(0);
+                pauseMusic();
                 break;
             case R.id.playNextButton:
                 mMusicService.playNext();
@@ -186,64 +207,137 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             case R.id.alreadyFavoritedFab:
                 changeFavoritedSwitcher(false);
                 break;
+            case R.id.downloadButton:
+                downloadMusic();
+                break;
             default:
         }
     }
 
+    private void pauseMusic() {
+        mMusicService.pause();
+        mBinding.playChrononmeter.stop();
+        mBinding.playSwitcher.setDisplayedChild(0);
+    }
+
+    private void playMusic() {
+        if (mMusicService.hasMusic()) {
+            mBinding.playSwitcher.setDisplayedChild(1);
+            setPlayChrononmeterBase();
+            mBinding.playChrononmeter.start();
+        }
+        mMusicService.play();
+    }
+
+    private void downloadMusic() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            return;
+        }
+
+        Music currentMusic = mMusicService.getCurrentMusic();
+        String fileName = String.valueOf(currentMusic.getCode());
+
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+        File file = new File(dir, fileName);
+
+        if (file.exists()) {
+            Toast.makeText(mMusicService, "音乐已下载", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        Uri uri = Uri.parse("http://10.0.2.2/XL_9.1.34.812.exe");
+//        Uri uri = Uri.parse(currentMusic.getDownloadUrl());
+        DownloadManager.Request request = new DownloadManager.Request(uri)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, fileName)
+                .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI)
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+        downloadManager.enqueue(request);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            downloadMusic();
+        } else {
+            Toast.makeText(mMusicService, R.string.download_permission_denied_toast, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void changeFavoritedSwitcher(boolean favorited) {
-        mFavoritedChangedMusic = mMusicService.getMusic();
+        mFavoritedChangedMusic = mMusicService.getCurrentMusic();
         if (mFavoritedChangedMusic != null) {
             mFavoritedChangedMusic.setMusicType(MusicType.FAVORITED);
             mBinding.favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
         }
     }
 
-    private void startPlayChrononmeter() {
-        setPlayChrononmeterBase();
-        mBinding.playChrononmeter.start();
-    }
-
     private void setPlayChrononmeterBase() {
-        int currentPlayMillis = mMusicService.getPlayedMillis();
-        mBinding.playChrononmeter.setBase(SystemClock.elapsedRealtime() - currentPlayMillis);
+        int playedMillis = mMusicService.getPlayedMillis();
+        mBinding.playChrononmeter.setBase(SystemClock.elapsedRealtime() - playedMillis);
     }
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
         mMusicService = ((MusicService.MusicBinder) iBinder).getService(this);
 
-        Music music = mMusicService.getMusic();
-        if (music != null) {
-            displayCurrentMusicData(music);
+        if (mMusicService.hasMusic()) {
+            updateCurrentMusic();
+            setPlayChrononmeterBase();
 
             if (mMusicService.isPlaying()) {
+                mBinding.playChrononmeter.start();
                 mBinding.playSwitcher.setDisplayedChild(1);
-                startPlayChrononmeter();
-            } else {
-                setPlayChrononmeterBase();
             }
         }
     }
 
-    private void refreshFavoritedSwitcher(Music music) {
-        if (mCheckFavoritedTask != null) {
-            mCheckFavoritedTask.cancel(false);
+    private void initFavoritedSwitcher() {
+        if (mInitFavoritedTask != null) {
+            mInitFavoritedTask.cancel(false);
         }
-        mCheckFavoritedTask = new CheckFavoritedTask();
-        mCheckFavoritedTask.execute(music);
+
+        mInitFavoritedTask = new AsyncTask<Music, Void, Boolean>() {
+            @Override
+            protected Boolean doInBackground(Music... musics) {
+                Music music = musics[0];
+                String selection = MusicContract._CODE + "=" + music.getCode() + " AND "
+                        + MusicContract._TYPE + "=" + MusicType.FAVORITED;
+
+                Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, null);
+
+                boolean favorited = false;
+                if (cursor != null) {
+                    favorited = cursor.getCount() > 0;
+                    cursor.close();
+                }
+
+                return favorited;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean favorited) {
+                super.onPostExecute(favorited);
+                mBinding.favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
+            }
+        }.execute(mMusicService.getCurrentMusic());
     }
 
-    private void displayCurrentMusicData(Music music) {
-        refreshFavoritedSwitcher(music);
-        NetworkUtils.addLyricsRequest(this, music.getCode(), REQUESTS_TAG, this, this);
+    private void updateCurrentMusic() {
+        Music currentMusic = mMusicService.getCurrentMusic();
 
-        String playDuration = DateTimeUtils.getFormattedTime(this, music.getSeconds());
-        int progress = (int) TimeUnit.MILLISECONDS.toSeconds(mMusicService.getPlayedMillis());
+        NetworkUtils.addLyricsRequest(this, currentMusic.getCode(), REQUESTS_TAG, this, this);
+        mActivityPlay.setBigPicture(this, currentMusic.getBigPicture());
+        initFavoritedSwitcher();
 
-        mBinding.playSeekBar.setMax(music.getSeconds());
-        mBinding.playSeekBar.setProgress(progress);
-        mBinding.playDuration.setText(playDuration);
-        mActivityPlay.setBigPicture(this, music.getBigPicture());
+        String formattedTime = DateTimeUtils.getFormattedTime(this, currentMusic.getSeconds());
+
+        mBinding.playDuration.setText(formattedTime);
+        mBinding.playSeekBar.setMax(currentMusic.getSeconds());
     }
 
     @Override
@@ -252,14 +346,17 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     @Override
-    public void onMediaPlayerStarted() {
-        startPlayChrononmeter();
+    public void onMediaPlayerPrepared() {
+        setPlayChrononmeterBase();
+        mBinding.playChrononmeter.start();
     }
 
     @Override
     public void onMediaPlayerPreparing() {
+        mBinding.playChrononmeter.stop();
+        setPlayChrononmeterBase();
         updateFavoritedData();
-        displayCurrentMusicData(mMusicService.getMusic());
+        updateCurrentMusic();
         mBinding.playSwitcher.setDisplayedChild(1);
     }
 
@@ -275,12 +372,13 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    ContentResolver contentResolver = getContentResolver();
                     String where = MusicContract._CODE + "=" + musicCode + " AND "
                             + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 
-                    getContentResolver().delete(MusicContract.URI, where, null);
+                    contentResolver.delete(MusicContract.URI, where, null);
                     if (favorited) {
-                        getContentResolver().insert(MusicContract.URI, musicValues);
+                        contentResolver.insert(MusicContract.URI, musicValues);
                     }
                 }
             }).start();
@@ -315,32 +413,6 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
         if (mMusicService.isPlaying()) {
             mBinding.playChrononmeter.start();
-        }
-    }
-
-    private class CheckFavoritedTask extends AsyncTask<Music, Void, Boolean> {
-
-        @Override
-        protected Boolean doInBackground(Music... musics) {
-            Music music = musics[0];
-            String selection = MusicContract._CODE + "=" + music.getCode() + " AND "
-                    + MusicContract._TYPE + "=" + MusicType.FAVORITED;
-
-            Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, null);
-
-            boolean favorited = false;
-            if (cursor != null) {
-                favorited = cursor.getCount() > 0;
-                cursor.close();
-            }
-
-            return favorited;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean favorited) {
-            super.onPostExecute(favorited);
-            mBinding.favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
         }
     }
 
@@ -382,10 +454,9 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             ViewHolder viewHolder;
             if (view == null) {
                 view = getLayoutInflater().inflate(R.layout.layout_image_view, viewGroup, false);
-
                 viewHolder = new ViewHolder();
-                viewHolder.mImageView = view.findViewById(R.id.imageView);
 
+                viewHolder.mImageView = view.findViewById(R.id.imageView);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();

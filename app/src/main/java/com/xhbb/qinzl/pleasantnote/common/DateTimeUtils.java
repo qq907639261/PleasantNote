@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 public class DateTimeUtils {
 
     public static String getFormattedTime(Context context, int seconds) {
-        long minutes = TimeUnit.SECONDS.toMinutes(seconds);
+        int minutes = seconds / 60;
 
-        long hours = minutes / 60;
-        long minutesOfHour = minutes % 60;
+        int hours = minutes / 60;
+        int minutesOfHour = minutes % 60;
         int secondsOfMinute = seconds % 60;
 
         String formattedTime = context.getString(R.string.format_time, minutesOfHour, secondsOfMinute);

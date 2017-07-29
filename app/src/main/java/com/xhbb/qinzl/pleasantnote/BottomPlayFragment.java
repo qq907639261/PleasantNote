@@ -86,7 +86,7 @@ public class BottomPlayFragment extends Fragment
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
         mMusicService = ((MusicService.MusicBinder) iBinder).getService(this);
 
-        Music music = mMusicService.getMusic();
+        Music music = mMusicService.getCurrentMusic();
         if (music != null) {
             displayCurrentMusicData(music);
             mFragmentBottomPlay.setPlaySwitcherDisplayedChild(mMusicService.isPlaying());
@@ -105,13 +105,13 @@ public class BottomPlayFragment extends Fragment
     }
 
     @Override
-    public void onMediaPlayerStarted() {
+    public void onMediaPlayerPrepared() {
 
     }
 
     @Override
     public void onMediaPlayerPreparing() {
-        displayCurrentMusicData(mMusicService.getMusic());
+        displayCurrentMusicData(mMusicService.getCurrentMusic());
         mFragmentBottomPlay.setPlaySwitcherDisplayedChild(true);
     }
 }

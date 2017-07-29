@@ -42,9 +42,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private Music mMusic;
     private Notification mNotification;
     private Cursor mCursor;
-    private QueryMoreMusicTask mQueryMoreMusicTask;
+    private AsyncTask<Music, Void, Cursor> mQueryMoreMusicTask;
+    private AsyncTask<Void, Void, Cursor> mInitMusicTask;
     private int mDataPosition;
-    private InitMusicTask mInitMusicTask;
     private int[] mPlaySpinnerValues;
     private List<Integer> mPreviousMusicPositions;
     private MusicBinder mMusicBinder;
@@ -124,8 +124,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mMediaPlayer.seekTo(millis);
     }
 
-    public Music getMusic() {
+    public Music getCurrentMusic() {
         return mMusic;
+    }
+
+    public boolean hasMusic() {
+        return mMediaPlayer.getDuration() > 0;
     }
 
     @Override
@@ -138,8 +142,83 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mInitMusicTask != null) {
             mInitMusicTask.cancel(true);
         }
-        mInitMusicTask = new InitMusicTask();
-        mInitMusicTask.execute();
+
+        mInitMusicTask = new AsyncTask<Void, Void, Cursor>() {
+            @Override
+            protected Cursor doInBackground(Void... voids) {
+                String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
+                String sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
+
+                Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+                cursor = handleCancelled(isCancelled(), cursor);
+
+                return cursor;
+            }
+
+            @Override
+            protected void onPostExecute(Cursor cursor) {
+                super.onPostExecute(cursor);
+                setCursor(cursor);
+                resetAndPlay();
+            }
+        }.execute();
+    }
+
+    private void queryMoreMusic() {
+        if (mQueryMoreMusicTask != null) {
+            mQueryMoreMusicTask.cancel(true);
+        }
+
+        mQueryMoreMusicTask = new AsyncTask<Music, Void, Cursor>() {
+            @Override
+            protected Cursor doInBackground(Music... musics) {
+                Music music = musics[0];
+                int musicType = music.getMusicType();
+
+                String selection = MusicContract._TYPE + "=" + musicType;
+                String sortOrder = null;
+
+                if (musicType == MusicType.RANKING) {
+                    selection += " AND " + MusicContract._RANKING_CODE + "=" + music.getRankingCode();
+                } else if (musicType == MusicType.HISTORY) {
+                    sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
+                }
+
+                Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+                cursor = handleCancelled(isCancelled(), cursor);
+
+                return cursor;
+            }
+
+            @Override
+            protected void onPostExecute(Cursor cursor) {
+                super.onPostExecute(cursor);
+                setCursor(cursor);
+            }
+        }.execute(mMusic);
+    }
+
+    private Cursor handleCancelled(boolean cancelled, Cursor cursor) {
+        if (cancelled && cursor != null) {
+            cursor.close();
+            cursor = null;
+        }
+        return cursor;
+    }
+
+    private void setCursor(Cursor cursor) {
+        if (cursor == null) {
+            return;
+        }
+
+        if (mCursor != null) {
+            mCursor.close();
+        }
+        mCursor = cursor;
+
+        if (mCursor.moveToPosition(mDataPosition)) {
+            mMusic = new Music(mCursor);
+        }
     }
 
     private void playNewMusic(Intent intent) {
@@ -147,14 +226,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mDataPosition = intent.getIntExtra(EXTRA_DATA_POSITION, 0);
         resetAndPlay();
         queryMoreMusic();
-    }
-
-    private void queryMoreMusic() {
-        if (mQueryMoreMusicTask != null) {
-            mQueryMoreMusicTask.cancel(true);
-        }
-        mQueryMoreMusicTask = new QueryMoreMusicTask();
-        mQueryMoreMusicTask.execute();
     }
 
     private void resetAndPlay() {
@@ -182,6 +253,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mInitMusicTask != null) {
             mInitMusicTask.cancel(true);
         }
+
         if (mQueryMoreMusicTask != null) {
             mQueryMoreMusicTask.cancel(true);
         }
@@ -206,19 +278,18 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
-        mediaPlayer.start();
-        saveCurrentMusic(mMusic);
-
         if (mListener != null) {
-            mListener.onMediaPlayerStarted();
+            mListener.onMediaPlayerPrepared();
         }
+
+        mediaPlayer.start();
+        saveCurrentMusic(mMusic, getContentResolver());
     }
 
-    private void saveCurrentMusic(final Music music) {
+    private void saveCurrentMusic(final Music music, final ContentResolver contentResolver) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ContentResolver contentResolver = getContentResolver();
                 ContentValues musicValues = music.getMusicValues();
                 musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
 
@@ -234,11 +305,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
-        if (noCursorData()) {
-            mediaPlayer.start();
-        } else {
-            playNext();
-        }
+        playNext();
     }
 
     public void playNext() {
@@ -300,29 +367,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return mCursor == null || mCursor.getCount() == 0;
     }
 
-    private Cursor handleCancelled(boolean cancelled, Cursor cursor) {
-        if (cancelled && cursor != null) {
-            cursor.close();
-            cursor = null;
-        }
-        return cursor;
-    }
-
-    private void setCursor(Cursor cursor) {
-        if (cursor == null) {
-            return;
-        }
-
-        if (mCursor != null) {
-            mCursor.close();
-        }
-        mCursor = cursor;
-
-        if (mCursor.moveToPosition(mDataPosition)) {
-            mMusic = new Music(mCursor);
-        }
-    }
-
     public class MusicBinder extends Binder {
 
         public MusicService getService(@Nullable OnMusicServiceListener listener) {
@@ -331,58 +375,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
     }
 
-    private class InitMusicTask extends AsyncTask<Void, Void, Cursor> {
-
-        @Override
-        protected Cursor doInBackground(Void... voids) {
-            String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
-            String sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
-
-            Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
-            cursor = handleCancelled(isCancelled(), cursor);
-
-            return cursor;
-        }
-
-        @Override
-        protected void onPostExecute(Cursor cursor) {
-            super.onPostExecute(cursor);
-            setCursor(cursor);
-            resetAndPlay();
-        }
-    }
-
-    private class QueryMoreMusicTask extends AsyncTask<Void, Void, Cursor> {
-
-        @Override
-        protected Cursor doInBackground(Void... voids) {
-            int musicType = mMusic.getMusicType();
-
-            String selection = MusicContract._TYPE + "=" + musicType;
-            String sortOrder = null;
-
-            if (musicType == MusicType.RANKING) {
-                selection += " AND " + MusicContract._RANKING_CODE + "=" + mMusic.getRankingCode();
-            } else if (musicType == MusicType.HISTORY) {
-                sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
-            }
-
-            Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
-            cursor = handleCancelled(isCancelled(), cursor);
-
-            return cursor;
-        }
-
-        @Override
-        protected void onPostExecute(Cursor cursor) {
-            super.onPostExecute(cursor);
-            setCursor(cursor);
-        }
-    }
-
     public interface OnMusicServiceListener {
 
-        void onMediaPlayerStarted();
+        void onMediaPlayerPrepared();
         void onMediaPlayerPreparing();
     }
 }

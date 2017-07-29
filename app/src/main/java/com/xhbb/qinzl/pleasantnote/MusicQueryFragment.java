@@ -100,16 +100,16 @@ public class MusicQueryFragment extends MainFragment {
         LocalBroadcastManager.getInstance(activity).unregisterReceiver(mLocalReceiver);
 
         if (!activity.isChangingConfigurations()) {
-            deleteQueryMusic(activity);
+            deleteQueryMusic();
         }
     }
 
-    private void deleteQueryMusic(final Context context) {
+    private void deleteQueryMusic() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 String where = MusicContract._TYPE + "=" + MusicType.QUERY;
-                context.getContentResolver().delete(MusicContract.URI, where, null);
+                getContext().getContentResolver().delete(MusicContract.URI, where, null);
             }
         }).start();
     }
