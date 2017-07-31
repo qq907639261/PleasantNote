@@ -61,8 +61,8 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     private ActivityPlayBinding mBinding;
     private MusicService mMusicService;
     private AsyncTask<Music, Void, Boolean> mInitFavoritedTask;
+    private AsyncTask<Void, Void, String> mDisplayLyricsTask;
     private Music mFavoritedChangedMusic;
-    private AsyncTask<Void, Void, String> mLoadLyricsTask;
 
     public static void start(Context context) {
         context.startActivity(newIntent(context));
@@ -125,10 +125,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         updateFavoritedData();
         mPlaySpinnerAdapter.recyclePlaySpinnerIcons();
         mBinding.playChrononmeter.stop();
-
-        if (mMusicService != null) {
-            unbindService(this);
-        }
+        unbindService(this);
     }
 
     @Override
@@ -136,8 +133,8 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         super.onDestroy();
         NetworkUtils.cancelRequests(this, REQUESTS_TAG);
 
-        if (mLoadLyricsTask != null) {
-            mLoadLyricsTask.cancel(false);
+        if (mDisplayLyricsTask != null) {
+            mDisplayLyricsTask.cancel(false);
         }
 
         if (mInitFavoritedTask != null) {
@@ -147,21 +144,20 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onErrorResponse(VolleyError error) {
-        mActivityPlay.setLyrics(getString(R.string.no_lyrics_text));
-        mActivityPlay.setLyricsColor(this, true);
+
     }
 
     @Override
     public void onResponse(String response) {
-        setLyrics(response);
+        displayLyrics(response);
     }
 
-    private void setLyrics(final String response) {
-        if (mLoadLyricsTask != null) {
-            mLoadLyricsTask.cancel(false);
+    private void displayLyrics(final String response) {
+        if (mDisplayLyricsTask != null) {
+            mDisplayLyricsTask.cancel(false);
         }
 
-        mLoadLyricsTask = new AsyncTask<Void, Void, String>() {
+        mDisplayLyricsTask = new AsyncTask<Void, Void, String>() {
             @Override
             protected String doInBackground(Void... voids) {
                 return JsonUtils.getLyrics(response);
@@ -171,7 +167,6 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             protected void onPostExecute(String lyrics) {
                 super.onPostExecute(lyrics);
                 mActivityPlay.setLyrics(lyrics);
-                mActivityPlay.setLyricsColor(PlayActivity.this, false);
             }
         }.execute();
     }
@@ -342,17 +337,17 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
-        mMusicService = null;
+
     }
 
     @Override
-    public void onMediaPlayerPrepared() {
+    public void onPrepared() {
         setPlayChrononmeterBase();
         mBinding.playChrononmeter.start();
     }
 
     @Override
-    public void onMediaPlayerPreparing() {
+    public void onPreparing() {
         mBinding.playChrononmeter.stop();
         setPlayChrononmeterBase();
         updateFavoritedData();

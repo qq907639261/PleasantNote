@@ -105,12 +105,12 @@ public class BottomPlayFragment extends Fragment
     }
 
     @Override
-    public void onMediaPlayerPrepared() {
+    public void onPrepared() {
 
     }
 
     @Override
-    public void onMediaPlayerPreparing() {
+    public void onPreparing() {
         displayCurrentMusicData(mMusicService.getCurrentMusic());
         mFragmentBottomPlay.setPlaySwitcherDisplayedChild(true);
     }

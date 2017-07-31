@@ -50,7 +50,7 @@
                     android:paddingRight="8dp"
                     android:paddingTop="32dp"
                     android:text="@{activityPlay.lyrics}"
-                    android:textColor="@{activityPlay.lyricsColor}"
+                    android:textColor="@color/lyricsText"
                     android:textSize="20sp"
                     tools:text="第一行\n第二行"/>
             </android.support.v4.widget.NestedScrollView>

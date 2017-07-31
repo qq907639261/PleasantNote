@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CleanUpHistoryMusicJob extends Job {
 
-    public static final String TAG = "CleanUpHistoryMusicJob";
+    static final String TAG = "CleanUpHistoryMusicJob";
 
     public static void scheduleJob() {
         new JobRequest.Builder(TAG)

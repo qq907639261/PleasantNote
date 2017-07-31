@@ -1,6 +1,5 @@
 package com.xhbb.qinzl.pleasantnote;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -118,8 +117,8 @@ public abstract class MainFragment extends Fragment
             Music music = new Music(mCursor);
 
             Context context = getContext();
-            Intent intent = MusicService.newIntent(context, MusicService.ACTION_PLAY_NEW_MUSIC,
-                    music, itemPosition);
+            Intent intent = MusicService.newIntent(context,
+                    MusicService.ACTION_PLAY_NEW_MUSIC, music);
             context.startService(intent);
         }
     }
