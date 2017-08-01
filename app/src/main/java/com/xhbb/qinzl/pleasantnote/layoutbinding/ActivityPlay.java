@@ -7,10 +7,6 @@ import android.graphics.drawable.Drawable;
 import android.widget.BaseAdapter;
 
 import com.xhbb.qinzl.pleasantnote.BR;
-import com.xhbb.qinzl.pleasantnote.R;
-import com.xhbb.qinzl.pleasantnote.common.GlideApp;
-
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by qinzl on 2017/7/20.
@@ -53,25 +49,9 @@ public class ActivityPlay extends BaseObservable {
         return mBigPicture;
     }
 
-    public void setBigPicture(final Context context, final String bigPicture) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mBigPicture = GlideApp.with(context)
-                            .asDrawable()
-                            .load(bigPicture)
-                            .error(R.drawable.empty_image)
-                            .centerCrop(context)
-                            .submit()
-                            .get();
-                    mBigPicture.setAlpha(50);
-                    notifyPropertyChanged(BR.bigPicture);
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+    public void setBigPicture(Drawable bigPicture) {
+        mBigPicture = bigPicture;
+        notifyPropertyChanged(BR.bigPicture);
     }
 
     public Context getContext() {

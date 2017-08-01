@@ -94,9 +94,9 @@ public class BottomPlayFragment extends Fragment
     }
 
     private void displayCurrentMusicData(Music music) {
-        mFragmentBottomPlay.setImageUrl(music.getSmallPicture());
+        mFragmentBottomPlay.setImageUrl(music.getSmallPictureUrl());
         mFragmentBottomPlay.setMusicName(music.getName());
-        mFragmentBottomPlay.setSinger(music.getSinger());
+        mFragmentBottomPlay.setSinger(music.getSingerName());
     }
 
     @Override

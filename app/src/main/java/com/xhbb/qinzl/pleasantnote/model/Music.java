@@ -16,11 +16,10 @@ public class Music implements Parcelable {
     private String mName;
     private int mSeconds;
     private int mCode;
-    private String mSinger;
-    private String mBigPicture;
-    private String mSmallPicture;
+    private String mSingerName;
+    private String mBigPictureUrl;
+    private String mSmallPictureUrl;
     private String mPlayUrl;
-    private String mDownloadUrl;
     private int mRankingCode;
     private int mMusicType;
 
@@ -28,11 +27,10 @@ public class Music implements Parcelable {
         mName = cursor.getString(cursor.getColumnIndex(MusicContract._NAME));
         mSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._SECONDS));
         mCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));
-        mSinger = cursor.getString(cursor.getColumnIndex(MusicContract._SINGER));
-        mBigPicture = cursor.getString(cursor.getColumnIndex(MusicContract._BIG_PICTURE));
-        mSmallPicture = cursor.getString(cursor.getColumnIndex(MusicContract._SMALL_PICTURE));
+        mSingerName = cursor.getString(cursor.getColumnIndex(MusicContract._SINGER_NAME));
+        mBigPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._BIG_PICTURE_URL));
+        mSmallPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._SMALL_PICTURE_URL));
         mPlayUrl = cursor.getString(cursor.getColumnIndex(MusicContract._PLAY_URL));
-        mDownloadUrl = cursor.getString(cursor.getColumnIndex(MusicContract._DOWNLOAD_URL));
         mRankingCode = cursor.getInt(cursor.getColumnIndex(MusicContract._RANKING_CODE));
         mMusicType = cursor.getInt(cursor.getColumnIndex(MusicContract._TYPE));
     }
@@ -41,11 +39,10 @@ public class Music implements Parcelable {
         mName = in.readString();
         mSeconds = in.readInt();
         mCode = in.readInt();
-        mSinger = in.readString();
-        mBigPicture = in.readString();
-        mSmallPicture = in.readString();
+        mSingerName = in.readString();
+        mBigPictureUrl = in.readString();
+        mSmallPictureUrl = in.readString();
         mPlayUrl = in.readString();
-        mDownloadUrl = in.readString();
         mRankingCode = in.readInt();
         mMusicType = in.readInt();
     }
@@ -55,11 +52,10 @@ public class Music implements Parcelable {
         parcel.writeString(mName);
         parcel.writeInt(mSeconds);
         parcel.writeInt(mCode);
-        parcel.writeString(mSinger);
-        parcel.writeString(mBigPicture);
-        parcel.writeString(mSmallPicture);
+        parcel.writeString(mSingerName);
+        parcel.writeString(mBigPictureUrl);
+        parcel.writeString(mSmallPictureUrl);
         parcel.writeString(mPlayUrl);
-        parcel.writeString(mDownloadUrl);
         parcel.writeInt(mRankingCode);
         parcel.writeInt(mMusicType);
     }
@@ -71,10 +67,9 @@ public class Music implements Parcelable {
         musicValues.put(MusicContract._CODE, mCode);
         musicValues.put(MusicContract._SECONDS, mSeconds);
         musicValues.put(MusicContract._PLAY_URL, mPlayUrl);
-        musicValues.put(MusicContract._DOWNLOAD_URL, mDownloadUrl);
-        musicValues.put(MusicContract._SMALL_PICTURE, mSmallPicture);
-        musicValues.put(MusicContract._BIG_PICTURE, mBigPicture);
-        musicValues.put(MusicContract._SINGER, mSinger);
+        musicValues.put(MusicContract._SMALL_PICTURE_URL, mSmallPictureUrl);
+        musicValues.put(MusicContract._BIG_PICTURE_URL, mBigPictureUrl);
+        musicValues.put(MusicContract._SINGER_NAME, mSingerName);
         musicValues.put(MusicContract._RANKING_CODE, mRankingCode);
         musicValues.put(MusicContract._TYPE, mMusicType);
 
@@ -93,24 +88,20 @@ public class Music implements Parcelable {
         return mCode;
     }
 
-    public String getSinger() {
-        return mSinger;
+    public String getSingerName() {
+        return mSingerName;
     }
 
-    public String getBigPicture() {
-        return mBigPicture;
+    public String getBigPictureUrl() {
+        return mBigPictureUrl;
     }
 
-    public String getSmallPicture() {
-        return mSmallPicture;
+    public String getSmallPictureUrl() {
+        return mSmallPictureUrl;
     }
 
     public String getPlayUrl() {
         return mPlayUrl;
-    }
-
-    public String getDownloadUrl() {
-        return mDownloadUrl;
     }
 
     public int getRankingCode() {

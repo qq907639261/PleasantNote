@@ -1,5 +1,6 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -10,6 +11,7 @@ import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -29,6 +31,7 @@ import com.android.volley.VolleyError;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.common.DateTimeUtils;
 import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
+import com.xhbb.qinzl.pleasantnote.common.GlideApp;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.data.PrefrencesUtils;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityPlayBinding;
@@ -37,6 +40,7 @@ import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class PlayActivity extends AppCompatActivity implements Response.Listener<String>,
@@ -52,7 +56,8 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     private ActivityPlayBinding mBinding;
     private MusicService mMusicService;
     private AsyncTask<Void, Void, Boolean> mInitFavoritedTask;
-    private AsyncTask<Void, Void, String> mDisplayLyricsTask;
+    private AsyncTask<String, Void, String> mDisplayLyricsTask;
+    private AsyncTask<String, Void, Drawable> mDisplayBackgroundTask;
     private Music mFavoritedChangedMusic;
 
     public static void start(Context context) {
@@ -136,6 +141,10 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         if (mInitFavoritedTask != null) {
             mInitFavoritedTask.cancel(false);
         }
+
+        if (mDisplayBackgroundTask != null) {
+            mDisplayBackgroundTask.cancel(false);
+        }
     }
 
     @Override
@@ -154,15 +163,15 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         outState.putString(ARG_LYRICS, mActivityPlay.getLyrics());
     }
 
-    private void displayLyrics(final String response) {
+    private void displayLyrics(String response) {
         if (mDisplayLyricsTask != null) {
             mDisplayLyricsTask.cancel(false);
         }
 
-        mDisplayLyricsTask = new AsyncTask<Void, Void, String>() {
+        mDisplayLyricsTask = new AsyncTask<String, Void, String>() {
             @Override
-            protected String doInBackground(Void... voids) {
-                return JsonUtils.getLyrics(response);
+            protected String doInBackground(String... responses) {
+                return JsonUtils.getLyrics(responses[0]);
             }
 
             @Override
@@ -170,7 +179,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPostExecute(lyrics);
                 mActivityPlay.setLyrics(lyrics);
             }
-        }.execute();
+        }.execute(response);
     }
 
     @Override
@@ -264,22 +273,22 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         }
 
         mInitFavoritedTask = new AsyncTask<Void, Void, Boolean>() {
-            private ContentResolver mContentResolver;
-            private int mMusicCode;
+            private ContentResolver iContentResolver;
+            private int iMusicCode;
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                mContentResolver = getContentResolver();
-                mMusicCode = mMusicService.getCurrentMusic().getCode();
+                iContentResolver = getContentResolver();
+                iMusicCode = mMusicService.getCurrentMusic().getCode();
             }
 
             @Override
             protected Boolean doInBackground(Void... voids) {
-                String selection = MusicContract._CODE + "=" + mMusicCode + " AND "
+                String selection = MusicContract._CODE + "=" + iMusicCode + " AND "
                         + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 
-                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, null);
+                Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, null);
 
                 boolean favorited = false;
                 if (cursor != null) {
@@ -302,13 +311,56 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         Music currentMusic = mMusicService.getCurrentMusic();
 
         NetworkUtils.addLyricsRequest(this, currentMusic.getCode(), REQUESTS_TAG, this, this);
-        mActivityPlay.setBigPicture(this, currentMusic.getBigPicture());
+        displayBackground(currentMusic.getBigPictureUrl());
         initFavoritedSwitcher();
 
         String formattedTime = DateTimeUtils.getFormattedTime(this, currentMusic.getSeconds());
 
         mBinding.playDuration.setText(formattedTime);
         mBinding.playSeekBar.setMax(currentMusic.getSeconds());
+    }
+
+    private void displayBackground(String pictureUrl) {
+        if (mDisplayBackgroundTask != null) {
+            mDisplayBackgroundTask.cancel(false);
+        }
+
+        mDisplayBackgroundTask = new AsyncTask<String, Void, Drawable>() {
+            private Activity iActivity;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                iActivity = PlayActivity.this;
+            }
+
+            @Override
+            protected Drawable doInBackground(String... pictureUrls) {
+                Drawable bigPicture = null;
+
+                try {
+                    bigPicture = GlideApp.with(iActivity)
+                            .asDrawable()
+                            .load(pictureUrls[0])
+                            .error(R.drawable.empty_image)
+                            .centerCrop(iActivity)
+                            .submit()
+                            .get();
+
+                    bigPicture.setAlpha(50);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+
+                return bigPicture;
+            }
+
+            @Override
+            protected void onPostExecute(Drawable drawable) {
+                super.onPostExecute(drawable);
+                mActivityPlay.setBigPicture(drawable);
+            }
+        }.execute(pictureUrl);
     }
 
     @Override
@@ -332,28 +384,40 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     private void updateFavoritedData() {
-        if (mFavoritedChangedMusic != null) {
-            final ContentResolver contentResolver = getContentResolver();
-            final boolean favorited = mBinding.favoritedSwitcher.getDisplayedChild() == 1;
-            final int musicCode = mFavoritedChangedMusic.getCode();
-            final ContentValues musicValues = favorited ?
-                    mFavoritedChangedMusic.getMusicValues() : null;
-
-            mFavoritedChangedMusic = null;
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String where = MusicContract._CODE + "=" + musicCode + " AND "
-                            + MusicContract._TYPE + "=" + MusicType.FAVORITED;
-
-                    contentResolver.delete(MusicContract.URI, where, null);
-                    if (favorited) {
-                        contentResolver.insert(MusicContract.URI, musicValues);
-                    }
-                }
-            }).start();
+        if (mFavoritedChangedMusic == null) {
+            return;
         }
+
+        new AsyncTask<Void, Void, Void>() {
+            private ContentResolver iContentResolver;
+            private boolean iFavorited;
+            private int iMusicCode;
+            private ContentValues iMusicValues;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                iContentResolver = getContentResolver();
+                iFavorited = mBinding.favoritedSwitcher.getDisplayedChild() == 1;
+                iMusicCode = mFavoritedChangedMusic.getCode();
+                iMusicValues = iFavorited ? mFavoritedChangedMusic.getMusicValues() : null;
+
+                mFavoritedChangedMusic = null;
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                String where = MusicContract._CODE + "=" + iMusicCode + " AND "
+                        + MusicContract._TYPE + "=" + MusicType.FAVORITED;
+
+                iContentResolver.delete(MusicContract.URI, where, null);
+                if (iFavorited) {
+                    iContentResolver.insert(MusicContract.URI, iMusicValues);
+                }
+
+                return null;
+            }
+        }.execute();
     }
 
     @Override
@@ -389,25 +453,25 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     private class PlaySpinnerAdapter extends BaseAdapter {
 
-        private TypedArray mPlaySpinnerIcons;
-        private String[] mPlaySpinnerAccessibilities;
+        private TypedArray iPlaySpinnerIcons;
+        private String[] iPlaySpinnerAccessibilities;
 
         private PlaySpinnerAdapter() {
-            mPlaySpinnerAccessibilities =
+            iPlaySpinnerAccessibilities =
                     getResources().getStringArray(R.array.play_spinner_accessibilities);
         }
 
         private void obtainPlaySpinnerIcons() {
-            mPlaySpinnerIcons = getResources().obtainTypedArray(R.array.play_spinner_drawables);
+            iPlaySpinnerIcons = getResources().obtainTypedArray(R.array.play_spinner_drawables);
         }
 
         private void recyclePlaySpinnerIcons() {
-            mPlaySpinnerIcons.recycle();
+            iPlaySpinnerIcons.recycle();
         }
 
         @Override
         public int getCount() {
-            return mPlaySpinnerAccessibilities.length;
+            return iPlaySpinnerAccessibilities.length;
         }
 
         @Override
@@ -423,25 +487,26 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
+
             if (view == null) {
                 view = getLayoutInflater().inflate(R.layout.layout_image_view, viewGroup, false);
                 viewHolder = new ViewHolder();
 
-                viewHolder.mImageView = view.findViewById(R.id.imageView);
+                viewHolder.imageView = view.findViewById(R.id.imageView);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            viewHolder.mImageView.setImageDrawable(mPlaySpinnerIcons.getDrawable(i));
-            viewHolder.mImageView.setContentDescription(mPlaySpinnerAccessibilities[i]);
+            viewHolder.imageView.setImageDrawable(iPlaySpinnerIcons.getDrawable(i));
+            viewHolder.imageView.setContentDescription(iPlaySpinnerAccessibilities[i]);
 
             return view;
         }
 
         private class ViewHolder {
 
-            private ImageView mImageView;
+            private ImageView imageView;
         }
     }
 }

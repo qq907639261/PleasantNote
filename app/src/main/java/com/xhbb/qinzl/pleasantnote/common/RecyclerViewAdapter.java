@@ -15,11 +15,15 @@ import android.view.ViewGroup;
 public abstract class RecyclerViewAdapter extends
         RecyclerView.Adapter<RecyclerViewAdapter.BindingHolder> {
 
-    protected Cursor mCursor;
+    private Cursor mCursor;
     private int mLayoutRes;
 
     public RecyclerViewAdapter(int defaultLayoutRes) {
         mLayoutRes = defaultLayoutRes;
+    }
+
+    protected Cursor getCursor() {
+        return mCursor;
     }
 
     public void swapCursor(Cursor cursor) {
@@ -49,15 +53,15 @@ public abstract class RecyclerViewAdapter extends
 
     protected class BindingHolder extends RecyclerView.ViewHolder {
 
-        private ViewDataBinding mBinding;
+        private ViewDataBinding iBinding;
 
         BindingHolder(View itemView) {
             super(itemView);
-            mBinding = DataBindingUtil.bind(itemView);
+            iBinding = DataBindingUtil.bind(itemView);
         }
 
-        public ViewDataBinding getBinding() {
-            return mBinding;
+        public ViewDataBinding getiBinding() {
+            return iBinding;
         }
     }
 }

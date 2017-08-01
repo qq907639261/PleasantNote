@@ -83,7 +83,7 @@ public class MusicQueryFragment extends MainFragment {
     }
 
     private void registerLocalBroadcast(Context context) {
-        IntentFilter filter = new IntentFilter(Contracts.ACTION_MUSIC_DATA_UPDATED);
+        IntentFilter filter = new IntentFilter(Contracts.ACTION_UPDATE_QUERY_DATA_FINISHED);
         LocalBroadcastManager.getInstance(context).registerReceiver(mLocalReceiver, filter);
     }
 
@@ -196,7 +196,7 @@ public class MusicQueryFragment extends MainFragment {
 
     private void handleReceive(Intent intent) {
         switch (intent.getAction()) {
-            case Contracts.ACTION_MUSIC_DATA_UPDATED:
+            case Contracts.ACTION_UPDATE_QUERY_DATA_FINISHED:
                 int updatedState = intent.getIntExtra(
                         UpdateQueryDataService.EXTRA_DATA_UPDATED_STATE, 0);
 
@@ -205,10 +205,11 @@ public class MusicQueryFragment extends MainFragment {
                 } else if (updatedState == DataUpdatedState.SCROLLED_TO_END_NO_UPDATE) {
                     mMusicAdapter.setScrolledToEnd(true);
                     getLoaderManager().initLoader(0, null, this);
-                } else if (updatedState == DataUpdatedState.EMPTY_DATA) {
+                } else if (updatedState == DataUpdatedState.EMPTY_DATA_NO_UPDATE) {
                     mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
                     getLoaderManager().initLoader(0, null, this);
                 }
+
                 break;
             default:
         }

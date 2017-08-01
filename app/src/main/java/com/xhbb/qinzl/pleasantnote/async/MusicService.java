@@ -142,12 +142,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
 
         mInitMusicTask = new AsyncTask<Void, Void, List<Music>>() {
-            private ContentResolver mContentResolver;
+            private ContentResolver iContentResolver;
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                mContentResolver = getContentResolver();
+                iContentResolver = getContentResolver();
             }
 
             @Override
@@ -155,7 +155,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
                 String sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
 
-                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusics(cursor, null);
             }
@@ -210,12 +210,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
 
         mQueryMoreMusicTask = new AsyncTask<Void, Void, List<Music>>() {
-            private ContentResolver mContentResolver;
+            private ContentResolver iContentResolver;
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                mContentResolver = getContentResolver();
+                iContentResolver = getContentResolver();
             }
 
             @Override
@@ -231,7 +231,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
                 }
 
-                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusics(cursor, currentMusic);
             }
@@ -287,7 +287,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     private void cleanUpHistoryMusic() {
         final Context context = getApplicationContext();
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -307,23 +306,32 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     private void saveCurrentMusic() {
-        final Music currentMusic = mMusics.get(mCurrentMusicPosition);
-        final ContentResolver contentResolver = getContentResolver();
+        new AsyncTask<Void, Void, Void>() {
+            private Music iCurrentMusic;
+            private ContentResolver iContentResolver;
 
-        new Thread(new Runnable() {
             @Override
-            public void run() {
-                ContentValues musicValues = currentMusic.getMusicValues();
-                int musicCode = currentMusic.getCode();
+            protected void onPreExecute() {
+                super.onPreExecute();
+                iCurrentMusic = mMusics.get(mCurrentMusicPosition);
+                iContentResolver = getContentResolver();
+            }
 
-                musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
+            @Override
+            protected Void doInBackground(Void... voids) {
+                int musicCode = iCurrentMusic.getCode();
                 String where = MusicContract._CODE + "=" + musicCode + " AND "
                         + MusicContract._TYPE + "=" + MusicType.HISTORY;
 
-                contentResolver.delete(MusicContract.URI, where, null);
-                contentResolver.insert(MusicContract.URI, musicValues);
+                ContentValues musicValues = iCurrentMusic.getMusicValues();
+                musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
+
+                iContentResolver.delete(MusicContract.URI, where, null);
+                iContentResolver.insert(MusicContract.URI, musicValues);
+
+                return null;
             }
-        }).start();
+        }.execute();
     }
 
     @Override

@@ -47,13 +47,13 @@ public class UpdateQueryDataService extends IntentService {
             MainTasks.updateMusicDataByQuery(context, musicValueses, firstPage);
         } else {
             if (firstPage) {
-                updatedState = DataUpdatedState.EMPTY_DATA;
+                updatedState = DataUpdatedState.EMPTY_DATA_NO_UPDATE;
             } else {
                 updatedState = DataUpdatedState.SCROLLED_TO_END_NO_UPDATE;
             }
         }
 
-        Intent broadcastIntent = new Intent(Contracts.ACTION_MUSIC_DATA_UPDATED);
+        Intent broadcastIntent = new Intent(Contracts.ACTION_UPDATE_QUERY_DATA_FINISHED);
         broadcastIntent.putExtra(EXTRA_DATA_UPDATED_STATE, updatedState);
 
         LocalBroadcastManager.getInstance(context).sendBroadcast(broadcastIntent);

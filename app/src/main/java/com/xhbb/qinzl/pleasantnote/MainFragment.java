@@ -57,18 +57,18 @@ public abstract class MainFragment extends Fragment
         private static final int TYPE_DEFAULT_ITEM = 0;
         private static final int TYPE_LAST_ITEM = 1;
 
-        private boolean mScrolledToEnd;
+        private boolean iScrolledToEnd;
 
         MusicAdapter(int defaultLayoutRes) {
             super(defaultLayoutRes);
         }
 
         void setScrolledToEnd(boolean scrolledToEnd) {
-            mScrolledToEnd = scrolledToEnd;
+            iScrolledToEnd = scrolledToEnd;
         }
 
         boolean isScrolledToEnd() {
-            return mScrolledToEnd;
+            return iScrolledToEnd;
         }
 
         @Override
@@ -91,21 +91,22 @@ public abstract class MainFragment extends Fragment
 
         @Override
         public void onBindViewHolder(BindingHolder holder, int position) {
-            mCursor.moveToPosition(position);
-            Music music = new Music(mCursor);
+            Cursor cursor = getCursor();
+            cursor.moveToPosition(position);
+            Music music = new Music(cursor);
 
-            String picture = music.getSmallPicture();
+            String picture = music.getSmallPictureUrl();
             String musicName = music.getName();
-            String singer = music.getSinger();
+            String singer = music.getSingerName();
             int seconds = music.getSeconds();
 
             ItemMusic itemMusic = new ItemMusic(getContext(), picture, musicName, singer, seconds,
                     position, this);
-            ViewDataBinding binding = holder.getBinding();
+            ViewDataBinding binding = holder.getiBinding();
 
             binding.setVariable(BR.itemMusic, itemMusic);
             if (position == getItemCount() - 1) {
-                binding.setVariable(BR.scrolledToEnd, mScrolledToEnd);
+                binding.setVariable(BR.scrolledToEnd, iScrolledToEnd);
             }
 
             binding.executePendingBindings();
@@ -113,8 +114,9 @@ public abstract class MainFragment extends Fragment
 
         @Override
         public void onClickItem(int itemPosition) {
-            mCursor.moveToPosition(itemPosition);
-            Music music = new Music(mCursor);
+            Cursor cursor = getCursor();
+            cursor.moveToPosition(itemPosition);
+            Music music = new Music(cursor);
 
             Context context = getContext();
             Intent intent = MusicService.newIntent(context,

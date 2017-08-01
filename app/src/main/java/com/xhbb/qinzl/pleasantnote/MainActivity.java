@@ -164,27 +164,29 @@ public class MainActivity extends AppCompatActivity
 
     private class MusicRankingAdapter extends FragmentStatePagerAdapter {
 
-        int[] mRankingCodes = getResources().getIntArray(R.array.music_ranking_codes);
-        String[] mTabTitles = getResources().getStringArray(R.array.music_rankings);
+        private int[] iRankingCodes;
+        private String[] iTabTitles;
 
-        MusicRankingAdapter(FragmentManager fm) {
+        private MusicRankingAdapter(FragmentManager fm) {
             super(fm);
+            iRankingCodes = getResources().getIntArray(R.array.music_ranking_codes);
+            iTabTitles = getResources().getStringArray(R.array.music_rankings);
         }
 
         @Override
         public Fragment getItem(int position) {
-            int rankingCode = mRankingCodes[position];
+            int rankingCode = iRankingCodes[position];
             return MusicRankingFragment.newInstance(rankingCode);
         }
 
         @Override
         public int getCount() {
-            return mTabTitles.length;
+            return iTabTitles.length;
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            return mTabTitles[position];
+            return iTabTitles[position];
         }
     }
 }

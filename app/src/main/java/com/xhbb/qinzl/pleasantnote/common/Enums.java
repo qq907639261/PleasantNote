@@ -20,7 +20,7 @@ public interface Enums {
 
     interface DataUpdatedState {
 
-        int EMPTY_DATA = 1;
+        int EMPTY_DATA_NO_UPDATE = 1;
         int SCROLLED_TO_END_UPDATE = 2;
         int SCROLLED_TO_END_NO_UPDATE = 3;
     }

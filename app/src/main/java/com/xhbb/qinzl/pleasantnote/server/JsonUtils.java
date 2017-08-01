@@ -25,11 +25,10 @@ public class JsonUtils {
             musicValueses[i].put(MusicContract._NAME, songs[i].songname);
             musicValueses[i].put(MusicContract._SECONDS, songs[i].seconds);
             musicValueses[i].put(MusicContract._CODE, songs[i].songid);
-            musicValueses[i].put(MusicContract._BIG_PICTURE, songs[i].albumpic_big);
-            musicValueses[i].put(MusicContract._SMALL_PICTURE, songs[i].albumpic_small);
-            musicValueses[i].put(MusicContract._DOWNLOAD_URL, songs[i].downUrl);
+            musicValueses[i].put(MusicContract._BIG_PICTURE_URL, songs[i].albumpic_big);
+            musicValueses[i].put(MusicContract._SMALL_PICTURE_URL, songs[i].albumpic_small);
             musicValueses[i].put(MusicContract._PLAY_URL, songs[i].url);
-            musicValueses[i].put(MusicContract._SINGER, songs[i].singername);
+            musicValueses[i].put(MusicContract._SINGER_NAME, songs[i].singername);
         }
         return musicValueses;
     }
@@ -47,10 +46,9 @@ public class JsonUtils {
         for (int i = 0; i < contents.length; i++) {
             musicValueses[i] = new ContentValues();
             musicValueses[i].put(MusicContract._TYPE, MusicType.QUERY);
-            musicValueses[i].put(MusicContract._SINGER, contents[i].singername);
-            musicValueses[i].put(MusicContract._DOWNLOAD_URL, contents[i].downUrl);
-            musicValueses[i].put(MusicContract._BIG_PICTURE, contents[i].albumpic_big);
-            musicValueses[i].put(MusicContract._SMALL_PICTURE, contents[i].albumpic_small);
+            musicValueses[i].put(MusicContract._SINGER_NAME, contents[i].singername);
+            musicValueses[i].put(MusicContract._BIG_PICTURE_URL, contents[i].albumpic_big);
+            musicValueses[i].put(MusicContract._SMALL_PICTURE_URL, contents[i].albumpic_small);
             musicValueses[i].put(MusicContract._CODE, contents[i].songid);
             musicValueses[i].put(MusicContract._PLAY_URL, contents[i].m4a);
             musicValueses[i].put(MusicContract._NAME, contents[i].songname);
@@ -94,7 +92,6 @@ public class JsonUtils {
                     int songid;
                     String albumpic_big;
                     String albumpic_small;
-                    String downUrl;
                     String url;
                     String singername;
                 }
@@ -121,7 +118,6 @@ public class JsonUtils {
 
                     String m4a;
                     int songid;
-                    String downUrl;
                     String singername;
                     String songname;
                     String albumpic_big;
