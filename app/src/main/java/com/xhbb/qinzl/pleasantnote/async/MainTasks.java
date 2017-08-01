@@ -36,9 +36,10 @@ class MainTasks {
     }
 
     static void cleanUpHistoryMusic(Context context) {
+        ContentResolver contentResolver = context.getContentResolver();
+
         String[] projection = {"COUNT(*)"};
         String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
-        ContentResolver contentResolver = context.getContentResolver();
 
         Cursor cursor = contentResolver.query(MusicContract.URI, projection, selection, null, null);
 
@@ -56,6 +57,7 @@ class MainTasks {
                     contentResolver.delete(MusicContract.URI, where, null);
                 }
             }
+
             cursor.close();
         }
     }

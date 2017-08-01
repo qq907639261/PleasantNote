@@ -13,7 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.android.volley.VolleyError;
-import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
+import com.xhbb.qinzl.pleasantnote.async.UpdateRankingDataService;
 import com.xhbb.qinzl.pleasantnote.common.Enums;
 import com.xhbb.qinzl.pleasantnote.common.Enums.VolleyState;
 import com.xhbb.qinzl.pleasantnote.data.Contracts;
@@ -117,9 +117,10 @@ public class MusicRankingFragment extends MainFragment {
 
     @Override
     public void onResponse(String response) {
-        mVolleyState = VolleyState.RESPONSE;
         Context context = getContext();
-        Intent intent = UpdateMusicDataService.newIntent(context, response, mRankingCode);
+        Intent intent = UpdateRankingDataService.newIntent(context, response, mRankingCode);
+
+        mVolleyState = VolleyState.RESPONSE;
         context.startService(intent);
     }
 }

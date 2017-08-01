@@ -2,6 +2,7 @@ package com.xhbb.qinzl.pleasantnote;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -17,7 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.android.volley.VolleyError;
-import com.xhbb.qinzl.pleasantnote.async.UpdateMusicDataService;
+import com.xhbb.qinzl.pleasantnote.async.UpdateQueryDataService;
 import com.xhbb.qinzl.pleasantnote.common.Enums.DataUpdatedState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.common.Enums.RefreshState;
@@ -97,6 +98,7 @@ public class MusicQueryFragment extends MainFragment {
     public void onDestroyView() {
         super.onDestroyView();
         Activity activity = getActivity();
+
         LocalBroadcastManager.getInstance(activity).unregisterReceiver(mLocalReceiver);
 
         if (!activity.isChangingConfigurations()) {
@@ -105,25 +107,27 @@ public class MusicQueryFragment extends MainFragment {
     }
 
     private void deleteQueryMusic() {
+        final ContentResolver contentResolver = getContext().getContentResolver();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 String where = MusicContract._TYPE + "=" + MusicType.QUERY;
-                getContext().getContentResolver().delete(MusicContract.URI, where, null);
+                contentResolver.delete(MusicContract.URI, where, null);
             }
         }).start();
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Context context = getContext();
+
         mCurrentPage = 1;
         mMusicAdapter.setScrolledToEnd(false);
         mRefreshState = RefreshState.SWIPE;
-        Context context = getContext();
-
         NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, mRequestsTag, this, this);
 
         String selection = MusicContract._TYPE + "=" + MusicType.QUERY;
+
         return new CursorLoader(context, MusicContract.URI, null, selection, null, null);
     }
 
@@ -182,12 +186,11 @@ public class MusicQueryFragment extends MainFragment {
 
     @Override
     public void onResponse(String response) {
-        mVolleyState = VolleyState.RESPONSE;
-
         Context context = getContext();
         boolean firstPage = mCurrentPage == 1;
-        Intent intent = UpdateMusicDataService.newIntent(context, response, firstPage);
+        Intent intent = UpdateQueryDataService.newIntent(context, response, firstPage);
 
+        mVolleyState = VolleyState.RESPONSE;
         context.startService(intent);
     }
 
@@ -195,7 +198,7 @@ public class MusicQueryFragment extends MainFragment {
         switch (intent.getAction()) {
             case Contracts.ACTION_MUSIC_DATA_UPDATED:
                 int updatedState = intent.getIntExtra(
-                        UpdateMusicDataService.EXTRA_DATA_UPDATED_STATE, 0);
+                        UpdateQueryDataService.EXTRA_DATA_UPDATED_STATE, 0);
 
                 if (updatedState == DataUpdatedState.SCROLLED_TO_END_UPDATE) {
                     mMusicAdapter.setScrolledToEnd(true);

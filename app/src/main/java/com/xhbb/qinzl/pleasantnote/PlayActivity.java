@@ -1,28 +1,20 @@
 package com.xhbb.qinzl.pleasantnote;
 
-import android.Manifest;
-import android.app.DownloadManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +23,6 @@ import android.widget.BaseAdapter;
 import android.widget.Chronometer;
 import android.widget.ImageView;
 import android.widget.SeekBar;
-import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -46,7 +37,6 @@ import com.xhbb.qinzl.pleasantnote.model.Music;
 import com.xhbb.qinzl.pleasantnote.server.JsonUtils;
 import com.xhbb.qinzl.pleasantnote.server.NetworkUtils;
 
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public class PlayActivity extends AppCompatActivity implements Response.Listener<String>,
@@ -55,12 +45,13 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         Chronometer.OnChronometerTickListener, SeekBar.OnSeekBarChangeListener {
 
     private static final Object REQUESTS_TAG = "PlayActivity";
+    private static final String ARG_LYRICS = "ARG_LYRICS";
 
     private ActivityPlay mActivityPlay;
     private PlaySpinnerAdapter mPlaySpinnerAdapter;
     private ActivityPlayBinding mBinding;
     private MusicService mMusicService;
-    private AsyncTask<Music, Void, Boolean> mInitFavoritedTask;
+    private AsyncTask<Void, Void, Boolean> mInitFavoritedTask;
     private AsyncTask<Void, Void, String> mDisplayLyricsTask;
     private Music mFavoritedChangedMusic;
 
@@ -81,6 +72,11 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
         mPlaySpinnerAdapter = new PlaySpinnerAdapter();
         mActivityPlay = new ActivityPlay(this, mPlaySpinnerAdapter, playSpinnerSelection);
+
+        if (savedInstanceState != null) {
+            String lyrics = savedInstanceState.getString(ARG_LYRICS);
+            mActivityPlay.setLyrics(lyrics);
+        }
 
         if (isPortraitOrientation()) {
             BottomSheetBehavior.from(mBinding.bottomLayout)
@@ -150,6 +146,12 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     @Override
     public void onResponse(String response) {
         displayLyrics(response);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(ARG_LYRICS, mActivityPlay.getLyrics());
     }
 
     private void displayLyrics(final String response) {
@@ -225,42 +227,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     private void downloadMusic() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-            return;
-        }
 
-        Music currentMusic = mMusicService.getCurrentMusic();
-        String fileName = String.valueOf(currentMusic.getCode());
-
-        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-        File file = new File(dir, fileName);
-
-        if (file.exists()) {
-            Toast.makeText(mMusicService, "音乐已下载", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-        Uri uri = Uri.parse("http://10.0.2.2/XL_9.1.34.812.exe");
-//        Uri uri = Uri.parse(currentMusic.getDownloadUrl());
-        DownloadManager.Request request = new DownloadManager.Request(uri)
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, fileName)
-                .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI)
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-        downloadManager.enqueue(request);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            downloadMusic();
-        } else {
-            Toast.makeText(mMusicService, R.string.download_permission_denied_toast, Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void changeFavoritedSwitcher(boolean favorited) {
@@ -296,14 +263,23 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             mInitFavoritedTask.cancel(false);
         }
 
-        mInitFavoritedTask = new AsyncTask<Music, Void, Boolean>() {
+        mInitFavoritedTask = new AsyncTask<Void, Void, Boolean>() {
+            private ContentResolver mContentResolver;
+            private int mMusicCode;
+
             @Override
-            protected Boolean doInBackground(Music... musics) {
-                Music music = musics[0];
-                String selection = MusicContract._CODE + "=" + music.getCode() + " AND "
+            protected void onPreExecute() {
+                super.onPreExecute();
+                mContentResolver = getContentResolver();
+                mMusicCode = mMusicService.getCurrentMusic().getCode();
+            }
+
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+                String selection = MusicContract._CODE + "=" + mMusicCode + " AND "
                         + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 
-                Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, null);
+                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, null);
 
                 boolean favorited = false;
                 if (cursor != null) {
@@ -319,7 +295,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPostExecute(favorited);
                 mBinding.favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
             }
-        }.execute(mMusicService.getCurrentMusic());
+        }.execute();
     }
 
     private void updateCurrentMusic() {
@@ -357,6 +333,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     private void updateFavoritedData() {
         if (mFavoritedChangedMusic != null) {
+            final ContentResolver contentResolver = getContentResolver();
             final boolean favorited = mBinding.favoritedSwitcher.getDisplayedChild() == 1;
             final int musicCode = mFavoritedChangedMusic.getCode();
             final ContentValues musicValues = favorited ?
@@ -367,7 +344,6 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    ContentResolver contentResolver = getContentResolver();
                     String where = MusicContract._CODE + "=" + musicCode + " AND "
                             + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 

@@ -142,12 +142,20 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
 
         mInitMusicTask = new AsyncTask<Void, Void, List<Music>>() {
+            private ContentResolver mContentResolver;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                mContentResolver = getContentResolver();
+            }
+
             @Override
             protected List<Music> doInBackground(Void... voids) {
                 String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
                 String sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
 
-                Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusics(cursor, null);
             }
@@ -202,6 +210,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
 
         mQueryMoreMusicTask = new AsyncTask<Void, Void, List<Music>>() {
+            private ContentResolver mContentResolver;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                mContentResolver = getContentResolver();
+            }
+
             @Override
             protected List<Music> doInBackground(Void... voids) {
                 int musicType = currentMusic.getMusicType();
@@ -215,7 +231,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
                 }
 
-                Cursor cursor = getContentResolver().query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusics(cursor, currentMusic);
             }
@@ -270,10 +286,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     private void cleanUpHistoryMusic() {
+        final Context context = getApplicationContext();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                MainTasks.cleanUpHistoryMusic(getApplicationContext());
+                MainTasks.cleanUpHistoryMusic(context);
             }
         }).start();
     }
@@ -290,12 +308,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     private void saveCurrentMusic() {
         final Music currentMusic = mMusics.get(mCurrentMusicPosition);
+        final ContentResolver contentResolver = getContentResolver();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ContentResolver contentResolver = getContentResolver();
-
                 ContentValues musicValues = currentMusic.getMusicValues();
                 int musicCode = currentMusic.getCode();
 
