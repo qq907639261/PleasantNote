@@ -60,7 +60,7 @@ public abstract class RecyclerViewAdapter extends
             iBinding = DataBindingUtil.bind(itemView);
         }
 
-        public ViewDataBinding getiBinding() {
+        public ViewDataBinding getBinding() {
             return iBinding;
         }
     }

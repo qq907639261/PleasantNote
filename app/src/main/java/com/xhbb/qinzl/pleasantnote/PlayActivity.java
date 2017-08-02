@@ -390,17 +390,17 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
         new AsyncTask<Void, Void, Void>() {
             private ContentResolver iContentResolver;
-            private boolean iFavorited;
             private int iMusicCode;
             private ContentValues iMusicValues;
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
+                boolean favorited = mBinding.favoritedSwitcher.getDisplayedChild() == 1;
+
                 iContentResolver = getContentResolver();
-                iFavorited = mBinding.favoritedSwitcher.getDisplayedChild() == 1;
                 iMusicCode = mFavoritedChangedMusic.getCode();
-                iMusicValues = iFavorited ? mFavoritedChangedMusic.getMusicValues() : null;
+                iMusicValues = favorited ? mFavoritedChangedMusic.getMusicValues() : null;
 
                 mFavoritedChangedMusic = null;
             }
@@ -411,7 +411,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                         + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 
                 iContentResolver.delete(MusicContract.URI, where, null);
-                if (iFavorited) {
+                if (iMusicValues != null) {
                     iContentResolver.insert(MusicContract.URI, iMusicValues);
                 }
 
@@ -458,11 +458,11 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
         private PlaySpinnerAdapter() {
             iPlaySpinnerAccessibilities =
-                    getResources().getStringArray(R.array.play_spinner_accessibilities);
+                    getResources().getStringArray(R.array.play_spinner_accessibility);
         }
 
         private void obtainPlaySpinnerIcons() {
-            iPlaySpinnerIcons = getResources().obtainTypedArray(R.array.play_spinner_drawables);
+            iPlaySpinnerIcons = getResources().obtainTypedArray(R.array.play_spinner_drawable);
         }
 
         private void recyclePlaySpinnerIcons() {
@@ -492,21 +492,21 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 view = getLayoutInflater().inflate(R.layout.layout_image_view, viewGroup, false);
                 viewHolder = new ViewHolder();
 
-                viewHolder.imageView = view.findViewById(R.id.imageView);
+                viewHolder.iImageView = view.findViewById(R.id.imageView);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            viewHolder.imageView.setImageDrawable(iPlaySpinnerIcons.getDrawable(i));
-            viewHolder.imageView.setContentDescription(iPlaySpinnerAccessibilities[i]);
+            viewHolder.iImageView.setImageDrawable(iPlaySpinnerIcons.getDrawable(i));
+            viewHolder.iImageView.setContentDescription(iPlaySpinnerAccessibilities[i]);
 
             return view;
         }
 
         private class ViewHolder {
 
-            private ImageView imageView;
+            private ImageView iImageView;
         }
     }
 }

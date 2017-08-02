@@ -15,7 +15,6 @@
     <string name="rocking_tab">摇滚</string>
     <string name="sales_tab">销量</string>
 
-    <string name="local_song_nav">本地歌曲</string>
     <string name="my_favorited_nav">我的收藏</string>
     <string name="recently_played_nav">最近播放</string>
 
@@ -40,4 +39,5 @@
     <string name="empty_data_text">暂无相关内容，我们将继续完善，敬请期待。^_^</string>
     <string name="music_playing_notification_content">正在播放音乐</string>
     <string name="play_music_tips_channel">音乐播放提示</string>
+    <string name="local_song_menu">本地歌曲</string>
 </resources>

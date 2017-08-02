@@ -102,7 +102,7 @@ public abstract class MainFragment extends Fragment
 
             ItemMusic itemMusic = new ItemMusic(getContext(), picture, musicName, singer, seconds,
                     position, this);
-            ViewDataBinding binding = holder.getiBinding();
+            ViewDataBinding binding = holder.getBinding();
 
             binding.setVariable(BR.itemMusic, itemMusic);
             if (position == getItemCount() - 1) {

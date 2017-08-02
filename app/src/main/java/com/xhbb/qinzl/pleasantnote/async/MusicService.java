@@ -157,7 +157,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
                 Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
-                return getMusics(cursor, null);
+                return getMusicsAndCloseCursor(cursor);
             }
 
             @Override
@@ -169,21 +169,36 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }.execute();
     }
 
-    private List<Music> getMusics(Cursor cursor, @Nullable Music currentMusic) {
+    private List<Music> getMusicsAndCloseCursor(Cursor cursor, Music currentMusic) {
         List<Music> musics = new ArrayList<>();
 
         if (cursor != null) {
             boolean moveSucceeded = cursor.moveToFirst();
-
             while (moveSucceeded) {
                 Music music = new Music(cursor);
 
-                if (currentMusic != null && music.getCode() == currentMusic.getCode()) {
+                if (music.getCode() == currentMusic.getCode()) {
                     musics.add(currentMusic);
                 } else {
                     musics.add(music);
                 }
 
+                moveSucceeded = cursor.moveToNext();
+            }
+
+            cursor.close();
+        }
+
+        return musics;
+    }
+
+    private List<Music> getMusicsAndCloseCursor(Cursor cursor) {
+        List<Music> musics = new ArrayList<>();
+
+        if (cursor != null) {
+            boolean moveSucceeded = cursor.moveToFirst();
+            while (moveSucceeded) {
+                musics.add(new Music(cursor));
                 moveSucceeded = cursor.moveToNext();
             }
 
@@ -233,7 +248,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
                 Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
-                return getMusics(cursor, currentMusic);
+                return getMusicsAndCloseCursor(cursor, currentMusic);
             }
 
             @Override

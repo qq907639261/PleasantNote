@@ -12,11 +12,6 @@
                     android:id="@+id/nav_recently_played"
                     android:icon="@drawable/ic_history_play"
                     android:title="@string/recently_played_nav"/>
-
-                <item
-                    android:id="@+id/nav_local_song"
-                    android:icon="@drawable/ic_local_play"
-                    android:title="@string/local_song_nav"/>
             </group>
         </menu>
     </item>

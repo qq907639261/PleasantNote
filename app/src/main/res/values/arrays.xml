@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="music_rankings">
+    <string-array name="music_ranking">
         <item>@string/popular_song_tab</item>
         <item>@string/western_countries_tab</item>
         <item>@string/mainland_tab</item>
@@ -12,7 +12,7 @@
         <item>@string/sales_tab</item>
     </string-array>
 
-    <integer-array name="music_ranking_codes">
+    <integer-array name="music_ranking_code">
         <item>@integer/popular_song_ranking_code</item>
         <item>@integer/western_countries_ranking_code</item>
         <item>@integer/mainland_ranking_code</item>
@@ -24,7 +24,7 @@
         <item>@integer/sales_ranking_code</item>
     </integer-array>
 
-    <array name="play_spinner_drawables">
+    <array name="play_spinner_drawable">
         <item>@drawable/ic_list_loop</item>
         <item>@drawable/ic_random_play</item>
         <item>@drawable/ic_single_cycle</item>
@@ -36,7 +36,7 @@
         <item>@integer/play_spinner_single_cycle</item>
     </integer-array>
 
-    <string-array name="play_spinner_accessibilities">
+    <string-array name="play_spinner_accessibility">
         <item>@string/list_loop_accessibility</item>
         <item>@string/random_play_accessibility</item>
         <item>@string/single_cycle_accessibility</item>

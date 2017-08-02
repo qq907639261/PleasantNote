@@ -39,9 +39,6 @@ public class ActivityMain implements LayoutAppBar.OnLayoutAppBarListener {
     public boolean onDrawerItemSelected(MenuItem item, DrawerLayout drawerLayout,
                                         NavigationView navigationView) {
         switch (item.getItemId()) {
-            case R.id.nav_local_song:
-
-                break;
             case R.id.nav_my_favorited:
 
                 break;

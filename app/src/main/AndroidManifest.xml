@@ -51,6 +51,9 @@
             android:name=".async.UpdateQueryDataService"
             android:exported="false">
         </service>
+
+        <activity android:name=".LocalSongActivity">
+        </activity>
     </application>
 
 </manifest>

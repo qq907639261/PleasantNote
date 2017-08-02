@@ -21,7 +21,7 @@ public class ExampleInstrumentedTest {
         Context appContext = InstrumentationRegistry.getTargetContext();
         assertEquals(BuildConfig.APPLICATION_ID, appContext.getPackageName());
 
-        TypedArray typedArray = appContext.getResources().obtainTypedArray(R.array.play_spinner_drawables);
+        TypedArray typedArray = appContext.getResources().obtainTypedArray(R.array.play_spinner_drawable);
         Log.i(TAG, "useAppContext: " + typedArray.length());
         typedArray.recycle();
     }

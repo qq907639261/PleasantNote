@@ -11,6 +11,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.SearchView;
 
 import com.xhbb.qinzl.pleasantnote.async.CleanUpHistoryMusicJob;
@@ -34,7 +36,8 @@ public class MainActivity extends AppCompatActivity
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         MainSingleton.getInstance(this);
-        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(getSupportFragmentManager());
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(fragmentManager);
 
         mActivityMain = new ActivityMain(this, pagerAdapter, this);
 
@@ -43,7 +46,7 @@ public class MainActivity extends AppCompatActivity
             startService(MusicService.newIntent(this, MusicService.ACTION_INIT_MUSIC));
         } else {
             mActivityMain.setSearchViewCollapsed(true);
-            if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) != null) {
+            if (fragmentManager.findFragmentById(R.id.fragment_container) != null) {
                 mActivityMain.setViewPagerVisible(false);
             }
         }
@@ -57,6 +60,23 @@ public class MainActivity extends AppCompatActivity
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
                 .commit();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_local_song:
+                LocalSongActivity.start(this);
+                break;
+            default:
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -169,8 +189,8 @@ public class MainActivity extends AppCompatActivity
 
         private MusicRankingAdapter(FragmentManager fm) {
             super(fm);
-            iRankingCodes = getResources().getIntArray(R.array.music_ranking_codes);
-            iTabTitles = getResources().getStringArray(R.array.music_rankings);
+            iRankingCodes = getResources().getIntArray(R.array.music_ranking_code);
+            iTabTitles = getResources().getStringArray(R.array.music_ranking);
         }
 
         @Override

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_local_song"
+        android:icon="@drawable/ic_local_play"
+        android:title="@string/local_song_menu"
+        app:showAsAction="never"/>
+</menu>
