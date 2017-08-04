@@ -13,6 +13,7 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 
 public class Music implements Parcelable {
 
+    private long mId;
     private String mName;
     private int mSeconds;
     private int mCode;
@@ -24,18 +25,20 @@ public class Music implements Parcelable {
     private int mMusicType;
 
     public Music(Cursor cursor) {
+        mId = cursor.getLong(cursor.getColumnIndex(MusicContract._ID));
         mName = cursor.getString(cursor.getColumnIndex(MusicContract._NAME));
-        mSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._SECONDS));
         mCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));
-        mSingerName = cursor.getString(cursor.getColumnIndex(MusicContract._SINGER_NAME));
+        mPlayUrl = cursor.getString(cursor.getColumnIndex(MusicContract._PLAY_URL));
+        mMusicType = cursor.getInt(cursor.getColumnIndex(MusicContract._TYPE));
+        mSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._TOTAL_SECONDS));
+        mSingerName = cursor.getString(cursor.getColumnIndex(MusicContract._SINGER));
         mBigPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._BIG_PICTURE_URL));
         mSmallPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._SMALL_PICTURE_URL));
-        mPlayUrl = cursor.getString(cursor.getColumnIndex(MusicContract._PLAY_URL));
         mRankingCode = cursor.getInt(cursor.getColumnIndex(MusicContract._RANKING_CODE));
-        mMusicType = cursor.getInt(cursor.getColumnIndex(MusicContract._TYPE));
     }
 
     private Music(Parcel in) {
+        mId = in.readLong();
         mName = in.readString();
         mSeconds = in.readInt();
         mCode = in.readInt();
@@ -49,6 +52,7 @@ public class Music implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeLong(mId);
         parcel.writeString(mName);
         parcel.writeInt(mSeconds);
         parcel.writeInt(mCode);
@@ -63,15 +67,16 @@ public class Music implements Parcelable {
     public ContentValues getMusicValues() {
         ContentValues musicValues = new ContentValues();
 
+        musicValues.put(MusicContract._ID, mId);
         musicValues.put(MusicContract._NAME, mName);
         musicValues.put(MusicContract._CODE, mCode);
-        musicValues.put(MusicContract._SECONDS, mSeconds);
         musicValues.put(MusicContract._PLAY_URL, mPlayUrl);
+        musicValues.put(MusicContract._TYPE, mMusicType);
+        musicValues.put(MusicContract._TOTAL_SECONDS, mSeconds);
         musicValues.put(MusicContract._SMALL_PICTURE_URL, mSmallPictureUrl);
         musicValues.put(MusicContract._BIG_PICTURE_URL, mBigPictureUrl);
-        musicValues.put(MusicContract._SINGER_NAME, mSingerName);
+        musicValues.put(MusicContract._SINGER, mSingerName);
         musicValues.put(MusicContract._RANKING_CODE, mRankingCode);
-        musicValues.put(MusicContract._TYPE, mMusicType);
 
         return musicValues;
     }

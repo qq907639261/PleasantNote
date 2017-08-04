@@ -31,11 +31,16 @@ public interface Enums {
         int QUERY = 2;
         int HISTORY = 3;
         int FAVORITED = 4;
-//        int LOCAL = 5;
+        int LOCAL = 5;
     }
 
     interface DownloadState {
 
-        int STOP = 1;
+        int PAUSE = 1;
+        int CANCEL = 2;
+        int FAILED = 3;
+        int DOWNLOADED = 4;
+        int DOWNLOADING = 5;
+        int WAITING = 6;
     }
 }

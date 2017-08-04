@@ -23,12 +23,12 @@ public class JsonUtils {
             musicValueses[i].put(MusicContract._TYPE, MusicType.RANKING);
             musicValueses[i].put(MusicContract._RANKING_CODE, rankingCode);
             musicValueses[i].put(MusicContract._NAME, songs[i].songname);
-            musicValueses[i].put(MusicContract._SECONDS, songs[i].seconds);
+            musicValueses[i].put(MusicContract._TOTAL_SECONDS, songs[i].seconds);
             musicValueses[i].put(MusicContract._CODE, songs[i].songid);
             musicValueses[i].put(MusicContract._BIG_PICTURE_URL, songs[i].albumpic_big);
             musicValueses[i].put(MusicContract._SMALL_PICTURE_URL, songs[i].albumpic_small);
             musicValueses[i].put(MusicContract._PLAY_URL, songs[i].url);
-            musicValueses[i].put(MusicContract._SINGER_NAME, songs[i].singername);
+            musicValueses[i].put(MusicContract._SINGER, songs[i].singername);
         }
         return musicValueses;
     }
@@ -46,7 +46,7 @@ public class JsonUtils {
         for (int i = 0; i < contents.length; i++) {
             musicValueses[i] = new ContentValues();
             musicValueses[i].put(MusicContract._TYPE, MusicType.QUERY);
-            musicValueses[i].put(MusicContract._SINGER_NAME, contents[i].singername);
+            musicValueses[i].put(MusicContract._SINGER, contents[i].singername);
             musicValueses[i].put(MusicContract._BIG_PICTURE_URL, contents[i].albumpic_big);
             musicValueses[i].put(MusicContract._SMALL_PICTURE_URL, contents[i].albumpic_small);
             musicValueses[i].put(MusicContract._CODE, contents[i].songid);

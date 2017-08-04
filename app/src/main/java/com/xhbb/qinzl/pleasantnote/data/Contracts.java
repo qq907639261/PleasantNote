@@ -22,13 +22,24 @@ public interface Contracts {
         Uri URI = Uri.parse(CONTENT_AUTHORITY + TABLE);
 
         String _NAME = "name";
-        String _SECONDS = "seconds";
         String _CODE = "code";
-        String _SINGER_NAME = "singer_name";
-        String _BIG_PICTURE_URL = "big_picture_url";
-        String _SMALL_PICTURE_URL = "small_picture_url";
-        String _PLAY_URL = "play_url";
-        String _RANKING_CODE = "ranking_code";
         String _TYPE = "type";
+        String _PLAY_URL = "play_url";
+        String _TOTAL_SECONDS = "total_seconds";
+        String _SINGER = "singer";
+        String _SMALL_PICTURE_URL = "small_picture_url";
+        String _BIG_PICTURE_URL = "big_picture_url";
+        String _RANKING_CODE = "ranking_code";
+    }
+
+    interface DownloadContract extends BaseColumns {
+
+        String TABLE = "download";
+        Uri URI = Uri.parse(CONTENT_AUTHORITY + TABLE);
+
+        String _MUSIC_ID = "music_id";
+        String _STATE = "state";
+        String _URL = "url";
+        String _PROGRESS = "progress";
     }
 }

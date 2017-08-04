@@ -102,17 +102,18 @@ public class MusicQueryFragment extends MainFragment {
         LocalBroadcastManager.getInstance(activity).unregisterReceiver(mLocalReceiver);
 
         if (!activity.isChangingConfigurations()) {
-            deleteQueryMusic();
+            deleteQueryMusicAsync();
         }
     }
 
-    private void deleteQueryMusic() {
+    private void deleteQueryMusicAsync() {
         final ContentResolver contentResolver = getContext().getContentResolver();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 String where = MusicContract._TYPE + "=" + MusicType.QUERY;
                 contentResolver.delete(MusicContract.URI, where, null);
+                contentResolver.notifyChange(MusicContract.URI, null);
             }
         }).start();
     }

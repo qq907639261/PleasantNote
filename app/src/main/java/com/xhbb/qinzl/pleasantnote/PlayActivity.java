@@ -1,6 +1,5 @@
 package com.xhbb.qinzl.pleasantnote;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -16,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -55,9 +55,9 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     private PlaySpinnerAdapter mPlaySpinnerAdapter;
     private ActivityPlayBinding mBinding;
     private MusicService mMusicService;
-    private AsyncTask<Void, Void, Boolean> mInitFavoritedTask;
-    private AsyncTask<String, Void, String> mDisplayLyricsTask;
-    private AsyncTask<String, Void, Drawable> mDisplayBackgroundTask;
+    private AsyncTask<Void, Void, Boolean> mInitFavoritedSwitcherTask;
+    private AsyncTask<Void, Void, String> mDisplayLyricsTask;
+    private AsyncTask<Void, Void, Drawable> mDisplayBackgroundTask;
     private Music mFavoritedChangedMusic;
 
     public static void start(Context context) {
@@ -123,7 +123,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     @Override
     protected void onStop() {
         super.onStop();
-        updateFavoritedData();
+        updateFavoritedDataAsync();
         mPlaySpinnerAdapter.recyclePlaySpinnerIcons();
         mBinding.playChrononmeter.stop();
         unbindService(this);
@@ -138,8 +138,8 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             mDisplayLyricsTask.cancel(false);
         }
 
-        if (mInitFavoritedTask != null) {
-            mInitFavoritedTask.cancel(false);
+        if (mInitFavoritedSwitcherTask != null) {
+            mInitFavoritedSwitcherTask.cancel(false);
         }
 
         if (mDisplayBackgroundTask != null) {
@@ -154,7 +154,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onResponse(String response) {
-        displayLyrics(response);
+        executeDisplayLyricsTask(response);
     }
 
     @Override
@@ -163,15 +163,19 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         outState.putString(ARG_LYRICS, mActivityPlay.getLyrics());
     }
 
-    private void displayLyrics(String response) {
+    private void executeDisplayLyricsTask(String response) {
         if (mDisplayLyricsTask != null) {
             mDisplayLyricsTask.cancel(false);
         }
+        mDisplayLyricsTask = getDisplayLyricsTask(response).execute();
+    }
 
-        mDisplayLyricsTask = new AsyncTask<String, Void, String>() {
+    @NonNull
+    private AsyncTask<Void, Void, String> getDisplayLyricsTask(final String response) {
+        return new AsyncTask<Void, Void, String>() {
             @Override
-            protected String doInBackground(String... responses) {
-                return JsonUtils.getLyrics(responses[0]);
+            protected String doInBackground(Void... voids) {
+                return JsonUtils.getLyrics(response);
             }
 
             @Override
@@ -179,7 +183,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPostExecute(lyrics);
                 mActivityPlay.setLyrics(lyrics);
             }
-        }.execute(response);
+        };
     }
 
     @Override
@@ -267,12 +271,16 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         }
     }
 
-    private void initFavoritedSwitcher() {
-        if (mInitFavoritedTask != null) {
-            mInitFavoritedTask.cancel(false);
+    private void executeInitFavoritedSwitcherTask() {
+        if (mInitFavoritedSwitcherTask != null) {
+            mInitFavoritedSwitcherTask.cancel(false);
         }
+        mInitFavoritedSwitcherTask = getInitFavoritedSwitcherTask().execute();
+    }
 
-        mInitFavoritedTask = new AsyncTask<Void, Void, Boolean>() {
+    @NonNull
+    private AsyncTask<Void, Void, Boolean> getInitFavoritedSwitcherTask() {
+        return new AsyncTask<Void, Void, Boolean>() {
             private ContentResolver iContentResolver;
             private int iMusicCode;
 
@@ -304,15 +312,15 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPostExecute(favorited);
                 mBinding.favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
             }
-        }.execute();
+        };
     }
 
     private void updateCurrentMusic() {
         Music currentMusic = mMusicService.getCurrentMusic();
 
         NetworkUtils.addLyricsRequest(this, currentMusic.getCode(), REQUESTS_TAG, this, this);
-        displayBackground(currentMusic.getBigPictureUrl());
-        initFavoritedSwitcher();
+        executeDisplayBackgroundTask(currentMusic.getBigPictureUrl());
+        executeInitFavoritedSwitcherTask();
 
         String formattedTime = DateTimeUtils.getFormattedTime(this, currentMusic.getSeconds());
 
@@ -320,30 +328,34 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         mBinding.playSeekBar.setMax(currentMusic.getSeconds());
     }
 
-    private void displayBackground(String pictureUrl) {
+    private void executeDisplayBackgroundTask(String pictureUrl) {
         if (mDisplayBackgroundTask != null) {
             mDisplayBackgroundTask.cancel(false);
         }
+        mDisplayBackgroundTask = getDisplayBackgroundTask(pictureUrl).execute();
+    }
 
-        mDisplayBackgroundTask = new AsyncTask<String, Void, Drawable>() {
-            private Activity iActivity;
+    @NonNull
+    private AsyncTask<Void, Void, Drawable> getDisplayBackgroundTask(final String pictureUrl) {
+        return new AsyncTask<Void, Void, Drawable>() {
+            private Context iContext;
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                iActivity = PlayActivity.this;
+                iContext = getApplicationContext();
             }
 
             @Override
-            protected Drawable doInBackground(String... pictureUrls) {
+            protected Drawable doInBackground(Void... voids) {
                 Drawable bigPicture = null;
 
                 try {
-                    bigPicture = GlideApp.with(iActivity)
+                    bigPicture = GlideApp.with(iContext)
                             .asDrawable()
-                            .load(pictureUrls[0])
+                            .load(pictureUrl)
                             .error(R.drawable.empty_image)
-                            .centerCrop(iActivity)
+                            .centerCrop(iContext)
                             .submit()
                             .get();
 
@@ -360,7 +372,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPostExecute(drawable);
                 mActivityPlay.setBigPicture(drawable);
             }
-        }.execute(pictureUrl);
+        };
     }
 
     @Override
@@ -378,46 +390,37 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     public void onPreparing() {
         mBinding.playChrononmeter.stop();
         setPlayChrononmeterBase();
-        updateFavoritedData();
+        updateFavoritedDataAsync();
         updateCurrentMusic();
         mBinding.playSwitcher.setDisplayedChild(1);
     }
 
-    private void updateFavoritedData() {
+    private void updateFavoritedDataAsync() {
         if (mFavoritedChangedMusic == null) {
             return;
         }
 
-        new AsyncTask<Void, Void, Void>() {
-            private ContentResolver iContentResolver;
-            private int iMusicCode;
-            private ContentValues iMusicValues;
+        boolean favorited = mBinding.favoritedSwitcher.getDisplayedChild() == 1;
 
+        final ContentResolver contentResolver = getContentResolver();
+        final int musicCode = mFavoritedChangedMusic.getCode();
+        final ContentValues musicValues = favorited ? mFavoritedChangedMusic.getMusicValues() : null;
+
+        mFavoritedChangedMusic = null;
+
+        new Thread(new Runnable() {
             @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                boolean favorited = mBinding.favoritedSwitcher.getDisplayedChild() == 1;
-
-                iContentResolver = getContentResolver();
-                iMusicCode = mFavoritedChangedMusic.getCode();
-                iMusicValues = favorited ? mFavoritedChangedMusic.getMusicValues() : null;
-
-                mFavoritedChangedMusic = null;
-            }
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-                String where = MusicContract._CODE + "=" + iMusicCode + " AND "
+            public void run() {
+                String where = MusicContract._CODE + "=" + musicCode + " AND "
                         + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 
-                iContentResolver.delete(MusicContract.URI, where, null);
-                if (iMusicValues != null) {
-                    iContentResolver.insert(MusicContract.URI, iMusicValues);
+                contentResolver.delete(MusicContract.URI, where, null);
+                if (musicValues != null) {
+                    contentResolver.insert(MusicContract.URI, musicValues);
                 }
-
-                return null;
+                contentResolver.notifyChange(MusicContract.URI, null);
             }
-        }.execute();
+        }).start();
     }
 
     @Override

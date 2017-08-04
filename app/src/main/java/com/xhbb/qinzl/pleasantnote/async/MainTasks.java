@@ -55,6 +55,7 @@ class MainTasks {
                             + " LIMIT " + differenceCount + ")";
 
                     contentResolver.delete(MusicContract.URI, where, null);
+                    contentResolver.notifyChange(MusicContract.URI, null);
                 }
             }
 

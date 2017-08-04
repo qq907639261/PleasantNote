@@ -11,6 +11,7 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.xhbb.qinzl.pleasantnote.R;
@@ -87,7 +88,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private void handleIntent(Intent intent) {
         switch (intent.getAction()) {
             case ACTION_INIT_MUSIC:
-                initMusic();
+                executeInitMusicTask();
                 break;
             case ACTION_PLAY_NEW_MUSIC:
                 playNewMusic(intent);
@@ -136,12 +137,15 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return mMusics.size() > 0;
     }
 
-    private void initMusic() {
+    private void executeInitMusicTask() {
         if (mInitMusicTask != null) {
             mInitMusicTask.cancel(false);
         }
+        mInitMusicTask = getInitMusicTask().execute();
+    }
 
-        mInitMusicTask = new AsyncTask<Void, Void, List<Music>>() {
+    private AsyncTask<Void, Void, List<Music>> getInitMusicTask() {
+        return new AsyncTask<Void, Void, List<Music>>() {
             private ContentResolver iContentResolver;
 
             @Override
@@ -166,7 +170,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 mMusics = musics;
                 resetAndPlay();
             }
-        }.execute();
+        };
     }
 
     private List<Music> getMusicsAndCloseCursor(Cursor cursor, Music currentMusic) {
@@ -216,15 +220,19 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mMusics.add(newMusic);
 
         resetAndPlay();
-        queryMoreMusic(newMusic);
+        executeQueryMoreMusicTask(newMusic);
     }
 
-    private void queryMoreMusic(final Music currentMusic) {
+    private void executeQueryMoreMusicTask(Music currentMusic) {
         if (mQueryMoreMusicTask != null) {
             mQueryMoreMusicTask.cancel(false);
         }
+        mQueryMoreMusicTask = getQueryMoreMusicTask(currentMusic).execute();
+    }
 
-        mQueryMoreMusicTask = new AsyncTask<Void, Void, List<Music>>() {
+    @NonNull
+    private AsyncTask<Void, Void, List<Music>> getQueryMoreMusicTask(final Music currentMusic) {
+        return new AsyncTask<Void, Void, List<Music>>() {
             private ContentResolver iContentResolver;
 
             @Override
@@ -259,7 +267,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     mMusics = musics;
                 }
             }
-        }.execute();
+        };
     }
 
     private void resetAndPlay() {
@@ -295,12 +303,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
 
         CleanUpHistoryMusicJob.cancelJob();
-        cleanUpHistoryMusic();
+        cleanUpHistoryMusicAsync();
 
         mMediaPlayer.release();
     }
 
-    private void cleanUpHistoryMusic() {
+    private void cleanUpHistoryMusicAsync() {
         final Context context = getApplicationContext();
         new Thread(new Runnable() {
             @Override
@@ -317,36 +325,28 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
 
         mediaPlayer.start();
-        saveCurrentMusic();
+        saveCurrentMusicAsync();
     }
 
-    private void saveCurrentMusic() {
-        new AsyncTask<Void, Void, Void>() {
-            private Music iCurrentMusic;
-            private ContentResolver iContentResolver;
+    private void saveCurrentMusicAsync() {
+        final Music currentMusic = mMusics.get(mCurrentMusicPosition);
+        final ContentResolver contentResolver = getContentResolver();
 
+        new Thread(new Runnable() {
             @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                iCurrentMusic = mMusics.get(mCurrentMusicPosition);
-                iContentResolver = getContentResolver();
-            }
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-                int musicCode = iCurrentMusic.getCode();
+            public void run() {
+                int musicCode = currentMusic.getCode();
                 String where = MusicContract._CODE + "=" + musicCode + " AND "
                         + MusicContract._TYPE + "=" + MusicType.HISTORY;
 
-                ContentValues musicValues = iCurrentMusic.getMusicValues();
+                ContentValues musicValues = currentMusic.getMusicValues();
                 musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
 
-                iContentResolver.delete(MusicContract.URI, where, null);
-                iContentResolver.insert(MusicContract.URI, musicValues);
-
-                return null;
+                contentResolver.delete(MusicContract.URI, where, null);
+                contentResolver.insert(MusicContract.URI, musicValues);
+                contentResolver.notifyChange(MusicContract.URI, null);
             }
-        }.execute();
+        }).start();
     }
 
     @Override
