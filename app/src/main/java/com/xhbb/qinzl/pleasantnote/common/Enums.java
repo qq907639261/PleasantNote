@@ -39,8 +39,8 @@ public interface Enums {
         int PAUSE = 1;
         int CANCEL = 2;
         int FAILED = 3;
-        int DOWNLOADED = 4;
+        int WAITING = 4;
         int DOWNLOADING = 5;
-        int WAITING = 6;
+        int DOWNLOADED = 6;
     }
 }

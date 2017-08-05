@@ -14,7 +14,7 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "pleasant_note.db";
-    private static final int DB_VERSION = 10;
+    private static final int DB_VERSION = 11;
 
     private static final String CREATE_TABLE_MUSIC =
             "CREATE TABLE " + MusicContract.TABLE + "(" +

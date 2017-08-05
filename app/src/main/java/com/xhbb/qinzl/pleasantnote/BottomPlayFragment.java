@@ -40,6 +40,10 @@ public class BottomPlayFragment extends Fragment
         return binding.getRoot();
     }
 
+    public boolean isPlaying() {
+        return mMusicService.isPlaying();
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -55,9 +59,7 @@ public class BottomPlayFragment extends Fragment
     @Override
     public void onStop() {
         super.onStop();
-        if (mMusicService != null) {
-            getContext().unbindService(this);
-        }
+        getContext().unbindService(this);
     }
 
     @Override
@@ -101,7 +103,7 @@ public class BottomPlayFragment extends Fragment
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
-        mMusicService = null;
+
     }
 
     @Override

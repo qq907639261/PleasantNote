@@ -67,7 +67,6 @@ public class Music implements Parcelable {
     public ContentValues getMusicValues() {
         ContentValues musicValues = new ContentValues();
 
-        musicValues.put(MusicContract._ID, mId);
         musicValues.put(MusicContract._NAME, mName);
         musicValues.put(MusicContract._CODE, mCode);
         musicValues.put(MusicContract._PLAY_URL, mPlayUrl);
@@ -79,6 +78,10 @@ public class Music implements Parcelable {
         musicValues.put(MusicContract._RANKING_CODE, mRankingCode);
 
         return musicValues;
+    }
+
+    public long getId() {
+        return mId;
     }
 
     public String getName() {
@@ -115,10 +118,6 @@ public class Music implements Parcelable {
 
     public int getMusicType() {
         return mMusicType;
-    }
-
-    public void setMusicType(int musicType) {
-        mMusicType = musicType;
     }
 
     @Override

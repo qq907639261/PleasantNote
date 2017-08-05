@@ -49,6 +49,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private MusicBinder mMusicBinder;
     private Random mRandom;
     private OnMusicServiceListener mListener;
+    private boolean mPlaying;
 
     public static Intent newIntent(Context context, String action) {
         return new Intent(context, MusicService.class)
@@ -111,14 +112,16 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void play() {
         mMediaPlayer.start();
+        mPlaying = mMediaPlayer.isPlaying();
     }
 
     public boolean isPlaying() {
-        return mMediaPlayer.isPlaying();
+        return mPlaying;
     }
 
     public void pause() {
         mMediaPlayer.pause();
+        mPlaying = false;
     }
 
     public int getPlayedMillis() {
@@ -201,6 +204,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         if (cursor != null) {
             boolean moveSucceeded = cursor.moveToFirst();
+
             while (moveSucceeded) {
                 musics.add(new Music(cursor));
                 moveSucceeded = cursor.moveToNext();
@@ -215,6 +219,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private void playNewMusic(Intent intent) {
         Music newMusic = intent.getParcelableExtra(EXTRA_MUSIC);
 
+        mHistoryMusicPositions.clear();
         mCurrentMusicPosition = 0;
         mMusics.clear();
         mMusics.add(newMusic);
@@ -281,6 +286,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(playUrl);
             mMediaPlayer.prepareAsync();
+            saveCurrentMusicAsync();
+            mPlaying = true;
 
             if (mListener != null) {
                 mListener.onPreparing();
@@ -288,6 +295,27 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void saveCurrentMusicAsync() {
+        final Music currentMusic = mMusics.get(mCurrentMusicPosition);
+        final ContentResolver contentResolver = getContentResolver();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int musicCode = currentMusic.getCode();
+                String where = MusicContract._CODE + "=" + musicCode + " AND "
+                        + MusicContract._TYPE + "=" + MusicType.HISTORY;
+
+                ContentValues musicValues = currentMusic.getMusicValues();
+                musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
+
+                contentResolver.delete(MusicContract.URI, where, null);
+                contentResolver.insert(MusicContract.URI, musicValues);
+                contentResolver.notifyChange(MusicContract.URI, null);
+            }
+        }).start();
     }
 
     @Override
@@ -323,30 +351,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mListener != null) {
             mListener.onPrepared();
         }
-
         mediaPlayer.start();
-        saveCurrentMusicAsync();
-    }
-
-    private void saveCurrentMusicAsync() {
-        final Music currentMusic = mMusics.get(mCurrentMusicPosition);
-        final ContentResolver contentResolver = getContentResolver();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int musicCode = currentMusic.getCode();
-                String where = MusicContract._CODE + "=" + musicCode + " AND "
-                        + MusicContract._TYPE + "=" + MusicType.HISTORY;
-
-                ContentValues musicValues = currentMusic.getMusicValues();
-                musicValues.put(MusicContract._TYPE, MusicType.HISTORY);
-
-                contentResolver.delete(MusicContract.URI, where, null);
-                contentResolver.insert(MusicContract.URI, musicValues);
-                contentResolver.notifyChange(MusicContract.URI, null);
-            }
-        }).start();
     }
 
     @Override

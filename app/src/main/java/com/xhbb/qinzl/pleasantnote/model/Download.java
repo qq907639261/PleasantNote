@@ -17,7 +17,10 @@ public class Download {
     private int mProgress;
 
     public Download(Cursor cursor) {
-
+        mMusicId = cursor.getInt(cursor.getColumnIndex(DownloadContract._MUSIC_ID));
+        mState = cursor.getInt(cursor.getColumnIndex(DownloadContract._STATE));
+        mUrl = cursor.getString(cursor.getColumnIndex(DownloadContract._URL));
+        mProgress = cursor.getInt(cursor.getColumnIndex(DownloadContract._PROGRESS));
     }
 
     public ContentValues getDownloadValues() {

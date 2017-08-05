@@ -1,11 +1,13 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.database.Cursor;
@@ -17,6 +19,8 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,13 +29,17 @@ import android.widget.BaseAdapter;
 import android.widget.Chronometer;
 import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.xhbb.qinzl.pleasantnote.async.DownloadMusicService;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.common.DateTimeUtils;
+import com.xhbb.qinzl.pleasantnote.common.Enums.DownloadState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.common.GlideApp;
+import com.xhbb.qinzl.pleasantnote.data.Contracts.DownloadContract;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.data.PrefrencesUtils;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityPlayBinding;
@@ -240,13 +248,61 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     private void downloadMusic() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            return;
+        }
 
+        // TODO: 2017/8/5 还有很多事情要做。。。
+
+        new AsyncTask<Void, Void, Void>() {
+            private ContentResolver iContentResolver;
+            private Music iCurrentMusic;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                iContentResolver = getContentResolver();
+                iCurrentMusic = mMusicService.getCurrentMusic();
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ContentValues musicValues = iCurrentMusic.getMusicValues();
+                musicValues.put(MusicContract._TYPE, MusicType.LOCAL);
+
+                ContentValues downloadValues = new ContentValues();
+                downloadValues.put(DownloadContract._MUSIC_ID, iCurrentMusic.getId());
+                downloadValues.put(DownloadContract._STATE, DownloadState.WAITING);
+
+                iContentResolver.insert(MusicContract.URI, musicValues);
+                iContentResolver.insert(DownloadContract.URI, downloadValues);
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                startService(new Intent(PlayActivity.this, DownloadMusicService.class));
+            }
+        }.execute();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            downloadMusic();
+        } else {
+            Toast.makeText(this, R.string.denied_permission_toast, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void changeFavoritedSwitcher(boolean favorited) {
         mFavoritedChangedMusic = mMusicService.getCurrentMusic();
         if (mFavoritedChangedMusic != null) {
-            mFavoritedChangedMusic.setMusicType(MusicType.FAVORITED);
             mBinding.favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
         }
     }
@@ -416,6 +472,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
                 contentResolver.delete(MusicContract.URI, where, null);
                 if (musicValues != null) {
+                    musicValues.put(MusicContract._TYPE, MusicType.FAVORITED);
                     contentResolver.insert(MusicContract.URI, musicValues);
                 }
                 contentResolver.notifyChange(MusicContract.URI, null);

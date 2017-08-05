@@ -18,6 +18,8 @@
     <string name="my_favorited_nav">我的收藏</string>
     <string name="recently_played_nav">最近播放</string>
 
+    <string name="local_song_menu">本地歌曲</string>
+
     <string name="my_icon_accessibility">我的头像</string>
     <string name="open_drawer_accessibility">打开导航抽屉</string>
     <string name="close_drawer_accessibility">关闭导航抽屉</string>
@@ -31,13 +33,15 @@
     <string name="random_play_accessibility">随机播放</string>
     <string name="single_cycle_accessibility">单曲循环</string>
 
-    <string name="search_menu">搜索</string>
-    <string name="music_search_hint">歌曲/歌手</string>
     <string name="network_error_text">连网失败，请检查网络！</string>
     <string name="scrolled_to_end_text">已经到底啦</string>
     <string name="refreshing_text">快上音乐！</string>
     <string name="empty_data_text">暂无相关内容，我们将继续完善，敬请期待。^_^</string>
+
+    <string name="background_task_channel">后台任务</string>
+    <string name="download_task_channel">下载任务</string>
+
+    <string name="music_search_hint">歌曲/歌手</string>
     <string name="music_playing_notification_content">正在播放音乐</string>
-    <string name="play_music_tips_channel">音乐播放提示</string>
-    <string name="local_song_menu">本地歌曲</string>
+    <string name="denied_permission_toast">您拒绝了相关权限</string>
 </resources>

@@ -168,7 +168,12 @@ public class MainActivity extends AppCompatActivity
     public void onActivityStopped(Activity activity) {
         mPreviousActivityPausing = false;
         if (activity == mStartedActivity) {
-            startService(MusicService.newIntent(this, MusicService.ACTION_START_FOREGROUND));
+            BottomPlayFragment fragment = (BottomPlayFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.bottom_fragment_container);
+
+            if (fragment.isPlaying()) {
+                startService(MusicService.newIntent(this, MusicService.ACTION_START_FOREGROUND));
+            }
         }
     }
 
