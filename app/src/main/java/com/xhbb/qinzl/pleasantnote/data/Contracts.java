@@ -37,7 +37,7 @@ public interface Contracts {
         String TABLE = "download";
         Uri URI = Uri.parse(CONTENT_AUTHORITY + TABLE);
 
-        String _MUSIC_ID = "music_id";
+        String _MUSIC_CODE = "music_code";
         String _STATE = "state";
         String _URL = "url";
         String _PROGRESS = "progress";

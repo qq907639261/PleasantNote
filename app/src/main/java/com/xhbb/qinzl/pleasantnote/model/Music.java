@@ -13,7 +13,6 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 
 public class Music implements Parcelable {
 
-    private long mId;
     private String mName;
     private int mSeconds;
     private int mCode;
@@ -25,7 +24,6 @@ public class Music implements Parcelable {
     private int mMusicType;
 
     public Music(Cursor cursor) {
-        mId = cursor.getLong(cursor.getColumnIndex(MusicContract._ID));
         mName = cursor.getString(cursor.getColumnIndex(MusicContract._NAME));
         mCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));
         mPlayUrl = cursor.getString(cursor.getColumnIndex(MusicContract._PLAY_URL));
@@ -38,7 +36,6 @@ public class Music implements Parcelable {
     }
 
     private Music(Parcel in) {
-        mId = in.readLong();
         mName = in.readString();
         mSeconds = in.readInt();
         mCode = in.readInt();
@@ -52,7 +49,6 @@ public class Music implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeLong(mId);
         parcel.writeString(mName);
         parcel.writeInt(mSeconds);
         parcel.writeInt(mCode);
@@ -78,10 +74,6 @@ public class Music implements Parcelable {
         musicValues.put(MusicContract._RANKING_CODE, mRankingCode);
 
         return musicValues;
-    }
-
-    public long getId() {
-        return mId;
     }
 
     public String getName() {

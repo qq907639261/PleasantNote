@@ -11,13 +11,13 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.DownloadContract;
 
 public class Download {
 
-    private int mMusicId;
+    private int mMusicCode;
     private int mState;
     private String mUrl;
     private int mProgress;
 
     public Download(Cursor cursor) {
-        mMusicId = cursor.getInt(cursor.getColumnIndex(DownloadContract._MUSIC_ID));
+        mMusicCode = cursor.getInt(cursor.getColumnIndex(DownloadContract._MUSIC_CODE));
         mState = cursor.getInt(cursor.getColumnIndex(DownloadContract._STATE));
         mUrl = cursor.getString(cursor.getColumnIndex(DownloadContract._URL));
         mProgress = cursor.getInt(cursor.getColumnIndex(DownloadContract._PROGRESS));
@@ -26,7 +26,7 @@ public class Download {
     public ContentValues getDownloadValues() {
         ContentValues downloadValues = new ContentValues();
 
-        downloadValues.put(DownloadContract._MUSIC_ID, mMusicId);
+        downloadValues.put(DownloadContract._MUSIC_CODE, mMusicCode);
         downloadValues.put(DownloadContract._STATE, mState);
         downloadValues.put(DownloadContract._URL, mUrl);
         downloadValues.put(DownloadContract._PROGRESS, mProgress);
@@ -34,8 +34,8 @@ public class Download {
         return downloadValues;
     }
 
-    public int getMusicId() {
-        return mMusicId;
+    public int getMusicCode() {
+        return mMusicCode;
     }
 
     public int getState() {

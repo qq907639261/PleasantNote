@@ -96,12 +96,12 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
                 android:maxHeight="30dp"
+                android:text="@string/default_play_duration_text"
                 android:textAppearance="@android:style/TextAppearance.Widget.TextView"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toBottomOf="@+id/playChrononmeter"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/playChrononmeter"
-                tools:text="03:14"/>
+                app:layout_constraintTop_toTopOf="@+id/playChrononmeter"/>
 
             <View
                 android:id="@+id/dividingView"

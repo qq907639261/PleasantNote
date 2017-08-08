@@ -14,7 +14,7 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "pleasant_note.db";
-    private static final int DB_VERSION = 11;
+    private static final int DB_VERSION = 12;
 
     private static final String CREATE_TABLE_MUSIC =
             "CREATE TABLE " + MusicContract.TABLE + "(" +
@@ -33,7 +33,7 @@ class DbHelper extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_DOWNLOAD =
             "CREATE TABLE " + DownloadContract.TABLE + "(" +
                     DownloadContract._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    DownloadContract._MUSIC_ID + " LONG," +
+                    DownloadContract._MUSIC_CODE + " INTEGER," +
                     DownloadContract._URL + " TEXT," +
                     DownloadContract._STATE + " INTEGER," +
                     DownloadContract._PROGRESS + " INTEGER" +

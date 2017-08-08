@@ -90,30 +90,30 @@ public class DownloadMusicService extends Service {
         executeQueryDownloadDataTask();
     }
 
-    public void putDownloadStates(int musicId, int downloadState) {
-        mDownloadStates.put(musicId, downloadState);
+    public void putDownloadStates(int musicCode, int downloadState) {
+        mDownloadStates.put(musicCode, downloadState);
     }
 
-    private void updateDownloadStateAsync(final int musicId, final int downloadState) {
+    private void updateDownloadStateAsync(final int musicCode, final int downloadState) {
         final ContentResolver contentResolver = getContentResolver();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                updateDownloadState(downloadState, musicId, contentResolver);
+                updateDownloadState(downloadState, musicCode, contentResolver);
             }
         }).start();
     }
 
-    private void updateDownloadState(int downloadState, int musicId, ContentResolver contentResolver) {
+    private void updateDownloadState(int downloadState, int musicCode, ContentResolver contentResolver) {
         ContentValues values = new ContentValues();
         values.put(DownloadContract._STATE, downloadState);
 
-        updateDownloadByMusicId(contentResolver, values, musicId);
+        updateDownloadByMusicCode(contentResolver, values, musicCode);
     }
 
-    private void updateDownloadByMusicId(ContentResolver contentResolver, ContentValues values,
-                                         int musicId) {
-        String where = DownloadContract._MUSIC_ID + "=" + musicId;
+    private void updateDownloadByMusicCode(ContentResolver contentResolver, ContentValues values,
+                                           int musicCode) {
+        String where = DownloadContract._MUSIC_CODE + "=" + musicCode;
         updateDownload(contentResolver, values, where);
     }
 
@@ -166,10 +166,10 @@ public class DownloadMusicService extends Service {
             protected void onPostExecute(List<Download> downloads) {
                 super.onPostExecute(downloads);
                 for (Download download : downloads) {
-                    int musicId = download.getMusicId();
+                    int musicCode = download.getMusicCode();
 
-                    putDownloadStates(musicId, DownloadState.DOWNLOADING);
-                    updateDownloadStateAsync(musicId, DownloadState.DOWNLOADING);
+                    putDownloadStates(musicCode, DownloadState.PREPARING);
+                    updateDownloadStateAsync(musicCode, DownloadState.PREPARING);
 
                     executeDownloadMusicExecutorService(download);
                 }
@@ -179,20 +179,21 @@ public class DownloadMusicService extends Service {
 
     private void executeDownloadMusicExecutorService(final Download download) {
         final ContentResolver contentResolver = getContentResolver();
-        final Context context = getApplicationContext();
+        final int musicCode = download.getMusicCode();
 
         mDownloadMusicExecutorService.execute(new Runnable() {
             @Override
             public void run() {
-                // TODO: 2017/8/5 还有很多事情可做
+                if (mDownloadMusicExecutorService.isShutdown()) {
+                    return;
+                }
+
                 File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-//                if (dir.getFreeSpace())
-//                ContextCompat.getExternalFilesDirs()
 
-                int musicId = download.getMusicId();
                 String downloadUrl = download.getUrl();
+                File musicFile = new File(dir, musicCode + ".mp3");
 
-                File musicFile = new File(dir, musicId + ".mp3");
+                updateDownloadState(DownloadState.DOWNLOADING, musicCode, contentResolver);
 
                 if (!musicFile.exists()) {
                     boolean createFileFailed = false;
@@ -209,7 +210,7 @@ public class DownloadMusicService extends Service {
                         ContentValues values = new ContentValues();
                         values.put(DownloadContract._URL, downloadUrl);
 
-                        updateDownloadByMusicId(contentResolver, values, musicId);
+                        updateDownloadByMusicCode(contentResolver, values, musicCode);
                     } catch (IOException e) {
                         e.printStackTrace();
                         createFileFailed = true;
@@ -218,7 +219,7 @@ public class DownloadMusicService extends Service {
                         if (createFileFailed) {
                             //noinspection ResultOfMethodCallIgnored
                             musicFile.delete();
-                            finishDownload(musicId, DownloadState.FAILED);
+                            finishDownload(musicCode, DownloadState.FAILED);
                         }
                     }
                 }
@@ -244,30 +245,38 @@ public class DownloadMusicService extends Service {
 
                     int len;
                     while ((len = inputStream.read(b)) != -1) {
-                        int downloadState = mDownloadStates.get(musicId);
+                        int downloadState = mDownloadStates.get(musicCode);
 
                         if (downloadState == DownloadState.PAUSE || downloadState == DownloadState.CANCEL) {
                             if (downloadState == DownloadState.CANCEL) {
                                 //noinspection ResultOfMethodCallIgnored
                                 musicFile.delete();
-                                deleteDownloadByMusicId(musicId, contentResolver);
+                                deleteDownloadByMusicCode(musicCode, contentResolver);
                             }
 
-                            finishDownload(musicId, downloadState);
+                            finishDownload(musicCode, downloadState);
                             return;
                         }
 
-                        downloadedLength += len;
-                        int progress = (int) (((double) downloadedLength / contentLength) * 100);
-
                         randomAccessFile.write(b, 0, len);
-                        NotificationUtils.notifyDownload(context, progress);
+
+                        downloadedLength += len;
+                        final int progress = (int) (((double) downloadedLength / contentLength) * 100);
+
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (mListener != null) {
+                                    mListener.onProgressUpdate(musicCode, progress);
+                                }
+                            }
+                        });
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                     //noinspection ResultOfMethodCallIgnored
                     musicFile.delete();
-                    finishDownload(musicId, DownloadState.FAILED);
+                    finishDownload(musicCode, DownloadState.FAILED);
                     return;
                 } finally {
                     if (connection != null) {
@@ -285,15 +294,15 @@ public class DownloadMusicService extends Service {
                     }
                 }
 
-                finishDownload(musicId, DownloadState.DOWNLOADED);
+                finishDownload(musicCode, DownloadState.DOWNLOADED);
             }
 
-            private void finishDownload(final int musicId, final int downloadState) {
-                updateDownloadState(downloadState, musicId, contentResolver);
+            private void finishDownload(final int musicCode, final int downloadState) {
+                updateDownloadState(downloadState, musicCode, contentResolver);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        mDownloadStates.delete(musicId);
+                        mDownloadStates.delete(musicCode);
 
                         if (mDownloadStates.size() == 0) {
                             stopSelf();
@@ -321,8 +330,8 @@ public class DownloadMusicService extends Service {
         });
     }
 
-    private void deleteDownloadByMusicId(int musicId, ContentResolver contentResolver) {
-        String where = DownloadContract._MUSIC_ID + "=" + musicId;
+    private void deleteDownloadByMusicCode(int musicCode, ContentResolver contentResolver) {
+        String where = DownloadContract._MUSIC_CODE + "=" + musicCode;
 
         contentResolver.delete(DownloadContract.URI, where, null);
         contentResolver.notifyChange(DownloadContract.URI, null);
@@ -332,16 +341,15 @@ public class DownloadMusicService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        updateDownloadingAndWaitingToPauseAsync();
+        mDownloadMusicExecutorService.shutdown();
+        updateWaitingAndPreparingToPauseAsync();
 
         if (mQueryDownloadDataTask != null) {
             mQueryDownloadDataTask.cancel(false);
         }
-
-        mDownloadMusicExecutorService.shutdown();
     }
 
-    private void updateDownloadingAndWaitingToPauseAsync() {
+    private void updateWaitingAndPreparingToPauseAsync() {
         final ContentResolver contentResolver = getContentResolver();
         new Thread(new Runnable() {
             @Override
@@ -349,7 +357,7 @@ public class DownloadMusicService extends Service {
                 ContentValues values = new ContentValues();
                 values.put(DownloadContract._STATE, DownloadState.PAUSE);
 
-                String where = DownloadContract._STATE + " IN (" + DownloadState.DOWNLOADING +
+                String where = DownloadContract._STATE + " IN (" + DownloadState.PREPARING +
                         "," + DownloadState.WAITING + ")";
 
                 updateDownload(contentResolver, values, where);
@@ -369,6 +377,7 @@ public class DownloadMusicService extends Service {
 
         void onDownloadFailed();
         void onDownloadStopped();
+        void onProgressUpdate(int musicCode, int progress);
         void onDownloadSucceeded();
     }
 }

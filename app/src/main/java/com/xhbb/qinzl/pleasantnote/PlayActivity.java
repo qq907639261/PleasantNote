@@ -63,9 +63,11 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     private PlaySpinnerAdapter mPlaySpinnerAdapter;
     private ActivityPlayBinding mBinding;
     private MusicService mMusicService;
-    private AsyncTask<Void, Void, Boolean> mInitFavoritedSwitcherTask;
+    private AsyncTask<Void, Void, Boolean> mInitFavoritedSwitcherChildTask;
+    private AsyncTask<Void, Void, Boolean> mInitDownloadButtonEnabledTask;
     private AsyncTask<Void, Void, String> mDisplayLyricsTask;
     private AsyncTask<Void, Void, Drawable> mDisplayBackgroundTask;
+    private AsyncTask<Void, Void, Void> mDownloadMusicTask;
     private Music mFavoritedChangedMusic;
 
     public static void start(Context context) {
@@ -106,6 +108,8 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         mBinding.playChrononmeter.setOnChronometerTickListener(this);
         mBinding.playSeekBar.setOnSeekBarChangeListener(this);
         mBinding.downloadButton.setOnClickListener(this);
+        mBinding.downloadButton.setEnabled(false);
+        mBinding.downloadButton.setImageResource(R.drawable.ic_downloaded);
 
         mBinding.setActivityPlay(mActivityPlay);
     }
@@ -146,12 +150,20 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             mDisplayLyricsTask.cancel(false);
         }
 
-        if (mInitFavoritedSwitcherTask != null) {
-            mInitFavoritedSwitcherTask.cancel(false);
+        if (mInitFavoritedSwitcherChildTask != null) {
+            mInitFavoritedSwitcherChildTask.cancel(false);
         }
 
         if (mDisplayBackgroundTask != null) {
             mDisplayBackgroundTask.cancel(false);
+        }
+
+        if (mInitDownloadButtonEnabledTask != null) {
+            mInitDownloadButtonEnabledTask.cancel(false);
+        }
+
+        if (mDownloadMusicTask != null) {
+            mDownloadMusicTask.cancel(false);
         }
     }
 
@@ -226,7 +238,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 changeFavoritedSwitcher(false);
                 break;
             case R.id.downloadButton:
-                downloadMusic();
+                executeDownloadMusicTask();
                 break;
             default:
         }
@@ -247,16 +259,23 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         mMusicService.play();
     }
 
-    private void downloadMusic() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+    private void executeDownloadMusicTask() {
+        String writeExternalStorage = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+        if (ContextCompat.checkSelfPermission(this, writeExternalStorage) !=
                 PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            ActivityCompat.requestPermissions(this, new String[]{writeExternalStorage}, 0);
             return;
         }
 
-        // TODO: 2017/8/5 还有很多事情要做。。。
+        if (mDownloadMusicTask != null) {
+            mDownloadMusicTask.cancel(false);
+        }
+        mDownloadMusicTask = getDownloadMusicTask().execute();
+    }
 
-        new AsyncTask<Void, Void, Void>() {
+    @NonNull
+    private AsyncTask<Void, Void, Void> getDownloadMusicTask() {
+        return new AsyncTask<Void, Void, Void>() {
             private ContentResolver iContentResolver;
             private Music iCurrentMusic;
 
@@ -265,6 +284,10 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPreExecute();
                 iContentResolver = getContentResolver();
                 iCurrentMusic = mMusicService.getCurrentMusic();
+
+                mBinding.downloadButton.setEnabled(false);
+                mBinding.downloadButton.setImageResource(R.drawable.ic_downloaded);
+                Toast.makeText(PlayActivity.this, R.string.start_download_music_toast, Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -272,12 +295,25 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 ContentValues musicValues = iCurrentMusic.getMusicValues();
                 musicValues.put(MusicContract._TYPE, MusicType.LOCAL);
 
+                String musicWhere = MusicContract._CODE + "=" + iCurrentMusic.getCode() +
+                        " AND " + MusicContract._TYPE + "=" + MusicType.LOCAL;
+
+                iContentResolver.delete(MusicContract.URI, musicWhere, null);
+                iContentResolver.insert(MusicContract.URI, musicValues);
+                iContentResolver.notifyChange(MusicContract.URI, null);
+
                 ContentValues downloadValues = new ContentValues();
-                downloadValues.put(DownloadContract._MUSIC_ID, iCurrentMusic.getId());
                 downloadValues.put(DownloadContract._STATE, DownloadState.WAITING);
 
-                iContentResolver.insert(MusicContract.URI, musicValues);
-                iContentResolver.insert(DownloadContract.URI, downloadValues);
+                String downloadWhere = DownloadContract._MUSIC_CODE + "=" + iCurrentMusic.getCode();
+
+                int affectedRows = iContentResolver.update(DownloadContract.URI,
+                        downloadValues, downloadWhere, null);
+                if (affectedRows < 1) {
+                    downloadValues.put(DownloadContract._MUSIC_CODE, iCurrentMusic.getCode());
+                    iContentResolver.insert(DownloadContract.URI, downloadValues);
+                }
+                iContentResolver.notifyChange(DownloadContract.URI, null);
 
                 return null;
             }
@@ -287,14 +323,14 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPostExecute(aVoid);
                 startService(new Intent(PlayActivity.this, DownloadMusicService.class));
             }
-        }.execute();
+        };
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            downloadMusic();
+            executeDownloadMusicTask();
         } else {
             Toast.makeText(this, R.string.denied_permission_toast, Toast.LENGTH_SHORT).show();
         }
@@ -316,7 +352,10 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
         mMusicService = ((MusicService.MusicBinder) iBinder).getService(this);
 
-        if (mMusicService.hasMusic()) {
+        boolean hasMusic = mMusicService.hasMusic();
+        mBinding.playSeekBar.setEnabled(hasMusic);
+
+        if (hasMusic) {
             updateCurrentMusic();
             setPlayChrononmeterBase();
 
@@ -327,15 +366,15 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         }
     }
 
-    private void executeInitFavoritedSwitcherTask() {
-        if (mInitFavoritedSwitcherTask != null) {
-            mInitFavoritedSwitcherTask.cancel(false);
+    private void executeInitFavoritedSwitcherChildTask() {
+        if (mInitFavoritedSwitcherChildTask != null) {
+            mInitFavoritedSwitcherChildTask.cancel(false);
         }
-        mInitFavoritedSwitcherTask = getInitFavoritedSwitcherTask().execute();
+        mInitFavoritedSwitcherChildTask = getInitFavoritedSwitcherChildTask().execute();
     }
 
     @NonNull
-    private AsyncTask<Void, Void, Boolean> getInitFavoritedSwitcherTask() {
+    private AsyncTask<Void, Void, Boolean> getInitFavoritedSwitcherChildTask() {
         return new AsyncTask<Void, Void, Boolean>() {
             private ContentResolver iContentResolver;
             private int iMusicCode;
@@ -353,14 +392,14 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                         + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 
                 Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, null);
+                boolean hasData = false;
 
-                boolean favorited = false;
                 if (cursor != null) {
-                    favorited = cursor.getCount() > 0;
+                    hasData = cursor.getCount() > 0;
                     cursor.close();
                 }
 
-                return favorited;
+                return hasData;
             }
 
             @Override
@@ -376,12 +415,62 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
         NetworkUtils.addLyricsRequest(this, currentMusic.getCode(), REQUESTS_TAG, this, this);
         executeDisplayBackgroundTask(currentMusic.getBigPictureUrl());
-        executeInitFavoritedSwitcherTask();
+        executeInitFavoritedSwitcherChildTask();
+        executeInitDownloadButtonEnabledTask();
 
         String formattedTime = DateTimeUtils.getFormattedTime(this, currentMusic.getSeconds());
 
         mBinding.playDuration.setText(formattedTime);
         mBinding.playSeekBar.setMax(currentMusic.getSeconds());
+    }
+
+    private void executeInitDownloadButtonEnabledTask() {
+        if (mInitDownloadButtonEnabledTask != null) {
+            mInitDownloadButtonEnabledTask.cancel(false);
+        }
+        mInitDownloadButtonEnabledTask = getInitDownloadButtonEnabledTask().execute();
+    }
+
+    private AsyncTask<Void, Void, Boolean> getInitDownloadButtonEnabledTask() {
+        return new AsyncTask<Void, Void, Boolean>() {
+            private ContentResolver iContentResolver;
+            private long iMusicCode;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                iContentResolver = getContentResolver();
+                iMusicCode = mMusicService.getCurrentMusic().getCode();
+            }
+
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+                String selection = DownloadContract._MUSIC_CODE + "=" + iMusicCode;
+
+                Cursor cursor = iContentResolver.query(DownloadContract.URI, null, selection, null, null);
+                boolean canDownload = cursor == null || cursor.getCount() == 0;
+
+                if (cursor != null) {
+                    if (cursor.moveToFirst()) {
+                        int downloadState = cursor.getInt(cursor.getColumnIndex(DownloadContract._STATE));
+                        canDownload = downloadState == DownloadState.PAUSE
+                                || downloadState == DownloadState.FAILED;
+                    }
+
+                    cursor.close();
+                }
+
+                return canDownload;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean enabled) {
+                super.onPostExecute(enabled);
+                mBinding.downloadButton.setEnabled(enabled);
+                mBinding.downloadButton.setImageResource(enabled ?
+                        R.drawable.ic_file_download : R.drawable.ic_downloaded);
+            }
+        };
     }
 
     private void executeDisplayBackgroundTask(String pictureUrl) {
