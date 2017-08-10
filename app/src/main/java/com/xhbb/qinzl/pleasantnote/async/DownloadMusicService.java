@@ -52,11 +52,15 @@ public class DownloadMusicService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        mBinder = new DownloadMusicBinder();
+        mBinder = new DownloadMusicBinder(this);
         mDownloadMusicExecutorService = Executors.newFixedThreadPool(THREAD_COUNT_IN_POOL);
         mDownloadStates = new SparseIntArray();
         mHandler = new Handler();
         mRandom = new Random();
+    }
+
+    private void setListener(OnDownloadMusicServiceListener listener) {
+        mListener = listener;
     }
 
     @Override
@@ -367,9 +371,15 @@ public class DownloadMusicService extends Service {
 
     public class DownloadMusicBinder extends Binder {
 
+        private DownloadMusicService mDownloadMusicService;
+
+        DownloadMusicBinder(DownloadMusicService downloadMusicService) {
+            mDownloadMusicService = downloadMusicService;
+        }
+
         public DownloadMusicService getService(@Nullable OnDownloadMusicServiceListener listener) {
-            mListener = listener;
-            return DownloadMusicService.this;
+            mDownloadMusicService.setListener(listener);
+            return mDownloadMusicService;
         }
     }
 

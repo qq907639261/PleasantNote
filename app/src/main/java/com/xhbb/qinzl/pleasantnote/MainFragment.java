@@ -57,18 +57,18 @@ public abstract class MainFragment extends Fragment
         private static final int TYPE_DEFAULT_ITEM = 0;
         private static final int TYPE_LAST_ITEM = 1;
 
-        private boolean iScrolledToEnd;
+        private boolean mScrolledToEnd;
 
-        MusicAdapter(int defaultLayoutRes) {
-            super(defaultLayoutRes);
+        MusicAdapter(Context context, int defaultLayoutRes) {
+            super(context, defaultLayoutRes);
         }
 
         void setScrolledToEnd(boolean scrolledToEnd) {
-            iScrolledToEnd = scrolledToEnd;
+            mScrolledToEnd = scrolledToEnd;
         }
 
         boolean isScrolledToEnd() {
-            return iScrolledToEnd;
+            return mScrolledToEnd;
         }
 
         @Override
@@ -106,7 +106,7 @@ public abstract class MainFragment extends Fragment
 
             binding.setVariable(BR.itemMusic, itemMusic);
             if (position == getItemCount() - 1) {
-                binding.setVariable(BR.scrolledToEnd, iScrolledToEnd);
+                binding.setVariable(BR.scrolledToEnd, mScrolledToEnd);
             }
 
             binding.executePendingBindings();

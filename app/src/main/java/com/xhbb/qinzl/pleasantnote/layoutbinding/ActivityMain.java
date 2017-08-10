@@ -6,6 +6,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.view.MenuItem;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import com.xhbb.qinzl.pleasantnote.R;
 
@@ -38,12 +39,13 @@ public class ActivityMain implements LayoutAppBar.OnLayoutAppBarListener {
 
     public boolean onDrawerItemSelected(MenuItem item, DrawerLayout drawerLayout,
                                         NavigationView navigationView) {
+        Context context = drawerLayout.getContext();
         switch (item.getItemId()) {
             case R.id.nav_my_favorited:
-
+                Toast.makeText(context, "我的收藏", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.nav_recently_played:
-
+                Toast.makeText(context, "最近播放", Toast.LENGTH_SHORT).show();
                 break;
             default:
         }

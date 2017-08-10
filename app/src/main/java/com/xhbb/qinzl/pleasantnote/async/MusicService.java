@@ -65,7 +65,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         super.onCreate();
 
         mMusics = new ArrayList<>();
-        mMusicBinder = new MusicBinder();
+        mMusicBinder = new MusicBinder(this);
         mHistoryMusicPositions = new ArrayList<>();
         mPlaySpinnerValues = getResources().getIntArray(R.array.play_spinner_values);
         mForegroundNotification = NotificationUtils.getForegroundNotification(getApplicationContext());
@@ -73,6 +73,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
+    }
+
+    private void setListener(OnMusicServiceListener listener) {
+        mListener = listener;
     }
 
     @Override
@@ -413,9 +417,15 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public class MusicBinder extends Binder {
 
+        private MusicService mMusicService;
+
+        MusicBinder(MusicService musicService) {
+            mMusicService = musicService;
+        }
+
         public MusicService getService(@Nullable OnMusicServiceListener listener) {
-            mListener = listener;
-            return MusicService.this;
+            mMusicService.setListener(listener);
+            return mMusicService;
         }
     }
 

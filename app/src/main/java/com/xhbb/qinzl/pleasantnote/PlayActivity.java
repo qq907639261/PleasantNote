@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
@@ -22,6 +23,7 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -85,7 +87,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
         int playSpinnerSelection = PrefrencesUtils.getPlaySpinnerSelection(this);
 
-        mPlaySpinnerAdapter = new PlaySpinnerAdapter();
+        mPlaySpinnerAdapter = new PlaySpinnerAdapter(getResources());
         mActivityPlay = new ActivityPlay(this, mPlaySpinnerAdapter, playSpinnerSelection);
 
         if (savedInstanceState != null) {
@@ -123,7 +125,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     protected void onStart() {
         super.onStart();
         bindMusicService();
-        mPlaySpinnerAdapter.obtainPlaySpinnerIcons();
+        mPlaySpinnerAdapter.obtainPlaySpinnerIcons(getResources());
         mPlaySpinnerAdapter.notifyDataSetChanged();
     }
 
@@ -602,25 +604,25 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     private class PlaySpinnerAdapter extends BaseAdapter {
 
-        private TypedArray iPlaySpinnerIcons;
-        private String[] iPlaySpinnerAccessibilities;
+        private TypedArray mPlaySpinnerIcons;
+        private String[] mPlaySpinnerAccessibilities;
 
-        private PlaySpinnerAdapter() {
-            iPlaySpinnerAccessibilities =
-                    getResources().getStringArray(R.array.play_spinner_accessibility);
+        private PlaySpinnerAdapter(Resources resources) {
+            mPlaySpinnerAccessibilities =
+                    resources.getStringArray(R.array.play_spinner_accessibility);
         }
 
-        private void obtainPlaySpinnerIcons() {
-            iPlaySpinnerIcons = getResources().obtainTypedArray(R.array.play_spinner_drawable);
+        private void obtainPlaySpinnerIcons(Resources resources) {
+            mPlaySpinnerIcons = resources.obtainTypedArray(R.array.play_spinner_drawable);
         }
 
         private void recyclePlaySpinnerIcons() {
-            iPlaySpinnerIcons.recycle();
+            mPlaySpinnerIcons.recycle();
         }
 
         @Override
         public int getCount() {
-            return iPlaySpinnerAccessibilities.length;
+            return mPlaySpinnerAccessibilities.length;
         }
 
         @Override
@@ -638,24 +640,24 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             ViewHolder viewHolder;
 
             if (view == null) {
-                view = getLayoutInflater().inflate(R.layout.layout_image_view, viewGroup, false);
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_image_view, viewGroup, false);
                 viewHolder = new ViewHolder();
 
-                viewHolder.iImageView = view.findViewById(R.id.imageView);
+                viewHolder.mImageView = view.findViewById(R.id.imageView);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            viewHolder.iImageView.setImageDrawable(iPlaySpinnerIcons.getDrawable(i));
-            viewHolder.iImageView.setContentDescription(iPlaySpinnerAccessibilities[i]);
+            viewHolder.mImageView.setImageDrawable(mPlaySpinnerIcons.getDrawable(i));
+            viewHolder.mImageView.setContentDescription(mPlaySpinnerAccessibilities[i]);
 
             return view;
         }
 
         private class ViewHolder {
 
-            private ImageView iImageView;
+            private ImageView mImageView;
         }
     }
 }

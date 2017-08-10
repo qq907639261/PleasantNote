@@ -58,7 +58,7 @@ public class MusicQueryFragment extends MainFragment {
         Context context = getContext();
 
         mLayoutManager = new LinearLayoutManager(context);
-        mMusicAdapter = new MusicAdapter(R.layout.item_music);
+        mMusicAdapter = new MusicAdapter(context, R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
         mLocalReceiver = new LocalReceiver();
         mQuery = getArguments().getString(ARG_QUERY);

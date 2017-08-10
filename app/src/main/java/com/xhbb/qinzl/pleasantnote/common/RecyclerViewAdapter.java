@@ -1,5 +1,6 @@
 package com.xhbb.qinzl.pleasantnote.common;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
@@ -17,13 +18,19 @@ public abstract class RecyclerViewAdapter extends
 
     private Cursor mCursor;
     private int mLayoutRes;
+    private Context mContext;
 
-    public RecyclerViewAdapter(int defaultLayoutRes) {
+    public RecyclerViewAdapter(Context context, int defaultLayoutRes) {
+        mContext = context;
         mLayoutRes = defaultLayoutRes;
     }
 
     protected Cursor getCursor() {
         return mCursor;
+    }
+
+    protected Context getContext() {
+        return mContext;
     }
 
     public void swapCursor(Cursor cursor) {
@@ -53,15 +60,15 @@ public abstract class RecyclerViewAdapter extends
 
     protected class BindingHolder extends RecyclerView.ViewHolder {
 
-        private ViewDataBinding iBinding;
+        private ViewDataBinding mBinding;
 
         BindingHolder(View itemView) {
             super(itemView);
-            iBinding = DataBindingUtil.bind(itemView);
+            mBinding = DataBindingUtil.bind(itemView);
         }
 
         public ViewDataBinding getBinding() {
-            return iBinding;
+            return mBinding;
         }
     }
 }

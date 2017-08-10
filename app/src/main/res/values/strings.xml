@@ -54,4 +54,5 @@
     <string name="music_playing_notification_content">正在后台播放音乐</string>
 
     <string name="select_all_check_box">全选</string>
+    <string name="local_song_data_is_empty_toast">您还没有下载本地音乐</string>
 </resources>
