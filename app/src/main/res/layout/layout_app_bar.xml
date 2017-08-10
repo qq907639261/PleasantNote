@@ -34,7 +34,8 @@
             android:drawerLayout="@{drawerLayout}"
             android:onDrawerOpened="@{()->layoutAppBar.onDrawerOpened(searchView)}"
             android:title="@string/app_name"
-            app:layout_scrollFlags="scroll|enterAlways">
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
 
             <SearchView
                 android:id="@+id/searchView"
