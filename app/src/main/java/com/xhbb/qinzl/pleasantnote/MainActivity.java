@@ -3,6 +3,7 @@ package com.xhbb.qinzl.pleasantnote;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity
 
         MainSingleton.getInstance(this);
         FragmentManager fragmentManager = getSupportFragmentManager();
-        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(fragmentManager);
+        MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(fragmentManager, getResources());
 
         mActivityMain = new ActivityMain(this, pagerAdapter, this);
 
@@ -192,10 +193,10 @@ public class MainActivity extends AppCompatActivity
         private int[] mRankingCodes;
         private String[] mTabTitles;
 
-        private MusicRankingAdapter(FragmentManager fm) {
+        private MusicRankingAdapter(FragmentManager fm, Resources resources) {
             super(fm);
-            mRankingCodes = getResources().getIntArray(R.array.music_ranking_code);
-            mTabTitles = getResources().getStringArray(R.array.music_ranking);
+            mRankingCodes = resources.getIntArray(R.array.music_ranking_code);
+            mTabTitles = resources.getStringArray(R.array.music_ranking);
         }
 
         @Override

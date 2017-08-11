@@ -60,9 +60,9 @@ public class MusicQueryFragment extends MainFragment {
         mLayoutManager = new LinearLayoutManager(context);
         mMusicAdapter = new MusicAdapter(context, R.layout.item_music);
         mLayoutRecyclerView = new LayoutRecyclerView(context, mMusicAdapter, mLayoutManager, this);
-        mLocalReceiver = new LocalReceiver();
         mQuery = getArguments().getString(ARG_QUERY);
         mRequestsTag = getClass().getSimpleName();
+        mLocalReceiver = new LocalReceiver(this, mMusicAdapter, mLayoutRecyclerView);
 
         registerLocalBroadcast(context);
 
@@ -107,7 +107,7 @@ public class MusicQueryFragment extends MainFragment {
     }
 
     private void deleteQueryMusicAsync() {
-        final ContentResolver contentResolver = getContext().getContentResolver();
+        final ContentResolver contentResolver = getContext().getApplicationContext().getContentResolver();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -125,7 +125,8 @@ public class MusicQueryFragment extends MainFragment {
         mCurrentPage = 1;
         mMusicAdapter.setScrolledToEnd(false);
         mRefreshState = RefreshState.SWIPE;
-        NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage, mRequestsTag, this, this);
+        NetworkUtils.addQueryRequest(context, mQuery, mCurrentPage,
+                mRequestsTag, this, this);
 
         String selection = MusicContract._TYPE + "=" + MusicType.QUERY;
 
@@ -195,32 +196,43 @@ public class MusicQueryFragment extends MainFragment {
         context.startService(intent);
     }
 
-    private void handleReceive(Intent intent) {
-        switch (intent.getAction()) {
-            case Contracts.ACTION_UPDATE_QUERY_DATA_FINISHED:
-                int updatedState = intent.getIntExtra(
-                        UpdateQueryDataService.EXTRA_DATA_UPDATED_STATE, 0);
-
-                if (updatedState == DataUpdatedState.SCROLLED_TO_END_UPDATE) {
-                    mMusicAdapter.setScrolledToEnd(true);
-                } else if (updatedState == DataUpdatedState.SCROLLED_TO_END_NO_UPDATE) {
-                    mMusicAdapter.setScrolledToEnd(true);
-                    getLoaderManager().initLoader(0, null, this);
-                } else if (updatedState == DataUpdatedState.EMPTY_DATA_NO_UPDATE) {
-                    mLayoutRecyclerView.setTipsText(getString(R.string.empty_data_text));
-                    getLoaderManager().initLoader(0, null, this);
-                }
-
-                break;
-            default:
-        }
-    }
-
     private class LocalReceiver extends BroadcastReceiver {
+
+        private MusicQueryFragment mMusicQueryFragment;
+        private MusicAdapter mMusicAdapter;
+        private LayoutRecyclerView mLayoutRecyclerView;
+
+        private LocalReceiver(MusicQueryFragment musicQueryFragment, MusicAdapter musicAdapter,
+                              LayoutRecyclerView layoutRecyclerView) {
+            mMusicQueryFragment = musicQueryFragment;
+            mMusicAdapter = musicAdapter;
+            mLayoutRecyclerView = layoutRecyclerView;
+        }
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            handleReceive(intent);
+            switch (intent.getAction()) {
+                case Contracts.ACTION_UPDATE_QUERY_DATA_FINISHED:
+                    updateQueryData(intent);
+                    break;
+                default:
+            }
+        }
+
+        private void updateQueryData(Intent intent) {
+            int updatedState = intent.getIntExtra(
+                    UpdateQueryDataService.EXTRA_DATA_UPDATED_STATE, 0);
+
+            if (updatedState == DataUpdatedState.SCROLLED_TO_END_UPDATE) {
+                mMusicAdapter.setScrolledToEnd(true);
+            } else if (updatedState == DataUpdatedState.SCROLLED_TO_END_NO_UPDATE) {
+                mMusicAdapter.setScrolledToEnd(true);
+                mMusicQueryFragment.getLoaderManager().initLoader(0, null, mMusicQueryFragment);
+            } else if (updatedState == DataUpdatedState.EMPTY_DATA_NO_UPDATE) {
+                String emptyDataTips = mMusicQueryFragment.getString(R.string.empty_data_text);
+                mLayoutRecyclerView.setTipsText(emptyDataTips);
+                mMusicQueryFragment.getLoaderManager().initLoader(0, null, mMusicQueryFragment);
+            }
         }
     }
 }

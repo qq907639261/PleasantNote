@@ -3,10 +3,8 @@ package com.xhbb.qinzl.pleasantnote;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,13 +17,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
+import com.xhbb.qinzl.pleasantnote.data.Contracts.DownloadContract;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
+import com.xhbb.qinzl.pleasantnote.data.DbHelper;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 
-public class LocalSongActivity extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<Cursor> {
+public class LocalSongActivity extends AppCompatActivity {
 
     private LocalSongAdapter mLocalSongAdapter;
+    private AsyncTask<Void, Void, Cursor> mInitLocalSongDataTask;
 
     public static void start(Context context) {
         Intent starter = new Intent(context, LocalSongActivity.class);
@@ -44,26 +44,48 @@ public class LocalSongActivity extends AppCompatActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(mLocalSongAdapter);
 
-        getSupportLoaderManager().initLoader(0, null, this);
+        executeInitLocalSongDataTask(this);
+    }
+
+    private void executeInitLocalSongDataTask(final LocalSongActivity localSongActivity) {
+        mInitLocalSongDataTask = new AsyncTask<Void, Void, Cursor>() {
+            private Context mContext;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                mContext = localSongActivity.getApplicationContext();
+            }
+
+            @Override
+            protected Cursor doInBackground(Void... voids) {
+                DbHelper dbHelper = new DbHelper(mContext);
+                String sql = "SELECT * FROM " + MusicContract.TABLE +
+                        "," + DownloadContract.TABLE + " WHERE " +
+                        MusicContract._CODE + "=" + DownloadContract._MUSIC_CODE + " AND " +
+                        MusicContract._TYPE + "=" + MusicType.LOCAL;
+
+                return dbHelper.getReadableDatabase().rawQuery(sql, null);
+            }
+
+            @Override
+            protected void onPostExecute(Cursor cursor) {
+                super.onPostExecute(cursor);
+                if (cursor.getCount() == 0) {
+                    mLocalSongAdapter.swapCursor(null);
+                    Toast.makeText(localSongActivity, R.string.local_song_data_is_empty_toast, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                mLocalSongAdapter.swapCursor(cursor);
+            }
+        }.execute();
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        // TODO: 2017/8/10 不能只查询music表，看来不得不用到多表查询了
-        String selection = MusicContract._TYPE + "=" + MusicType.LOCAL;
-        return new CursorLoader(this, MusicContract.URI, null, selection, null, null);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        mLocalSongAdapter.swapCursor(cursor);
-        if (cursor.getCount() == 0) {
-            Toast.makeText(LocalSongActivity.this, R.string.local_song_data_is_empty_toast, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    protected void onDestroy() {
+        super.onDestroy();
+        mInitLocalSongDataTask.cancel(false);
         mLocalSongAdapter.swapCursor(null);
     }
 
@@ -77,6 +99,10 @@ public class LocalSongActivity extends AppCompatActivity
         }
 
         void swapCursor(Cursor cursor) {
+            if (mCursor != null) {
+                mCursor.close();
+            }
+
             mCursor = cursor;
             notifyDataSetChanged();
         }

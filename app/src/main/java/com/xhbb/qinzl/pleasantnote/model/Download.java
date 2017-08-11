@@ -42,8 +42,16 @@ public class Download {
         return mState;
     }
 
+    public void setState(int state) {
+        mState = state;
+    }
+
     public String getUrl() {
         return mUrl;
+    }
+
+    public void setUrl(String url) {
+        mUrl = url;
     }
 
     public int getProgress() {

@@ -11,10 +11,10 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
  * Created by qinzl on 2017/7/4.
  */
 
-class DbHelper extends SQLiteOpenHelper {
+public class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "pleasant_note.db";
-    private static final int DB_VERSION = 12;
+    private static final int DB_VERSION = 13;
 
     private static final String CREATE_TABLE_MUSIC =
             "CREATE TABLE " + MusicContract.TABLE + "(" +
@@ -39,7 +39,7 @@ class DbHelper extends SQLiteOpenHelper {
                     DownloadContract._PROGRESS + " INTEGER" +
                     ")";
 
-    DbHelper(Context context) {
+    public DbHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
 

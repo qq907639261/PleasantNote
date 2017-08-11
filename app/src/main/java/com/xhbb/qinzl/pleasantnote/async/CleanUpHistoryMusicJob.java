@@ -31,7 +31,7 @@ public class CleanUpHistoryMusicJob extends Job {
     @NonNull
     @Override
     protected Result onRunJob(Params params) {
-        MainTasks.cleanUpHistoryMusic(getContext());
+        MainTasks.cleanUpHistoryMusic(getContext().getApplicationContext());
         return Result.SUCCESS;
     }
 }

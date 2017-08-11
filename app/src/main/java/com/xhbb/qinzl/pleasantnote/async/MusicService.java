@@ -68,7 +68,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mMusicBinder = new MusicBinder(this);
         mHistoryMusicPositions = new ArrayList<>();
         mPlaySpinnerValues = getResources().getIntArray(R.array.play_spinner_values);
-        mForegroundNotification = NotificationUtils.getForegroundNotification(getApplicationContext());
+        mForegroundNotification = NotificationUtils.getForegroundNotification(this);
         mMediaPlayer = new MediaPlayer();
 
         mMediaPlayer.setOnPreparedListener(this);
@@ -148,17 +148,17 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mInitMusicTask != null) {
             mInitMusicTask.cancel(false);
         }
-        mInitMusicTask = getInitMusicTask().execute();
+        mInitMusicTask = getInitMusicTask(this).execute();
     }
 
-    private AsyncTask<Void, Void, List<Music>> getInitMusicTask() {
+    private AsyncTask<Void, Void, List<Music>> getInitMusicTask(final MusicService musicService) {
         return new AsyncTask<Void, Void, List<Music>>() {
-            private ContentResolver iContentResolver;
+            private ContentResolver mContentResolver;
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                iContentResolver = getContentResolver();
+                mContentResolver = musicService.getApplicationContext().getContentResolver();
             }
 
             @Override
@@ -166,7 +166,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
                 String sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
 
-                Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusicsAndCloseCursor(cursor);
             }
@@ -174,7 +174,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             @Override
             protected void onPostExecute(List<Music> musics) {
                 super.onPostExecute(musics);
-                mMusics = musics;
+                musicService.setMusics(musics);
                 resetAndPlay();
             }
         };
@@ -236,18 +236,19 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mQueryMoreMusicTask != null) {
             mQueryMoreMusicTask.cancel(false);
         }
-        mQueryMoreMusicTask = getQueryMoreMusicTask(currentMusic).execute();
+        mQueryMoreMusicTask = getQueryMoreMusicTask(this, currentMusic).execute();
     }
 
     @NonNull
-    private AsyncTask<Void, Void, List<Music>> getQueryMoreMusicTask(final Music currentMusic) {
+    private AsyncTask<Void, Void, List<Music>> getQueryMoreMusicTask(final MusicService musicService,
+                                                                     final Music currentMusic) {
         return new AsyncTask<Void, Void, List<Music>>() {
-            private ContentResolver iContentResolver;
+            private ContentResolver mContentResolver;
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                iContentResolver = getContentResolver();
+                mContentResolver = musicService.getApplicationContext().getContentResolver();
             }
 
             @Override
@@ -263,7 +264,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
                 }
 
-                Cursor cursor = iContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusicsAndCloseCursor(cursor, currentMusic);
             }
@@ -272,8 +273,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             protected void onPostExecute(List<Music> musics) {
                 super.onPostExecute(musics);
                 if (musics.contains(currentMusic)) {
-                    mCurrentMusicPosition = musics.indexOf(currentMusic);
-                    mMusics = musics;
+                    int currentMusicPosition = musics.indexOf(currentMusic);
+
+                    musicService.setCurrentMusicPosition(currentMusicPosition);
+                    musicService.setMusics(musics);
                 }
             }
         };
@@ -303,7 +306,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     private void saveCurrentMusicAsync() {
         final Music currentMusic = mMusics.get(mCurrentMusicPosition);
-        final ContentResolver contentResolver = getContentResolver();
+        final ContentResolver contentResolver = getApplicationContext().getContentResolver();
 
         new Thread(new Runnable() {
             @Override
@@ -370,7 +373,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         addHistoryMusicPosition(mHistoryMusicPositions, mCurrentMusicPosition);
 
-        int spinnerSelection = PrefrencesUtils.getPlaySpinnerSelection(getApplicationContext());
+        int spinnerSelection = PrefrencesUtils.getPlaySpinnerSelection(this);
         if (mPlaySpinnerValues[spinnerSelection] == getResources().getInteger(R.integer.play_spinner_list_loop)) {
             if (++mCurrentMusicPosition >= mMusics.size()) {
                 mCurrentMusicPosition = 0;
@@ -413,6 +416,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mHistoryMusicPositions.remove(last);
 
         resetAndPlay();
+    }
+
+    private void setMusics(List<Music> musics) {
+        mMusics = musics;
+    }
+
+    private void setCurrentMusicPosition(int currentMusicPosition) {
+        mCurrentMusicPosition = currentMusicPosition;
     }
 
     public class MusicBinder extends Binder {
