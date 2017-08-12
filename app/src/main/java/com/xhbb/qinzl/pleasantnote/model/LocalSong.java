@@ -17,24 +17,26 @@ public class LocalSong {
     private int mMusicCode;
     private String mMusicName;
     private String mSingerName;
-    private int mDownloadState;
-    private int mDownloadProgress;
     private String mPlayUrl;
     private int mTotalSeconds;
     private String mBigPictureUrl;
     private String mSmallPictureUrl;
     private int mMusicType;
+    private int mDownloadState;
+    private int mDownloadProgress;
+    private String mDownloadUrl;
 
     public LocalSong(Cursor cursor) {
         mMusicCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));
         mMusicName = cursor.getString(cursor.getColumnIndex(MusicContract._NAME));
         mSingerName = cursor.getString(cursor.getColumnIndex(MusicContract._SINGER));
-        mDownloadState = cursor.getInt(cursor.getColumnIndex(DownloadContract._STATE));
-        mDownloadProgress = cursor.getInt(cursor.getColumnIndex(DownloadContract._PROGRESS));
         mMusicType = cursor.getInt(cursor.getColumnIndex(MusicContract._TYPE));
         mTotalSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._TOTAL_SECONDS));
         mBigPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._BIG_PICTURE_URL));
         mSmallPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._SMALL_PICTURE_URL));
+        mDownloadState = cursor.getInt(cursor.getColumnIndex(DownloadContract._STATE));
+        mDownloadProgress = cursor.getInt(cursor.getColumnIndex(DownloadContract._PROGRESS));
+        mDownloadUrl = cursor.getString(cursor.getColumnIndex(DownloadContract._URL));
 
         File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
         File musicFile = new File(musicDir, mMusicCode + ".mp3");
@@ -57,8 +59,16 @@ public class LocalSong {
         return mDownloadState;
     }
 
+    public void setDownloadState(int downloadState) {
+        mDownloadState = downloadState;
+    }
+
     public int getDownloadProgress() {
         return mDownloadProgress;
+    }
+
+    public void setDownloadProgress(int downloadProgress) {
+        mDownloadProgress = downloadProgress;
     }
 
     public String getPlayUrl() {
@@ -79,5 +89,9 @@ public class LocalSong {
 
     public int getMusicType() {
         return mMusicType;
+    }
+
+    public String getDownloadUrl() {
+        return mDownloadUrl;
     }
 }

@@ -53,6 +53,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginBottom="@dimen/bottomPlayFragmentHeight"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
     <android.support.v7.widget.Toolbar
@@ -79,6 +80,5 @@
         android:id="@+id/bottom_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_anchor="@id/recyclerView"
-        app:layout_anchorGravity="bottom"/>
+        android:layout_gravity="bottom"/>
 </android.support.design.widget.CoordinatorLayout>

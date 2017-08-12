@@ -23,6 +23,13 @@ public class Download {
         mProgress = cursor.getInt(cursor.getColumnIndex(DownloadContract._PROGRESS));
     }
 
+    public Download(int musicCode, int state, String url, int progress) {
+        mMusicCode = musicCode;
+        mState = state;
+        mUrl = url;
+        mProgress = progress;
+    }
+
     public ContentValues getDownloadValues() {
         ContentValues downloadValues = new ContentValues();
 
@@ -38,14 +45,6 @@ public class Download {
         return mMusicCode;
     }
 
-    public int getState() {
-        return mState;
-    }
-
-    public void setState(int state) {
-        mState = state;
-    }
-
     public String getUrl() {
         return mUrl;
     }
@@ -54,7 +53,11 @@ public class Download {
         mUrl = url;
     }
 
-    public int getProgress() {
-        return mProgress;
+    public void setState(int state) {
+        mState = state;
+    }
+
+    public void setProgress(int progress) {
+        mProgress = progress;
     }
 }
