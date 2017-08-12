@@ -98,7 +98,7 @@ public abstract class MainFragment extends Fragment
             String picture = music.getSmallPictureUrl();
             String musicName = music.getName();
             String singer = music.getSingerName();
-            int seconds = music.getSeconds();
+            int seconds = music.getTotalSeconds();
 
             ItemMusic itemMusic = new ItemMusic(getContext(), picture, musicName, singer, seconds,
                     position, this);
@@ -119,8 +119,7 @@ public abstract class MainFragment extends Fragment
             Music music = new Music(cursor);
 
             Context context = getContext();
-            Intent intent = MusicService.newIntent(context,
-                    MusicService.ACTION_PLAY_NEW_MUSIC, music);
+            Intent intent = MusicService.newPlayNewMusicIntent(context, music);
             context.startService(intent);
         }
     }

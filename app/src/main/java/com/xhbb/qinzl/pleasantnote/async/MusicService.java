@@ -30,12 +30,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         MediaPlayer.OnCompletionListener {
 
     public static final String ACTION_INIT_MUSIC = Contracts.AUTHORITY + ".ACTION_INIT_MUSIC";
-    public static final String ACTION_PLAY_NEW_MUSIC = Contracts.AUTHORITY + ".ACTION_PLAY_NEW_MUSIC";
     public static final String ACTION_START_FOREGROUND = Contracts.AUTHORITY + ".ACTION_START_FOREGROUND";
     public static final String ACTION_STOP_FOREGROUND = Contracts.AUTHORITY + ".ACTION_STOP_FOREGROUND";
 
     public static final int LIMIT_VALUE_OF_HISTORY_MUSIC = 50;
 
+    private static final String ACTION_PLAY_NEW_MUSIC = Contracts.AUTHORITY + ".ACTION_PLAY_NEW_MUSIC";
     private static final String EXTRA_MUSIC = Contracts.AUTHORITY + ".EXTRA_MUSIC";
 
     private MediaPlayer mMediaPlayer;
@@ -56,8 +56,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 .setAction(action);
     }
 
-    public static Intent newIntent(Context context, String action, Music music) {
-        return newIntent(context, action).putExtra(EXTRA_MUSIC, music);
+    public static Intent newPlayNewMusicIntent(Context context, Music music) {
+        return newIntent(context, ACTION_PLAY_NEW_MUSIC).putExtra(EXTRA_MUSIC, music);
     }
 
     @Override

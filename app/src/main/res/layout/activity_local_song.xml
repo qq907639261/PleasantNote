@@ -74,4 +74,11 @@
             android:layout_marginRight="8dp"
             android:text="@string/delete_button"/>
     </android.support.v7.widget.Toolbar>
+
+    <FrameLayout
+        android:id="@+id/bottom_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_anchor="@id/recyclerView"
+        app:layout_anchorGravity="bottom"/>
 </android.support.design.widget.CoordinatorLayout>

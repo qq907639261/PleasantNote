@@ -14,7 +14,7 @@ import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 public class Music implements Parcelable {
 
     private String mName;
-    private int mSeconds;
+    private int mTotalSeconds;
     private int mCode;
     private String mSingerName;
     private String mBigPictureUrl;
@@ -28,16 +28,28 @@ public class Music implements Parcelable {
         mCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));
         mPlayUrl = cursor.getString(cursor.getColumnIndex(MusicContract._PLAY_URL));
         mMusicType = cursor.getInt(cursor.getColumnIndex(MusicContract._TYPE));
-        mSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._TOTAL_SECONDS));
+        mTotalSeconds = cursor.getInt(cursor.getColumnIndex(MusicContract._TOTAL_SECONDS));
         mSingerName = cursor.getString(cursor.getColumnIndex(MusicContract._SINGER));
         mBigPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._BIG_PICTURE_URL));
         mSmallPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._SMALL_PICTURE_URL));
         mRankingCode = cursor.getInt(cursor.getColumnIndex(MusicContract._RANKING_CODE));
     }
 
+    public Music(String name, int code, String playUrl, int musicType, int totalSeconds,
+                 String singerName, String bigPictureUrl, String smallPictureUrl) {
+        mName = name;
+        mCode = code;
+        mPlayUrl = playUrl;
+        mMusicType = musicType;
+        mTotalSeconds = totalSeconds;
+        mSingerName = singerName;
+        mBigPictureUrl = bigPictureUrl;
+        mSmallPictureUrl = smallPictureUrl;
+    }
+
     private Music(Parcel in) {
         mName = in.readString();
-        mSeconds = in.readInt();
+        mTotalSeconds = in.readInt();
         mCode = in.readInt();
         mSingerName = in.readString();
         mBigPictureUrl = in.readString();
@@ -50,7 +62,7 @@ public class Music implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(mName);
-        parcel.writeInt(mSeconds);
+        parcel.writeInt(mTotalSeconds);
         parcel.writeInt(mCode);
         parcel.writeString(mSingerName);
         parcel.writeString(mBigPictureUrl);
@@ -67,7 +79,7 @@ public class Music implements Parcelable {
         musicValues.put(MusicContract._CODE, mCode);
         musicValues.put(MusicContract._PLAY_URL, mPlayUrl);
         musicValues.put(MusicContract._TYPE, mMusicType);
-        musicValues.put(MusicContract._TOTAL_SECONDS, mSeconds);
+        musicValues.put(MusicContract._TOTAL_SECONDS, mTotalSeconds);
         musicValues.put(MusicContract._SMALL_PICTURE_URL, mSmallPictureUrl);
         musicValues.put(MusicContract._BIG_PICTURE_URL, mBigPictureUrl);
         musicValues.put(MusicContract._SINGER, mSingerName);
@@ -80,8 +92,8 @@ public class Music implements Parcelable {
         return mName;
     }
 
-    public int getSeconds() {
-        return mSeconds;
+    public int getTotalSeconds() {
+        return mTotalSeconds;
     }
 
     public int getCode() {

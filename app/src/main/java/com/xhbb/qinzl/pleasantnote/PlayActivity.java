@@ -422,10 +422,10 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         executeInitFavoritedSwitcherChildTask();
         executeInitDownloadButtonEnabledTask();
 
-        String formattedTime = DateTimeUtils.getFormattedTime(this, currentMusic.getSeconds());
+        String formattedTime = DateTimeUtils.getFormattedTime(this, currentMusic.getTotalSeconds());
 
         mBinding.playDuration.setText(formattedTime);
-        mBinding.playSeekBar.setMax(currentMusic.getSeconds());
+        mBinding.playSeekBar.setMax(currentMusic.getTotalSeconds());
     }
 
     private void executeInitDownloadButtonEnabledTask() {

@@ -12,20 +12,27 @@ import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.xhbb.qinzl.pleasantnote.async.MusicService;
+import com.xhbb.qinzl.pleasantnote.common.Enums.DownloadState;
 import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.DownloadContract;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.data.DbHelper;
+import com.xhbb.qinzl.pleasantnote.model.LocalSong;
 import com.xhbb.qinzl.pleasantnote.model.Music;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LocalSongActivity extends AppCompatActivity {
 
     private LocalSongAdapter mLocalSongAdapter;
-    private AsyncTask<Void, Void, Cursor> mInitLocalSongDataTask;
+    private AsyncTask<Void, Void, List<LocalSong>> mInitLocalSongDataTask;
 
     public static void start(Context context) {
         Intent starter = new Intent(context, LocalSongActivity.class);
@@ -39,16 +46,24 @@ public class LocalSongActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
 
-        mLocalSongAdapter = new LocalSongAdapter();
+        mLocalSongAdapter = new LocalSongAdapter(this);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(mLocalSongAdapter);
 
         executeInitLocalSongDataTask(this);
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
+                .commit();
+    }
+
+    private LocalSongAdapter getLocalSongAdapter() {
+        return mLocalSongAdapter;
     }
 
     private void executeInitLocalSongDataTask(final LocalSongActivity localSongActivity) {
-        mInitLocalSongDataTask = new AsyncTask<Void, Void, Cursor>() {
+        mInitLocalSongDataTask = new AsyncTask<Void, Void, List<LocalSong>>() {
             private Context mContext;
 
             @Override
@@ -58,26 +73,37 @@ public class LocalSongActivity extends AppCompatActivity {
             }
 
             @Override
-            protected Cursor doInBackground(Void... voids) {
-                DbHelper dbHelper = new DbHelper(mContext);
-                String sql = "SELECT * FROM " + MusicContract.TABLE +
-                        "," + DownloadContract.TABLE + " WHERE " +
+            protected List<LocalSong> doInBackground(Void... voids) {
+                String sql = "SELECT * FROM " + MusicContract.TABLE + "," +
+                        DownloadContract.TABLE + " WHERE " +
                         MusicContract._CODE + "=" + DownloadContract._MUSIC_CODE + " AND " +
                         MusicContract._TYPE + "=" + MusicType.LOCAL;
 
-                return dbHelper.getReadableDatabase().rawQuery(sql, null);
+                DbHelper dbHelper = new DbHelper(mContext);
+                Cursor cursor = dbHelper.getReadableDatabase().rawQuery(sql, null);
+
+                List<LocalSong> localSongs = new ArrayList<>();
+
+                boolean moveSucceeded = cursor.moveToFirst();
+                while (moveSucceeded) {
+                    localSongs.add(new LocalSong(cursor));
+                    moveSucceeded = cursor.moveToNext();
+                }
+
+                cursor.close();
+                dbHelper.close();
+
+                return localSongs;
             }
 
             @Override
-            protected void onPostExecute(Cursor cursor) {
-                super.onPostExecute(cursor);
-                if (cursor.getCount() == 0) {
-                    mLocalSongAdapter.swapCursor(null);
-                    Toast.makeText(localSongActivity, R.string.local_song_data_is_empty_toast, Toast.LENGTH_SHORT).show();
-                    return;
-                }
+            protected void onPostExecute(List<LocalSong> localSongs) {
+                super.onPostExecute(localSongs);
+                localSongActivity.getLocalSongAdapter().swapLocalSongs(localSongs);
 
-                mLocalSongAdapter.swapCursor(cursor);
+                if (localSongs.size() == 0) {
+                    Toast.makeText(localSongActivity, R.string.local_song_data_is_empty_toast, Toast.LENGTH_SHORT).show();
+                }
             }
         }.execute();
     }
@@ -86,29 +112,26 @@ public class LocalSongActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mInitLocalSongDataTask.cancel(false);
-        mLocalSongAdapter.swapCursor(null);
     }
 
     private class LocalSongAdapter extends RecyclerView.Adapter<LocalSongAdapter.ViewHolder> {
 
-        private Cursor mCursor;
+        private static final int TYPE_DEFAULT = 0;
+        private static final int TYPE_SONG_UN_DOWNLOADED = 1;
+
+        private List<LocalSong> mLocalSongs;
         private SparseIntArray mSongPositionSparseArray;
+        private Context mContext;
 
-        LocalSongAdapter() {
+        LocalSongAdapter(Context context) {
+            mLocalSongs = new ArrayList<>();
             mSongPositionSparseArray = new SparseIntArray();
+            mContext = context;
         }
 
-        void swapCursor(Cursor cursor) {
-            if (mCursor != null) {
-                mCursor.close();
-            }
-
-            mCursor = cursor;
+        void swapLocalSongs(List<LocalSong> localSongs) {
+            mLocalSongs = localSongs;
             notifyDataSetChanged();
-        }
-
-        void putSongPositionSparseArray(int songCode, int songPosition) {
-            mSongPositionSparseArray.put(songCode, songPosition);
         }
 
         int getSongPosition(int songCode) {
@@ -116,45 +139,90 @@ public class LocalSongActivity extends AppCompatActivity {
         }
 
         @Override
+        public int getItemViewType(int position) {
+            int downloadState = mLocalSongs.get(position).getDownloadState();
+
+            if (downloadState == DownloadState.DOWNLOADED) {
+                return TYPE_DEFAULT;
+            } else {
+                return TYPE_SONG_UN_DOWNLOADED;
+            }
+        }
+
+        @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_local_song, parent, false);
-            return new ViewHolder(view, this);
+            View view;
+            if (viewType == TYPE_DEFAULT) {
+                view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.item_local_song, parent, false);
+            } else {
+                view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.item_local_song_un_downloaded, parent, false);
+            }
+
+            return new ViewHolder(view, viewType, mContext);
         }
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.bindAdapter(mCursor, position);
+            LocalSong localSong = mLocalSongs.get(position);
+
+            holder.bindLocalSong(localSong);
+            mSongPositionSparseArray.put(localSong.getMusicCode(), position);
         }
 
         @Override
         public int getItemCount() {
-            return mCursor == null ? 0 : mCursor.getCount();
+            return mLocalSongs.size();
         }
 
-        class ViewHolder extends RecyclerView.ViewHolder {
+        class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+            private View mItemView;
             private TextView mMusicNameText;
             private TextView mSingerNameText;
             private ProgressBar mDownloadProgress;
-            private LocalSongAdapter mLocalSongAdapter;
+            private CheckBox mSelectSongCheckBox;
+            private LocalSong mLocalSong;
+            private Context mContext;
 
-            ViewHolder(View itemView, LocalSongAdapter localSongAdapter) {
+            ViewHolder(View itemView, int viewType, Context context) {
                 super(itemView);
-                mLocalSongAdapter = localSongAdapter;
-
+                mItemView = itemView;
                 mMusicNameText = itemView.findViewById(R.id.musicNameText);
                 mSingerNameText = itemView.findViewById(R.id.singerNameText);
-                mDownloadProgress = itemView.findViewById(R.id.downloadProgress);
+                mContext = context;
+
+                if (viewType == TYPE_DEFAULT) {
+                    mSelectSongCheckBox = itemView.findViewById(R.id.selectSongCheckBox);
+                } else {
+                    mDownloadProgress = itemView.findViewById(R.id.downloadProgress);
+                }
             }
 
-            void bindAdapter(Cursor cursor, int position) {
-                cursor.moveToPosition(position);
-                Music music = new Music(cursor);
+            void bindLocalSong(LocalSong localSong) {
+                mLocalSong = localSong;
+                mMusicNameText.setText(localSong.getMusicName());
+                mSingerNameText.setText(localSong.getSingerName());
 
-                mMusicNameText.setText(music.getName());
-                mSingerNameText.setText(music.getSingerName());
+                if (mDownloadProgress != null) {
+                    mDownloadProgress.setProgress(localSong.getDownloadProgress());
+                }
 
-                mLocalSongAdapter.putSongPositionSparseArray(music.getCode(), position);
+                mItemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View view) {
+                if (mLocalSong.getDownloadState() != DownloadState.DOWNLOADED) {
+                    return;
+                }
+
+                Music music = new Music(mLocalSong.getMusicName(), mLocalSong.getMusicCode(),
+                        mLocalSong.getPlayUrl(), mLocalSong.getMusicType(),
+                        mLocalSong.getTotalSeconds(), mLocalSong.getSingerName(),
+                        mLocalSong.getBigPictureUrl(), mLocalSong.getSmallPictureUrl());
+                mContext.startService(MusicService.newPlayNewMusicIntent(mContext, music));
             }
         }
     }
