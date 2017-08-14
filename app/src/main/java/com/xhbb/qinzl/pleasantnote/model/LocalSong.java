@@ -24,7 +24,8 @@ public class LocalSong {
     private int mMusicType;
     private int mDownloadState;
     private int mDownloadProgress;
-    private String mDownloadUrl;
+    //    private String mDownloadUrl;
+    private boolean mSongChecked;
 
     public LocalSong(Cursor cursor) {
         mMusicCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));
@@ -36,7 +37,7 @@ public class LocalSong {
         mSmallPictureUrl = cursor.getString(cursor.getColumnIndex(MusicContract._SMALL_PICTURE_URL));
         mDownloadState = cursor.getInt(cursor.getColumnIndex(DownloadContract._STATE));
         mDownloadProgress = cursor.getInt(cursor.getColumnIndex(DownloadContract._PROGRESS));
-        mDownloadUrl = cursor.getString(cursor.getColumnIndex(DownloadContract._URL));
+//        mDownloadUrl = cursor.getString(cursor.getColumnIndex(DownloadContract._URL));
 
         File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
         File musicFile = new File(musicDir, mMusicCode + ".mp3");
@@ -91,7 +92,11 @@ public class LocalSong {
         return mMusicType;
     }
 
-    public String getDownloadUrl() {
-        return mDownloadUrl;
+    public boolean isSongChecked() {
+        return mSongChecked;
+    }
+
+    public void setSongChecked(boolean songChecked) {
+        mSongChecked = songChecked;
     }
 }

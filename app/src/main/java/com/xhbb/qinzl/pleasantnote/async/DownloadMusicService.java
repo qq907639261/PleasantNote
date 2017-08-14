@@ -82,35 +82,35 @@ public class DownloadMusicService extends Service {
         startService(newIntent(this));
     }
 
-    public void changeDownloadStates(int musicCode, int downloadState) {
-        if (mDownloadStates.indexOfKey(musicCode) >= 0) {
-            mDownloadStates.put(musicCode, downloadState);
-        }
-    }
+//    public void changeDownloadStates(int musicCode, int downloadState) {
+//        if (mDownloadStates.indexOfKey(musicCode) >= 0) {
+//            mDownloadStates.put(musicCode, downloadState);
+//        }
+//    }
 
-    public void updateDownloadStateAndStartServiceAsync(final Download download,
-                                                        final int downloadState,
-                                                        final ContentResolver contentResolver) {
-        final DownloadMusicService downloadMusicService = this;
-        final Handler handler = mHandler;
-        final ExecutorService downloadMusicExecutorService = mDownloadMusicExecutorService;
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                downloadMusicService.updateDownloadState(download, downloadState, contentResolver);
-
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!downloadMusicExecutorService.isShutdown()) {
-                            downloadMusicService.startDownload();
-                        }
-                    }
-                });
-            }
-        }).start();
-    }
+//    public void updateDownloadStateAndStartServiceAsync(final Download download,
+//                                                        final int downloadState,
+//                                                        final ContentResolver contentResolver) {
+//        final DownloadMusicService downloadMusicService = this;
+//        final Handler handler = mHandler;
+//        final ExecutorService downloadMusicExecutorService = mDownloadMusicExecutorService;
+//
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                downloadMusicService.updateDownloadState(download, downloadState, contentResolver);
+//
+//                handler.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if (!downloadMusicExecutorService.isShutdown()) {
+//                            downloadMusicService.startDownload();
+//                        }
+//                    }
+//                });
+//            }
+//        }).start();
+//    }
 
     private void updateDownloadState(Download download, int downloadState,
                                      ContentResolver contentResolver) {
@@ -329,6 +329,19 @@ public class DownloadMusicService extends Service {
                     public void run() {
                         if (!downloadMusicExecutorService.isShutdown()) {
                             downloadMusicService.startDownload();
+
+                            OnDownloadMusicServiceListener listener = downloadMusicService.getListener();
+                            if (listener != null) {
+                                switch (downloadState) {
+                                    case DownloadState.DOWNLOADED:
+                                        listener.onDownloaded(musicCode);
+                                        break;
+                                    case DownloadState.PAUSE:
+                                        listener.onPause(musicCode);
+                                        break;
+                                    default:
+                                }
+                            }
                         }
                     }
                 });
@@ -408,5 +421,7 @@ public class DownloadMusicService extends Service {
 
         void onProgressUpdate(int musicCode, int progress);
         void onDownloading(int musicCode);
+        void onDownloaded(int musicCode);
+        void onPause(int musicCode);
     }
 }

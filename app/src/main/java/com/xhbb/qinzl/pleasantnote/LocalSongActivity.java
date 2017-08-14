@@ -1,10 +1,12 @@
 package com.xhbb.qinzl.pleasantnote;
 
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -15,7 +17,9 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,20 +31,26 @@ import com.xhbb.qinzl.pleasantnote.common.Enums.MusicType;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.DownloadContract;
 import com.xhbb.qinzl.pleasantnote.data.Contracts.MusicContract;
 import com.xhbb.qinzl.pleasantnote.data.DbHelper;
-import com.xhbb.qinzl.pleasantnote.model.Download;
 import com.xhbb.qinzl.pleasantnote.model.LocalSong;
 import com.xhbb.qinzl.pleasantnote.model.Music;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LocalSongActivity extends AppCompatActivity
         implements ServiceConnection,
-        DownloadMusicService.OnDownloadMusicServiceListener {
+        DownloadMusicService.OnDownloadMusicServiceListener,
+        View.OnClickListener,
+        CompoundButton.OnCheckedChangeListener {
 
     private LocalSongAdapter mLocalSongAdapter;
     private AsyncTask<Void, Void, List<LocalSong>> mInitLocalSongDataTask;
-    private DownloadMusicService mDownloadMusicService;
+    private Button mCancelButton;
+    private CheckBox mAllSongCheckBox;
+    private Button mBatchManageButton;
+    private View mBottomToolbar;
+    private View mBottomFragmentContainer;
 
     public static void start(Context context) {
         Intent starter = new Intent(context, LocalSongActivity.class);
@@ -52,12 +62,24 @@ public class LocalSongActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_local_song);
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        mCancelButton = (Button) findViewById(R.id.cancelButton);
+        mBatchManageButton = (Button) findViewById(R.id.batchManageButton);
+        mAllSongCheckBox = (CheckBox) findViewById(R.id.selectAllCheckBox);
+        mBottomToolbar = findViewById(R.id.bottomToolbar);
+        mBottomFragmentContainer = findViewById(R.id.bottom_fragment_container);
 
-        mLocalSongAdapter = new LocalSongAdapter(this);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        Button deleteButton = (Button) findViewById(R.id.deleteButton);
+
+        mLocalSongAdapter = new LocalSongAdapter(this, mAllSongCheckBox);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(mLocalSongAdapter);
+
+        mBatchManageButton.setOnClickListener(this);
+        mCancelButton.setOnClickListener(this);
+        mAllSongCheckBox.setOnCheckedChangeListener(this);
+        deleteButton.setOnClickListener(this);
 
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.bottom_fragment_container, BottomPlayFragment.newInstance())
@@ -139,7 +161,7 @@ public class LocalSongActivity extends AppCompatActivity
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        mDownloadMusicService = ((DownloadMusicService.DownloadMusicBinder) iBinder).getService(this);
+        ((DownloadMusicService.DownloadMusicBinder) iBinder).getService(this);
     }
 
     @Override
@@ -159,16 +181,137 @@ public class LocalSongActivity extends AppCompatActivity
 
     @Override
     public void onDownloading(int musicCode) {
+        changeDownloadState(musicCode, DownloadState.DOWNLOADING);
+    }
+
+    @Override
+    public void onDownloaded(int musicCode) {
+        changeDownloadState(musicCode, DownloadState.DOWNLOADED);
+    }
+
+    @Override
+    public void onPause(int musicCode) {
+        changeDownloadState(musicCode, DownloadState.PAUSE);
+    }
+
+    private void changeDownloadState(int musicCode, int downloadState) {
         Integer songPosition = mLocalSongAdapter.getSongPosition(musicCode);
 
         if (songPosition != null) {
-            mLocalSongAdapter.setDownloadState(songPosition, DownloadState.DOWNLOADING);
+            mLocalSongAdapter.setDownloadState(songPosition, downloadState);
             mLocalSongAdapter.notifyItemChanged(songPosition);
         }
     }
 
-    private DownloadMusicService getDownloadMusicService() {
-        return mDownloadMusicService;
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.batchManageButton:
+                onBatchManageButtonClick();
+                break;
+            case R.id.cancelButton:
+                onCancelButtonClick();
+                break;
+            case R.id.deleteButton:
+                onDeleteButtonClick();
+                break;
+            default:
+        }
+    }
+
+    private void onDeleteButtonClick() {
+        // TODO: 2017/8/14 对话框
+        List<LocalSong> localSongs = mLocalSongAdapter.getLocalSongs();
+        List<LocalSong> newLocalSongs = new ArrayList<>();
+        List<String> filePaths = new ArrayList<>();
+        StringBuilder deleteWhere = new StringBuilder(" IN (");
+
+        for (int i = 0; i < localSongs.size(); i++) {
+            LocalSong localSong = localSongs.get(i);
+
+            if (!localSong.isSongChecked()) {
+                newLocalSongs.add(localSong);
+                continue;
+            }
+
+            if (filePaths.size() > 0) {
+                deleteWhere.append(",");
+            }
+
+            filePaths.add(localSong.getPlayUrl());
+            deleteWhere.append(localSong.getMusicCode());
+        }
+
+        if (filePaths.size() == 0) {
+            return;
+        }
+
+        mLocalSongAdapter.swapLocalSongs(newLocalSongs);
+        onCancelButtonClick();
+
+        deleteWhere.append(")");
+        String downloadDeleteWhere = DownloadContract._MUSIC_CODE + deleteWhere;
+        String musicDeleteWhere = MusicContract._CODE + deleteWhere + " AND " +
+                MusicContract._TYPE + "=" + MusicType.LOCAL;
+
+        deleteDataAsync(DownloadContract.URI, downloadDeleteWhere);
+        deleteDataAsync(MusicContract.URI, musicDeleteWhere);
+        deleteFileAsync(filePaths);
+    }
+
+    private void deleteFileAsync(final List<String> filePaths) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (String filePath : filePaths) {
+                    //noinspection ResultOfMethodCallIgnored
+                    new File(filePath).delete();
+                }
+            }
+        }).start();
+    }
+
+    private void deleteDataAsync(final Uri uri, final String where) {
+        final ContentResolver contentResolver = getApplicationContext().getContentResolver();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                contentResolver.delete(uri, where, null);
+            }
+        }).start();
+    }
+
+    private void onCancelButtonClick() {
+        mBatchManageButton.setVisibility(View.VISIBLE);
+        mCancelButton.setVisibility(View.GONE);
+        mAllSongCheckBox.setVisibility(View.GONE);
+        mBottomFragmentContainer.setVisibility(View.VISIBLE);
+        mBottomToolbar.setVisibility(View.GONE);
+        mLocalSongAdapter.swapSongCheckBoxVisible(false);
+    }
+
+    private void onBatchManageButtonClick() {
+        mBatchManageButton.setVisibility(View.GONE);
+        mCancelButton.setVisibility(View.VISIBLE);
+        mAllSongCheckBox.setVisibility(View.VISIBLE);
+        mBottomFragmentContainer.setVisibility(View.GONE);
+        mBottomToolbar.setVisibility(View.VISIBLE);
+        mLocalSongAdapter.swapSongCheckBoxVisible(true);
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        if (compoundButton.getTag() == null) {
+            List<LocalSong> localSongs = mLocalSongAdapter.getLocalSongs();
+            for (LocalSong localSong : localSongs) {
+                localSong.setSongChecked(b);
+            }
+
+            mLocalSongAdapter.notifyDataSetChanged();
+        } else {
+            compoundButton.setTag(null);
+        }
     }
 
     private class LocalSongAdapter extends RecyclerView.Adapter<LocalSongAdapter.ViewHolder> {
@@ -178,17 +321,29 @@ public class LocalSongActivity extends AppCompatActivity
 
         private List<LocalSong> mLocalSongs;
         private SparseArray<Integer> mSongPositionSparseArray;
-        private LocalSongActivity mLocalSongActivity;
+        private Context mContext;
+        private boolean mSongCheckBoxVisible;
+        private CheckBox mAllSongCheckBox;
 
-        LocalSongAdapter(LocalSongActivity localSongActivity) {
+        LocalSongAdapter(Context context, CheckBox allSongCheckBox) {
             mLocalSongs = new ArrayList<>();
             mSongPositionSparseArray = new SparseArray<>();
-            mLocalSongActivity = localSongActivity;
+            mContext = context;
+            mAllSongCheckBox = allSongCheckBox;
         }
 
         void swapLocalSongs(List<LocalSong> localSongs) {
             mLocalSongs = localSongs;
             notifyDataSetChanged();
+        }
+
+        void swapSongCheckBoxVisible(boolean songCheckBoxVisible) {
+            mSongCheckBoxVisible = songCheckBoxVisible;
+            notifyDataSetChanged();
+        }
+
+        List<LocalSong> getLocalSongs() {
+            return mLocalSongs;
         }
 
         Integer getSongPosition(int songCode) {
@@ -222,14 +377,14 @@ public class LocalSongActivity extends AppCompatActivity
                         .inflate(R.layout.item_local_song_un_downloaded, parent, false);
             }
 
-            return new ViewHolder(view, viewType, mLocalSongActivity);
+            return new ViewHolder(view, mContext, mAllSongCheckBox);
         }
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             LocalSong localSong = mLocalSongs.get(position);
 
-            holder.bindLocalSong(localSong);
+            holder.bindLocalSong(localSong, mSongCheckBoxVisible);
             mSongPositionSparseArray.put(localSong.getMusicCode(), position);
         }
 
@@ -242,41 +397,52 @@ public class LocalSongActivity extends AppCompatActivity
             mLocalSongs.get(songPosition).setDownloadState(downloadState);
         }
 
-        class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        class ViewHolder extends RecyclerView.ViewHolder
+                implements View.OnClickListener,
+                CompoundButton.OnCheckedChangeListener {
 
             private View mItemView;
             private TextView mMusicNameText;
             private TextView mSingerNameText;
             private ProgressBar mDownloadProgress;
-            private CheckBox mSelectSongCheckBox;
+            private CheckBox mSongCheckBox;
             private LocalSong mLocalSong;
-            private LocalSongActivity mLocalSongActivity;
+            private Context mContext;
+            private CheckBox mAllSongCheckBox;
+            private View mSongCheckBoxContainer;
 
-            ViewHolder(View itemView, int viewType, LocalSongActivity localSongActivity) {
+            ViewHolder(View itemView, Context context, CheckBox allSongCheckBox) {
                 super(itemView);
+
                 mItemView = itemView;
+                mContext = context;
+                mAllSongCheckBox = allSongCheckBox;
                 mMusicNameText = itemView.findViewById(R.id.musicNameText);
                 mSingerNameText = itemView.findViewById(R.id.singerNameText);
-                mLocalSongActivity = localSongActivity;
+                mSongCheckBoxContainer = itemView.findViewById(R.id.songCheckBoxContainer);
 
-                if (viewType == LocalSongAdapter.TYPE_DEFAULT) {
-                    mSelectSongCheckBox = itemView.findViewById(R.id.selectSongCheckBox);
-                } else {
-                    mDownloadProgress = itemView.findViewById(R.id.downloadProgress);
-                }
+                mSongCheckBox = itemView.findViewById(R.id.songCheckBox);
+                mDownloadProgress = itemView.findViewById(R.id.downloadProgress);
             }
 
-            void bindLocalSong(LocalSong localSong) {
+            void bindLocalSong(LocalSong localSong, boolean songCheckBoxVisible) {
                 mLocalSong = localSong;
                 mMusicNameText.setText(localSong.getMusicName());
                 mSingerNameText.setText(localSong.getSingerName());
+
+                if (mSongCheckBoxContainer != null) {
+                    mSongCheckBoxContainer.setVisibility(songCheckBoxVisible ? View.VISIBLE : View.GONE);
+                    mSongCheckBox.setChecked(mLocalSong.isSongChecked());
+
+                    mSongCheckBox.setOnCheckedChangeListener(this);
+                    mSongCheckBoxContainer.setOnClickListener(this);
+                }
 
                 if (mDownloadProgress != null) {
                     int downloadProgress = localSong.getDownloadProgress();
                     mDownloadProgress.setProgress(downloadProgress);
 
-                    if (downloadProgress == 100) {
-                        mLocalSong.setDownloadState(DownloadState.DOWNLOADED);
+                    if (mLocalSong.getDownloadState() == DownloadState.DOWNLOADED) {
                         mDownloadProgress.setVisibility(View.GONE);
                     }
                 }
@@ -286,44 +452,69 @@ public class LocalSongActivity extends AppCompatActivity
 
             @Override
             public void onClick(View view) {
-                int downloadState = mLocalSong.getDownloadState();
-
-                if (downloadState != DownloadState.DOWNLOADED) {
-                    DownloadMusicService downloadMusicService = mLocalSongActivity.getDownloadMusicService();
-
-                    Download download = new Download(mLocalSong.getMusicCode(),
-                            mLocalSong.getDownloadState(), mLocalSong.getDownloadUrl(),
-                            mLocalSong.getDownloadProgress());
-
-                    if (downloadState == DownloadState.DOWNLOADING
-                            || downloadState == DownloadState.WAITING) {
-                        mLocalSong.setDownloadState(DownloadState.PAUSE);
-
-                        if (downloadState == DownloadState.DOWNLOADING) {
-                            downloadMusicService.changeDownloadStates(mLocalSong.getMusicCode(), DownloadState.PAUSE);
-                        } else {
-                            downloadMusicService.updateDownloadStateAndStartServiceAsync(download,
-                                    DownloadState.PAUSE,
-                                    mLocalSongActivity.getContentResolver());
-                        }
-                    } else {
-                        mLocalSong.setDownloadState(DownloadState.WAITING);
-
-                        downloadMusicService.updateDownloadStateAndStartServiceAsync(download,
-                                DownloadState.WAITING,
-                                mLocalSongActivity.getContentResolver());
-                    }
-
-                    return;
+                switch (view.getId()) {
+                    case R.id.itemView:
+                        onItemViewClick();
+                        break;
+                    case R.id.songCheckBoxContainer:
+                        onCheckBoxContainerClick();
+                        break;
+                    default:
                 }
+            }
+
+            private void onCheckBoxContainerClick() {
+                mSongCheckBox.setChecked(!mSongCheckBox.isChecked());
+            }
+
+            private void onItemViewClick() {
+                // 看来应该尽量避免用数据库作为服务与活动（或类似关系）的沟通媒介！！！
+
+//                int downloadState = mLocalSong.getDownloadState();
+//
+//                if (downloadState != DownloadState.DOWNLOADED) {
+//                    DownloadMusicService downloadMusicService = mLocalSongActivity.getDownloadMusicService();
+//
+//                    Download download = new Download(mLocalSong.getMusicCode(),
+//                            mLocalSong.getDownloadState(), mLocalSong.getDownloadUrl(),
+//                            mLocalSong.getDownloadProgress());
+//
+//                    if (downloadState == DownloadState.DOWNLOADING
+//                            || downloadState == DownloadState.WAITING) {
+//                        if (downloadState == DownloadState.DOWNLOADING) {
+//                            downloadMusicService.changeDownloadStates(mLocalSong.getMusicCode(), DownloadState.PAUSE);
+//                        } else {
+//                            downloadMusicService.updateDownloadStateAndStartServiceAsync(download,
+//                                    DownloadState.PAUSE,
+//                                    mLocalSongActivity.getContentResolver());
+//                        }
+//                    } else {
+//                        mLocalSong.setDownloadState(DownloadState.WAITING);
+//
+//                        downloadMusicService.updateDownloadStateAndStartServiceAsync(download,
+//                                DownloadState.WAITING,
+//                                mLocalSongActivity.getContentResolver());
+//                    }
+//
+//                    return;
+//                }
 
                 Music music = new Music(mLocalSong.getMusicName(), mLocalSong.getMusicCode(),
                         mLocalSong.getPlayUrl(), mLocalSong.getMusicType(),
                         mLocalSong.getTotalSeconds(), mLocalSong.getSingerName(),
                         mLocalSong.getBigPictureUrl(), mLocalSong.getSmallPictureUrl());
 
-                Intent service = MusicService.newPlayNewMusicIntent(mLocalSongActivity, music);
-                mLocalSongActivity.startService(service);
+                Intent service = MusicService.newPlayNewMusicIntent(mContext, music);
+                mContext.startService(service);
+            }
+
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                mLocalSong.setSongChecked(b);
+                if (!b && mAllSongCheckBox.isChecked()) {
+                    mAllSongCheckBox.setTag(1);
+                    mAllSongCheckBox.setChecked(false);
+                }
             }
         }
     }

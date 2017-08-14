@@ -19,11 +19,12 @@
             android:paddingRight="8dp">
 
             <Button
-                android:id="@+id/batchManagementButton"
+                android:id="@+id/batchManageButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end|center"
-                android:text="@string/batch_management_button"/>
+                android:text="@string/batch_management_button"
+                app:backgroundTint="@color/colorPrimaryDark"/>
 
             <CheckBox
                 android:id="@+id/selectAllCheckBox"
@@ -45,6 +46,7 @@
                 android:layout_gravity="center_vertical"
                 android:text="@string/cancel_button"
                 android:visibility="gone"
+                app:backgroundTint="@color/colorPrimaryDark"
                 tools:visibility="visible"/>
         </FrameLayout>
     </android.support.design.widget.AppBarLayout>
@@ -60,11 +62,11 @@
         android:id="@+id/bottomToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
         android:background="@color/colorPrimary"
         android:theme="@style/AppTheme.AppBarOverlay"
-        app:behavior_hideable="true"
-        app:behavior_peekHeight="0dp"
-        app:layout_behavior="@string/bottom_sheet_behavior">
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <Button
             android:id="@+id/deleteButton"
@@ -73,12 +75,14 @@
             android:layout_gravity="end"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
-            android:text="@string/delete_button"/>
+            android:text="@string/delete_button"
+            app:backgroundTint="@color/colorPrimaryDark"/>
     </android.support.v7.widget.Toolbar>
 
     <FrameLayout
         android:id="@+id/bottom_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"/>
+        android:layout_gravity="bottom"
+        tools:layout="@layout/fragment_bottom_play"/>
 </android.support.design.widget.CoordinatorLayout>

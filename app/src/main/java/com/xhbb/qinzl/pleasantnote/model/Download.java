@@ -23,12 +23,12 @@ public class Download {
         mProgress = cursor.getInt(cursor.getColumnIndex(DownloadContract._PROGRESS));
     }
 
-    public Download(int musicCode, int state, String url, int progress) {
-        mMusicCode = musicCode;
-        mState = state;
-        mUrl = url;
-        mProgress = progress;
-    }
+//    public Download(int musicCode, int state, String url, int progress) {
+//        mMusicCode = musicCode;
+//        mState = state;
+//        mUrl = url;
+//        mProgress = progress;
+//    }
 
     public ContentValues getDownloadValues() {
         ContentValues downloadValues = new ContentValues();
