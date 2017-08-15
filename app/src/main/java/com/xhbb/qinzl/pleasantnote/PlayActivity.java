@@ -334,7 +334,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             downloadMusicAsync();
         } else {
-            Toast.makeText(this, R.string.denied_permission_toast, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.permission_denied_toast, Toast.LENGTH_SHORT).show();
         }
     }
 

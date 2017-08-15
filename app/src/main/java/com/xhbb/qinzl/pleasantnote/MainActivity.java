@@ -1,46 +1,70 @@
 package com.xhbb.qinzl.pleasantnote;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.SearchView;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
 import com.xhbb.qinzl.pleasantnote.async.CleanUpHistoryMusicJob;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.common.MainSingleton;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
 
-public class MainActivity extends AppCompatActivity
-        implements ActivityMain.OnActivityMainListener,
-        Application.ActivityLifecycleCallbacks {
+public class MainActivity extends AppCompatActivity implements
+        ActivityMain.OnActivityMainListener,
+        Application.ActivityLifecycleCallbacks,
+        View.OnClickListener,
+        AMapLocationListener {
 
     private ActivityMainBinding mBinding;
     private ActivityMain mActivityMain;
     private Activity mStartedActivity;
     private boolean mPreviousActivityPausing;
+    private TextView mCurrentLocationText;
+    private ImageView mMyIconImage;
+    private AMapLocationClient mAMapLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
         MainSingleton.getInstance(this);
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.navigationView);
+
         FragmentManager fragmentManager = getSupportFragmentManager();
         MusicRankingAdapter pagerAdapter = new MusicRankingAdapter(fragmentManager, getResources());
+        View navHeaderView = navigationView.getHeaderView(0);
 
+        mCurrentLocationText = navHeaderView.findViewById(R.id.currentLocationText);
+        mMyIconImage = navHeaderView.findViewById(R.id.myIconImage);
         mActivityMain = new ActivityMain(this, pagerAdapter, this);
+        mAMapLocationClient = new AMapLocationClient(this);
 
         if (savedInstanceState == null) {
             addBottomPlayFragment();
@@ -55,6 +79,20 @@ public class MainActivity extends AppCompatActivity
         mBinding.setActivityMain(mActivityMain);
         CleanUpHistoryMusicJob.scheduleJob();
         getApplication().registerActivityLifecycleCallbacks(this);
+
+        mAMapLocationClient.setLocationListener(this);
+        mAMapLocationClient.setLocationOption(new AMapLocationClientOption()
+                .setOnceLocation(true));
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            mAMapLocationClient.startLocation();
+        } else {
+            Toast.makeText(this, R.string.location_permission_denied_toast, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void addBottomPlayFragment() {
@@ -78,6 +116,12 @@ public class MainActivity extends AppCompatActivity
             default:
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mAMapLocationClient.startLocation();
     }
 
     @Override
@@ -113,9 +157,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         if (isFinishing()) {
             stopService(new Intent(this, MusicService.class));
         }
+
+        mAMapLocationClient.unRegisterLocationListener(this);
+        mAMapLocationClient.onDestroy();
         getApplication().unregisterActivityLifecycleCallbacks(this);
     }
 
@@ -186,6 +234,43 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onActivityDestroyed(Activity activity) {
 
+    }
+
+    @Override
+    public void onClick(View view) {
+        onMyIconImageClick();
+    }
+
+    private void onMyIconImageClick() {
+
+    }
+
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+        if (aMapLocation == null) {
+            return;
+        }
+
+        if (aMapLocation.getErrorCode() != 0) {
+            if (aMapLocation.getErrorCode() == 12) {
+                checkAndRequestLocationPermission();
+            }
+            return;
+        }
+
+        // 在模拟器上定位不成功，但在真机上测试有效
+        String currentLocation = aMapLocation.getCountry() + " " +
+                aMapLocation.getProvince() + " " +
+                aMapLocation.getCity();
+        mCurrentLocationText.setText(currentLocation);
+    }
+
+    private void checkAndRequestLocationPermission() {
+        String locationPermission = Manifest.permission.ACCESS_FINE_LOCATION;
+        if (ContextCompat.checkSelfPermission(this, locationPermission) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{locationPermission}, 0);
+        }
     }
 
     private class MusicRankingAdapter extends FragmentStatePagerAdapter {
