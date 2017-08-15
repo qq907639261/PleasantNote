@@ -612,25 +612,25 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     private class PlaySpinnerAdapter extends BaseAdapter {
 
-        private TypedArray mPlaySpinnerIcons;
-        private String[] mPlaySpinnerAccessibilities;
+        private TypedArray mSwitchModeSpinnerIcons;
+        private CharSequence[] mSwitchModeSpinnerAccessibilities;
 
         private PlaySpinnerAdapter(Resources resources) {
-            mPlaySpinnerAccessibilities =
-                    resources.getStringArray(R.array.play_spinner_accessibility);
+            mSwitchModeSpinnerAccessibilities =
+                    resources.getTextArray(R.array.play_spinner_accessibility);
         }
 
         private void obtainPlaySpinnerIcons(Resources resources) {
-            mPlaySpinnerIcons = resources.obtainTypedArray(R.array.play_spinner_drawable);
+            mSwitchModeSpinnerIcons = resources.obtainTypedArray(R.array.play_spinner_drawable);
         }
 
         private void recyclePlaySpinnerIcons() {
-            mPlaySpinnerIcons.recycle();
+            mSwitchModeSpinnerIcons.recycle();
         }
 
         @Override
         public int getCount() {
-            return mPlaySpinnerAccessibilities.length;
+            return mSwitchModeSpinnerAccessibilities.length;
         }
 
         @Override
@@ -648,33 +648,36 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             ViewHolder viewHolder;
             if (view == null) {
                 view = LayoutInflater.from(viewGroup.getContext())
-                        .inflate(R.layout.layout_image_view, viewGroup, false);
+                        .inflate(R.layout.spinner_switch_mode_image, viewGroup, false);
 
-                viewHolder = new ViewHolder();
-                ImageView imageView = view.findViewById(R.id.imageView);
+                ImageView switchModeImage = view.findViewById(R.id.switchModeImage);
+                viewHolder = new ViewHolder(switchModeImage);
 
-                viewHolder.setImageView(imageView);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            viewHolder.getImageView().setImageDrawable(mPlaySpinnerIcons.getDrawable(i));
-            viewHolder.getImageView().setContentDescription(mPlaySpinnerAccessibilities[i]);
+            viewHolder.setSwitchModeImageDrawable(mSwitchModeSpinnerIcons.getDrawable(i));
+            viewHolder.setSwitchModeImageContentDescription(mSwitchModeSpinnerAccessibilities[i]);
 
             return view;
         }
 
         private class ViewHolder {
 
-            private ImageView mImageView;
+            private ImageView mSwitchModeImage;
 
-            ImageView getImageView() {
-                return mImageView;
+            ViewHolder(ImageView switchModeImage) {
+                mSwitchModeImage = switchModeImage;
             }
 
-            void setImageView(ImageView imageView) {
-                mImageView = imageView;
+            void setSwitchModeImageDrawable(Drawable drawable) {
+                mSwitchModeImage.setImageDrawable(drawable);
+            }
+
+            void setSwitchModeImageContentDescription(CharSequence contentDescription) {
+                mSwitchModeImage.setContentDescription(contentDescription);
             }
         }
     }

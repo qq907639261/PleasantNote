@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.xhbb.qinzl.pleasantnote.LocalSongActivity">
+    tools:context=".LocalSongActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -56,7 +56,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="@dimen/bottomPlayFragmentHeight"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:listitem="@layout/item_local_song"/>
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/bottomToolbar"

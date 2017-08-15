@@ -46,10 +46,16 @@
     <string name="delete_button">删除</string>
     <string name="batch_management_button">批量管理</string>
     <string name="cancel_button">取消</string>
+    <string name="confirm_button">确定</string>
 
     <string name="denied_permission_toast">您拒绝了此项授权</string>
     <string name="start_download_music_toast">开始下载音乐</string>
     <string name="local_song_data_is_empty_toast">您还没有下载本地音乐</string>
+    <string name="no_select_song_toast">您没有选择歌曲</string>
+    <string name="song_un_downloaded_toast">歌曲未下载</string>
+
+    <string name="delete_song_dialog_message">您确定要删除所有选中歌曲吗？</string>
+    <string name="delete_dialog_title">删除确认</string>
 
     <string name="music_search_hint">歌曲/歌手</string>
 
