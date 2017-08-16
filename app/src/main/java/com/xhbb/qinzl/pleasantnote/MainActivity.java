@@ -7,14 +7,21 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.databinding.DataBindingUtil;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -32,14 +39,21 @@ import com.amap.api.location.AMapLocationListener;
 import com.xhbb.qinzl.pleasantnote.async.CleanUpHistoryMusicJob;
 import com.xhbb.qinzl.pleasantnote.async.MusicService;
 import com.xhbb.qinzl.pleasantnote.common.MainSingleton;
+import com.xhbb.qinzl.pleasantnote.data.Contracts;
 import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity implements
         ActivityMain.OnActivityMainListener,
         Application.ActivityLifecycleCallbacks,
         View.OnClickListener,
-        AMapLocationListener {
+        AMapLocationListener,
+        SelectPhotoDialogFragment.OnSelectPhotoDialogFragmentListener {
+
+    private static final String FRAGMENT_TAG_SELECT_PHOTO = "SELECT_PHOTO";
+    private static final int REQUEST_IMAGE_CAPTURE = 0;
 
     private ActivityMainBinding mBinding;
     private ActivityMain mActivityMain;
@@ -79,15 +93,26 @@ public class MainActivity extends AppCompatActivity implements
         mBinding.setActivityMain(mActivityMain);
         CleanUpHistoryMusicJob.scheduleJob();
         getApplication().registerActivityLifecycleCallbacks(this);
+        mMyIconImage.setOnClickListener(this);
+        setMyIconImageIfExists();
 
         mAMapLocationClient.setLocationListener(this);
         mAMapLocationClient.setLocationOption(new AMapLocationClientOption()
                 .setOnceLocation(true));
     }
 
+    private void setMyIconImageIfExists() {
+        File myIconImage = getMyIconPicture();
+        if (myIconImage.exists()) {
+            Uri imageURI = Uri.parse(myIconImage.getPath());
+            mMyIconImage.setImageURI(imageURI);
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             mAMapLocationClient.startLocation();
         } else {
@@ -242,7 +267,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void onMyIconImageClick() {
-
+        DialogFragment fragment = SelectPhotoDialogFragment.newInstance();
+        fragment.show(getSupportFragmentManager(), FRAGMENT_TAG_SELECT_PHOTO);
     }
 
     @Override
@@ -271,6 +297,51 @@ public class MainActivity extends AppCompatActivity implements
                 PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{locationPermission}, 0);
         }
+    }
+
+    @Override
+    public void onTakePictureButtonClick() {
+        PackageManager packageManager = getPackageManager();
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            Toast.makeText(this, R.string.your_camera_unavailable_toast, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(packageManager) != null) {
+            File myIconPicture = getMyIconPicture();
+            String authority = Contracts.AUTHORITY + ".fileprovider";
+
+            Uri imageUri = FileProvider.getUriForFile(this, authority, myIconPicture);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_IMAGE_CAPTURE:
+                Bitmap imageBitmap = BitmapFactory.decodeFile(getMyIconPicture().getAbsolutePath());
+                mMyIconImage.setImageBitmap(imageBitmap);
+                break;
+            default:
+        }
+    }
+
+    @NonNull
+    private File getMyIconPicture() {
+        File parent = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        String child = getString(R.string.default_my_icon_file_name);
+
+        return new File(parent, child);
+    }
+
+    @Override
+    public void onSelectImageButtonClick() {
+        // TODO: 2017/8/16
     }
 
     private class MusicRankingAdapter extends FragmentStatePagerAdapter {

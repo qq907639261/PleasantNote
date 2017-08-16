@@ -85,7 +85,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_play);
 
-        int playSpinnerSelection = PrefrencesUtils.getPlaySpinnerSelection(this);
+        int playSpinnerSelection = PrefrencesUtils.getSwitchModeSpinnerSelection(this);
 
         mPlaySpinnerAdapter = new PlaySpinnerAdapter(getResources());
         mActivityPlay = new ActivityPlay(this, mPlaySpinnerAdapter, playSpinnerSelection);
@@ -219,7 +219,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        PrefrencesUtils.savePlaySpinnerSelection(this, i);
+        PrefrencesUtils.saveSwitchModeSpinnerSelection(this, i);
     }
 
     @Override

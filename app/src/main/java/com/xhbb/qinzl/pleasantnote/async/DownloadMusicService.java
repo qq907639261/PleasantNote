@@ -202,6 +202,11 @@ public class DownloadMusicService extends Service {
                     return;
                 }
 
+                if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                    finishDownload(musicCode, DownloadState.FAILED);
+                    return;
+                }
+
                 File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
 
                 String downloadUrl = download.getUrl();
@@ -262,8 +267,13 @@ public class DownloadMusicService extends Service {
 
                     inputStream = connection.getInputStream();
                     int contentLength = connection.getContentLength();
-                    byte[] b = new byte[1024];
 
+                    if (dir.getFreeSpace() < (contentLength - downloadedLength + 1024)) {
+                        finishDownload(musicCode, DownloadState.FAILED);
+                        return;
+                    }
+
+                    byte[] b = new byte[1024];
                     int len;
                     while ((len = inputStream.read(b)) != -1) {
                         int downloadState = downloadStates.get(musicCode);

@@ -373,7 +373,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         addHistoryMusicPosition(mHistoryMusicPositions, mCurrentMusicPosition);
 
-        int spinnerSelection = PrefrencesUtils.getPlaySpinnerSelection(this);
+        int spinnerSelection = PrefrencesUtils.getSwitchModeSpinnerSelection(this);
         if (mPlaySpinnerValues[spinnerSelection] == getResources().getInteger(R.integer.play_spinner_list_loop)) {
             if (++mCurrentMusicPosition >= mMusics.size()) {
                 mCurrentMusicPosition = 0;

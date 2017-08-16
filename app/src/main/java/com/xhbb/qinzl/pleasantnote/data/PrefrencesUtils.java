@@ -11,16 +11,16 @@ import com.xhbb.qinzl.pleasantnote.R;
 
 public class PrefrencesUtils {
 
-    public static void savePlaySpinnerSelection(Context context, int playSpinnerValue) {
-        String key = context.getString(R.string.key_play_spinner_value);
+    public static void saveSwitchModeSpinnerSelection(Context context, int switchModeSpinnerValue) {
+        String key = context.getString(R.string.key_switch_mode_spinner_value);
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
-                .putInt(key, playSpinnerValue)
+                .putInt(key, switchModeSpinnerValue)
                 .apply();
     }
 
-    public static int getPlaySpinnerSelection(Context context) {
-        String key = context.getString(R.string.key_play_spinner_value);
+    public static int getSwitchModeSpinnerSelection(Context context) {
+        String key = context.getString(R.string.key_switch_mode_spinner_value);
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getInt(key, 0);
     }

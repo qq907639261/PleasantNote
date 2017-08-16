@@ -55,7 +55,6 @@ public class LocalSongActivity extends AppCompatActivity
     private Button mBatchManageButton;
     private View mBottomToolbar;
     private View mBottomFragmentContainer;
-    private SparseIntArray mSongPositionsByMusicCode;
 
     public static void start(Context context) {
         Intent starter = new Intent(context, LocalSongActivity.class);
@@ -77,7 +76,6 @@ public class LocalSongActivity extends AppCompatActivity
         Button deleteButton = (Button) findViewById(R.id.deleteButton);
 
         mLocalSongAdapter = new LocalSongAdapter(this, mAllSongCheckBox);
-        mSongPositionsByMusicCode = new SparseIntArray();
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(mLocalSongAdapter);
@@ -106,7 +104,6 @@ public class LocalSongActivity extends AppCompatActivity
 
         final Context context = getApplicationContext();
         final LocalSongAdapter localSongAdapter = mLocalSongAdapter;
-        final SparseIntArray songPositionsByMusicCode = mSongPositionsByMusicCode;
 
         mInitLocalSongDataTask = new AsyncTask<Void, Void, List<LocalSong>>() {
             @Override
@@ -123,11 +120,7 @@ public class LocalSongActivity extends AppCompatActivity
 
                 boolean moveSucceeded = cursor.moveToFirst();
                 while (moveSucceeded) {
-                    LocalSong localSong = new LocalSong(cursor);
-
-                    localSongs.add(localSong);
-                    songPositionsByMusicCode.put(localSong.getMusicCode(), cursor.getPosition());
-
+                    localSongs.add(new LocalSong(cursor));
                     moveSucceeded = cursor.moveToNext();
                 }
 
@@ -173,8 +166,7 @@ public class LocalSongActivity extends AppCompatActivity
 
     @Override
     public void onProgressUpdate(int musicCode, int progress) {
-        int songPosition = mSongPositionsByMusicCode.get(musicCode);
-
+        int songPosition = mLocalSongAdapter.getPositionInSparseArray(musicCode);
         mLocalSongAdapter.setDownloadProgress(songPosition, progress);
         mLocalSongAdapter.notifyItemChanged(songPosition);
     }
@@ -187,6 +179,7 @@ public class LocalSongActivity extends AppCompatActivity
     @Override
     public void onDownloaded(int musicCode) {
         changeDownloadState(musicCode, DownloadState.DOWNLOADED);
+        mLocalSongAdapter.deletePositionInSparseArray(musicCode);
     }
 
     @Override
@@ -195,8 +188,7 @@ public class LocalSongActivity extends AppCompatActivity
     }
 
     private void changeDownloadState(int musicCode, int downloadState) {
-        int songPosition = mSongPositionsByMusicCode.get(musicCode);
-
+        int songPosition = mLocalSongAdapter.getPositionInSparseArray(musicCode);
         mLocalSongAdapter.setDownloadState(songPosition, downloadState);
         mLocalSongAdapter.notifyItemChanged(songPosition);
     }
@@ -334,8 +326,10 @@ public class LocalSongActivity extends AppCompatActivity
         private Context mContext;
         private boolean mSongCheckBoxVisible;
         private CheckBox mAllSongCheckBox;
+        private SparseIntArray mPositionSparseArray;
 
         LocalSongAdapter(Context context, CheckBox allSongCheckBox) {
+            mPositionSparseArray = new SparseIntArray();
             mLocalSongs = new ArrayList<>();
             mContext = context;
             mAllSongCheckBox = allSongCheckBox;
@@ -351,6 +345,14 @@ public class LocalSongActivity extends AppCompatActivity
             notifyDataSetChanged();
         }
 
+        int getPositionInSparseArray(int musicCode) {
+            return mPositionSparseArray.get(musicCode);
+        }
+
+        void deletePositionInSparseArray(int musicCode) {
+            mPositionSparseArray.delete(musicCode);
+        }
+
         List<LocalSong> getLocalSongs() {
             return mLocalSongs;
         }
@@ -360,13 +362,14 @@ public class LocalSongActivity extends AppCompatActivity
         }
 
         @Override
-
         public int getItemViewType(int position) {
-            int downloadState = mLocalSongs.get(position).getDownloadState();
+            LocalSong localSong = mLocalSongs.get(position);
+            int downloadState = localSong.getDownloadState();
 
             if (downloadState == DownloadState.DOWNLOADED) {
                 return TYPE_DEFAULT;
             } else {
+                mPositionSparseArray.put(localSong.getMusicCode(), position);
                 return TYPE_SONG_UN_DOWNLOADED;
             }
         }
@@ -388,7 +391,6 @@ public class LocalSongActivity extends AppCompatActivity
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             LocalSong localSong = mLocalSongs.get(position);
-
             holder.bindLocalSong(localSong, mSongCheckBoxVisible);
         }
 
@@ -421,23 +423,23 @@ public class LocalSongActivity extends AppCompatActivity
                 mItemView = itemView;
                 mContext = context;
                 mAllSongCheckBox = allSongCheckBox;
+
                 mMusicNameText = itemView.findViewById(R.id.musicNameText);
                 mSingerNameText = itemView.findViewById(R.id.singerNameText);
                 mSongCheckBoxContainer = itemView.findViewById(R.id.songCheckBoxContainer);
-
                 mSongCheckBox = itemView.findViewById(R.id.songCheckBox);
                 mDownloadProgress = itemView.findViewById(R.id.downloadProgress);
             }
 
             void bindLocalSong(LocalSong localSong, boolean songCheckBoxVisible) {
                 mLocalSong = localSong;
-                mMusicNameText.setText(localSong.getMusicName());
-                mSingerNameText.setText(localSong.getSingerName());
+                mMusicNameText.setText(mLocalSong.getMusicName());
+                mSingerNameText.setText(mLocalSong.getSingerName());
                 mSongCheckBoxContainer.setVisibility(songCheckBoxVisible ? View.VISIBLE : View.GONE);
                 mSongCheckBox.setChecked(mLocalSong.isSongChecked());
 
                 if (mDownloadProgress != null) {
-                    int downloadProgress = localSong.getDownloadProgress();
+                    int downloadProgress = mLocalSong.getDownloadProgress();
                     mDownloadProgress.setProgress(downloadProgress);
 
                     if (mLocalSong.getDownloadState() == DownloadState.DOWNLOADED) {
