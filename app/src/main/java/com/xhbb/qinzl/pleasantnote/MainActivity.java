@@ -44,6 +44,8 @@ import com.xhbb.qinzl.pleasantnote.databinding.ActivityMainBinding;
 import com.xhbb.qinzl.pleasantnote.layoutbinding.ActivityMain;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements
         ActivityMain.OnActivityMainListener,
@@ -53,7 +55,8 @@ public class MainActivity extends AppCompatActivity implements
         SelectPhotoDialogFragment.OnSelectPhotoDialogFragmentListener {
 
     private static final String FRAGMENT_TAG_SELECT_PHOTO = "SELECT_PHOTO";
-    private static final int REQUEST_IMAGE_CAPTURE = 0;
+    private static final int REQUEST_TAKE_PICTURE = 0;
+    private static final int REQUEST_SELECT_IMAGE = 1;
 
     private ActivityMainBinding mBinding;
     private ActivityMain mActivityMain;
@@ -144,12 +147,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        mAMapLocationClient.startLocation();
-    }
-
-    @Override
     public void onBackPressed() {
         DrawerLayout drawerLayout = mBinding.drawerLayout;
         NavigationView navigationView = mBinding.navigationView;
@@ -194,10 +191,11 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onDrawerOpened(SearchView searchView) {
-        clearFocus(searchView);
+        mAMapLocationClient.startLocation();
+        clearSearchViewFocus(searchView);
     }
 
-    private void clearFocus(SearchView searchView) {
+    private void clearSearchViewFocus(SearchView searchView) {
         if (searchView.hasFocus()) {
             searchView.clearFocus();
             searchView.setFocusable(false);
@@ -206,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onQueryTextSubmit(SearchView searchView, String s) {
-        clearFocus(searchView);
+        clearSearchViewFocus(searchView);
         mActivityMain.setViewPagerVisible(false);
 
         getSupportFragmentManager().beginTransaction()
@@ -301,34 +299,67 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onTakePictureButtonClick() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         PackageManager packageManager = getPackageManager();
-        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            Toast.makeText(this, R.string.your_camera_unavailable_toast, Toast.LENGTH_SHORT).show();
+
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA) ||
+                takePictureIntent.resolveActivity(packageManager) == null) {
+            Toast.makeText(this, R.string.camera_unavailable_toast, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(packageManager) != null) {
-            File myIconPicture = getMyIconPicture();
-            String authority = Contracts.AUTHORITY + ".fileprovider";
+        File myIconPicture = getMyIconPicture();
+        String authority = Contracts.AUTHORITY + ".fileprovider";
 
-            Uri imageUri = FileProvider.getUriForFile(this, authority, myIconPicture);
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        Uri imageUri = FileProvider.getUriForFile(this, authority, myIconPicture);
+        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
+        startActivityForResult(takePictureIntent, REQUEST_TAKE_PICTURE);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
         switch (requestCode) {
-            case REQUEST_IMAGE_CAPTURE:
+            case REQUEST_TAKE_PICTURE:
                 Bitmap imageBitmap = BitmapFactory.decodeFile(getMyIconPicture().getAbsolutePath());
                 mMyIconImage.setImageBitmap(imageBitmap);
                 break;
+            case REQUEST_SELECT_IMAGE:
+                try {
+                    Uri imageUri = data.getData();
+                    imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+
+                    mMyIconImage.setImageBitmap(imageBitmap);
+                    saveMyIconImageAsync(imageBitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
             default:
         }
+    }
+
+    private void saveMyIconImageAsync(final Bitmap imageBitmap) {
+        final File imageFile = getMyIconPicture();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    FileOutputStream out = new FileOutputStream(imageFile);
+                    imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     @NonNull
@@ -341,7 +372,15 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onSelectImageButtonClick() {
-        // TODO: 2017/8/16
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .setType("image/*");
+
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            Toast.makeText(this, R.string.select_image_unavailable_toast, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        startActivityForResult(intent, REQUEST_SELECT_IMAGE);
     }
 
     private class MusicRankingAdapter extends FragmentStatePagerAdapter {

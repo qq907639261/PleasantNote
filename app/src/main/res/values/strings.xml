@@ -58,7 +58,8 @@
     <string name="no_select_song_toast">您没有选择歌曲</string>
     <string name="song_un_downloaded_toast">歌曲未下载</string>
     <string name="location_permission_denied_toast">您拒绝了定位授权</string>
-    <string name="your_camera_unavailable_toast">您的相机设备不可用</string>
+    <string name="camera_unavailable_toast">拍照功能不可用</string>
+    <string name="select_image_unavailable_toast">选择图片功能不可用</string>
 
     <string name="delete_song_dialog_message">您确定要删除所有选中歌曲吗？</string>
     <string name="delete_dialog_title">删除确认</string>
