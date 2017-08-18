@@ -32,6 +32,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static final String ACTION_INIT_MUSIC = Contracts.AUTHORITY + ".ACTION_INIT_MUSIC";
     public static final String ACTION_START_FOREGROUND = Contracts.AUTHORITY + ".ACTION_START_FOREGROUND";
     public static final String ACTION_STOP_FOREGROUND = Contracts.AUTHORITY + ".ACTION_STOP_FOREGROUND";
+    public static final String ACTION_SEND_MUSIC_TO_PLAY_WIDGET = Contracts.AUTHORITY + ".ACTION_SEND_MUSIC_TO_PLAY_WIDGET";
+    public static final String ACTION_PLAY_MUSIC = Contracts.AUTHORITY + ".ACTION_PLAY_MUSIC";
+    public static final String ACTION_PAUSE_MUSIC = Contracts.AUTHORITY + ".ACTION_PAUSE_MUSIC";
+    public static final String ACTION_PLAY_NEXT_MUSIC = Contracts.AUTHORITY + ".ACTION_PLAY_NEXT_MUSIC";
 
     public static final int LIMIT_VALUE_OF_HISTORY_MUSIC = 50;
 
@@ -49,11 +53,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private MusicBinder mMusicBinder;
     private Random mRandom;
     private OnMusicServiceListener mListener;
-    private boolean mPlaying;
+    private boolean mMusicPlaying;
+
+    public static Intent newIntent(Context context) {
+        return new Intent(context, MusicService.class);
+    }
 
     public static Intent newIntent(Context context, String action) {
-        return new Intent(context, MusicService.class)
-                .setAction(action);
+        return newIntent(context).setAction(action);
     }
 
     public static Intent newPlayNewMusicIntent(Context context, Music music) {
@@ -91,6 +98,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     private void handleIntent(Intent intent) {
+        if (intent.getAction() == null) {
+            return;
+        }
+
         switch (intent.getAction()) {
             case ACTION_INIT_MUSIC:
                 executeInitMusicTask();
@@ -104,7 +115,30 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             case ACTION_STOP_FOREGROUND:
                 stopForeground(true);
                 break;
+            case ACTION_SEND_MUSIC_TO_PLAY_WIDGET:
+                sendMusicToPlayWidget();
+                break;
+            case ACTION_PLAY_MUSIC:
+                play();
+                break;
+            case ACTION_PAUSE_MUSIC:
+                pause();
+                break;
+            case ACTION_PLAY_NEXT_MUSIC:
+                playNext();
+                break;
             default:
+        }
+    }
+
+    private void sendMusicToPlayWidget() {
+        Music music = getCurrentMusic();
+        if (music != null) {
+            if (mMusicPlaying) {
+                sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_PLAYED, music);
+            } else {
+                sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_INITED, music);
+            }
         }
     }
 
@@ -116,16 +150,27 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void play() {
         mMediaPlayer.start();
-        mPlaying = mMediaPlayer.isPlaying();
+        mMusicPlaying = mMediaPlayer.isPlaying();
+
+        if (mMusicPlaying) {
+            sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_PLAYED, getCurrentMusic());
+        }
     }
 
-    public boolean isPlaying() {
-        return mPlaying;
+    private void sendPrivateMusicBroadcast(String action, Music music) {
+        Intent intent = new Intent(action);
+        intent.putExtra(Contracts.EXTRA_MUSIC, music);
+        sendBroadcast(intent, getString(R.string.permission_private));
+    }
+
+    public boolean isMusicPlaying() {
+        return mMusicPlaying;
     }
 
     public void pause() {
         mMediaPlayer.pause();
-        mPlaying = false;
+        mMusicPlaying = false;
+        sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_STOPPED, getCurrentMusic());
     }
 
     public int getPlayedMillis() {
@@ -148,25 +193,17 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mInitMusicTask != null) {
             mInitMusicTask.cancel(false);
         }
-        mInitMusicTask = getInitMusicTask(this).execute();
-    }
 
-    private AsyncTask<Void, Void, List<Music>> getInitMusicTask(final MusicService musicService) {
-        return new AsyncTask<Void, Void, List<Music>>() {
-            private ContentResolver mContentResolver;
+        final MusicService musicService = this;
+        final ContentResolver contentResolver = getApplicationContext().getContentResolver();
 
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mContentResolver = musicService.getApplicationContext().getContentResolver();
-            }
-
+        mInitMusicTask = new AsyncTask<Void, Void, List<Music>>() {
             @Override
             protected List<Music> doInBackground(Void... voids) {
                 String selection = MusicContract._TYPE + "=" + MusicType.HISTORY;
                 String sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
 
-                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = contentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusicsAndCloseCursor(cursor);
             }
@@ -177,7 +214,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 musicService.setMusics(musics);
                 resetAndPlay();
             }
-        };
+        }.execute();
     }
 
     private List<Music> getMusicsAndCloseCursor(Cursor cursor, Music currentMusic) {
@@ -288,17 +325,20 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
 
         try {
-            String playUrl = mMusics.get(mCurrentMusicPosition).getPlayUrl();
+            Music music = mMusics.get(mCurrentMusicPosition);
+            String playUrl = music.getPlayUrl();
 
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(playUrl);
             mMediaPlayer.prepareAsync();
             saveCurrentMusicAsync();
-            mPlaying = true;
+            mMusicPlaying = true;
 
             if (mListener != null) {
-                mListener.onPreparing();
+                mListener.onMediaPlayerPreparing();
             }
+
+            sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_PLAYED, music);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -339,8 +379,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         CleanUpHistoryMusicJob.cancelJob();
         cleanUpHistoryMusicAsync();
-
         mMediaPlayer.release();
+        sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_STOPPED, null);
     }
 
     private void cleanUpHistoryMusicAsync() {
@@ -356,7 +396,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         if (mListener != null) {
-            mListener.onPrepared();
+            mListener.onMediaPlayerPrepared();
         }
         mediaPlayer.start();
     }
@@ -442,7 +482,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public interface OnMusicServiceListener {
 
-        void onPrepared();
-        void onPreparing();
+        void onMediaPlayerPrepared();
+        void onMediaPlayerPreparing();
     }
 }

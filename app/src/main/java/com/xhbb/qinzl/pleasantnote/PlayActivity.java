@@ -142,7 +142,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     private void bindMusicService() {
-        Intent service = new Intent(this, MusicService.class);
+        Intent service = MusicService.newIntent(this);
         bindService(service, this, Context.BIND_AUTO_CREATE);
     }
 
@@ -361,7 +361,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             updateCurrentMusic();
             setPlayChrononmeterBase();
 
-            if (mMusicService.isPlaying()) {
+            if (mMusicService.isMusicPlaying()) {
                 mBinding.playChrononmeter.start();
                 mBinding.playSwitcher.setDisplayedChild(1);
             }
@@ -481,35 +481,25 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         };
     }
 
-    private void executeDisplayBackgroundTask(String pictureUrl) {
+    private void executeDisplayBackgroundTask(final String pictureUrl) {
         if (mDisplayBackgroundTask != null) {
             mDisplayBackgroundTask.cancel(false);
         }
-        mDisplayBackgroundTask = getDisplayBackgroundTask(pictureUrl, this).execute();
-    }
 
-    @NonNull
-    private AsyncTask<Void, Void, Drawable> getDisplayBackgroundTask(final String pictureUrl,
-                                                                     final PlayActivity playActivity) {
-        return new AsyncTask<Void, Void, Drawable>() {
-            private Context mContext;
+        final Context context = getApplicationContext();
+        final PlayActivity playActivity = this;
 
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mContext = playActivity.getApplicationContext();
-            }
-
+        mDisplayBackgroundTask = new AsyncTask<Void, Void, Drawable>() {
             @Override
             protected Drawable doInBackground(Void... voids) {
                 Drawable bigPicture = null;
 
                 try {
-                    bigPicture = GlideApp.with(mContext)
+                    bigPicture = GlideApp.with(context)
                             .asDrawable()
                             .load(pictureUrl)
                             .error(R.drawable.empty_image)
-                            .centerCrop(mContext)
+                            .centerCrop(context)
                             .submit()
                             .get();
 
@@ -526,7 +516,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 super.onPostExecute(drawable);
                 playActivity.getActivityPlay().setBigPicture(drawable);
             }
-        };
+        }.execute();
     }
 
     @Override
@@ -535,13 +525,13 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
     }
 
     @Override
-    public void onPrepared() {
+    public void onMediaPlayerPrepared() {
         setPlayChrononmeterBase();
         mBinding.playChrononmeter.start();
     }
 
     @Override
-    public void onPreparing() {
+    public void onMediaPlayerPreparing() {
         mBinding.playChrononmeter.stop();
         setPlayChrononmeterBase();
         updateFavoritedDataAsync();
@@ -605,7 +595,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         mMusicService.seekTo(progressOfMillis);
         mBinding.playChrononmeter.setBase(SystemClock.elapsedRealtime() - progressOfMillis);
 
-        if (mMusicService.isPlaying()) {
+        if (mMusicService.isMusicPlaying()) {
             mBinding.playChrononmeter.start();
         }
     }

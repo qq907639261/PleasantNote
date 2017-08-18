@@ -1,0 +1,65 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/selector_bottom_play_fragment"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    tools:layout_height="@dimen/play_widget_height">
+
+    <ImageView
+        android:id="@+id/musicImage"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/music_image_accessibility"
+        android:src="@drawable/empty_image"/>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/musicNameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@android:style/TextAppearance.Widget.TextView"
+            android:textColor="@color/appBarContent"
+            tools:text="海阔天空"/>
+
+        <TextView
+            android:id="@+id/singerNameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/appBarContent"
+            android:typeface="monospace"
+            tools:text="Beyond"/>
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/playButton"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/selector_bottom_play_fragment_button"
+        android:contentDescription="@string/play_accessibility"
+        android:src="@drawable/ic_play"
+        android:tint="@color/appBarContent"/>
+
+    <ImageButton
+        android:id="@+id/nextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/selector_bottom_play_fragment_button"
+        android:contentDescription="@string/next_song_accessibility"
+        android:src="@drawable/ic_skip_next_big"
+        android:tint="@color/appBarContent"/>
+</LinearLayout>

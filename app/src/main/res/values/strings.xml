@@ -3,6 +3,8 @@
 
     <string name="key_switch_mode_spinner_value" translatable="false">key_switch_mode_spinner_value</string>
 
+    <string name="permission_private" translatable="false">com.xhbb.qinzl.pleasantnote.permission_private</string>
+
     <string name="default_my_icon_file_name" translatable="false">my_icon_default.jpg</string>
 
     <string name="format_time">%1$02d:%2$02d</string>

@@ -41,7 +41,7 @@ public class BottomPlayFragment extends Fragment
     }
 
     public boolean isPlaying() {
-        return mMusicService.isPlaying();
+        return mMusicService.isMusicPlaying();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class BottomPlayFragment extends Fragment
 
     private void bindMusicService() {
         Context context = getContext();
-        Intent musicService = new Intent(context, MusicService.class);
+        Intent musicService = MusicService.newIntent(context);
         context.bindService(musicService, this, Context.BIND_AUTO_CREATE);
     }
 
@@ -65,7 +65,7 @@ public class BottomPlayFragment extends Fragment
     @Override
     public void onClickPlayButton() {
         mMusicService.play();
-        mFragmentBottomPlay.setPlaySwitcherDisplayedChild(mMusicService.isPlaying());
+        mFragmentBottomPlay.setPlaySwitcherDisplayedChild(mMusicService.isMusicPlaying());
     }
 
     @Override
@@ -91,7 +91,7 @@ public class BottomPlayFragment extends Fragment
         Music music = mMusicService.getCurrentMusic();
         if (music != null) {
             displayCurrentMusicData(music);
-            mFragmentBottomPlay.setPlaySwitcherDisplayedChild(mMusicService.isPlaying());
+            mFragmentBottomPlay.setPlaySwitcherDisplayedChild(mMusicService.isMusicPlaying());
         }
     }
 
@@ -107,12 +107,12 @@ public class BottomPlayFragment extends Fragment
     }
 
     @Override
-    public void onPrepared() {
+    public void onMediaPlayerPrepared() {
 
     }
 
     @Override
-    public void onPreparing() {
+    public void onMediaPlayerPreparing() {
         displayCurrentMusicData(mMusicService.getCurrentMusic());
         mFragmentBottomPlay.setPlaySwitcherDisplayedChild(true);
     }

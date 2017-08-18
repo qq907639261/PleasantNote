@@ -26,8 +26,8 @@
             android:url="@{fragmentBottomPlay.imageUrl}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/musicName"
+            app:layout_constraintEnd_toStartOf="@+id/musicName"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:src="@drawable/my_icon_default"/>
 
@@ -35,16 +35,15 @@
             android:id="@+id/musicName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
-            android:layout_marginStart="8dp"
+            android:ellipsize="end"
             android:maxLines="1"
             android:text="@{fragmentBottomPlay.musicName}"
             android:textAppearance="@android:style/TextAppearance.Widget.TextView"
             app:layout_constraintBottom_toTopOf="@+id/singerName"
-            app:layout_constraintLeft_toRightOf="@+id/musicImage"
-            app:layout_constraintRight_toLeftOf="@+id/playSwitcher"
+            app:layout_constraintEnd_toStartOf="@+id/playSwitcher"
+            app:layout_constraintStart_toEndOf="@+id/musicImage"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="海阔天空"/>
@@ -54,12 +53,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:ellipsize="end"
             android:maxLines="1"
             android:text="@{fragmentBottomPlay.singer}"
             android:typeface="monospace"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="@+id/musicName"
-            app:layout_constraintRight_toRightOf="@+id/musicName"
+            app:layout_constraintEnd_toEndOf="@+id/musicName"
+            app:layout_constraintStart_toStartOf="@+id/musicName"
             app:layout_constraintTop_toBottomOf="@+id/musicName"
             tools:text="Beyond"/>
 
@@ -70,7 +70,7 @@
             android:displayedChild="@{fragmentBottomPlay.playSwitcherDisplayedChild}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintRight_toLeftOf="@+id/nextButton"
+            app:layout_constraintEnd_toStartOf="@+id/nextButton"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageButton
@@ -103,7 +103,7 @@
             android:tint="@color/appBarContent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
     </android.support.constraint.ConstraintLayout>
 </layout>

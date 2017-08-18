@@ -23,6 +23,10 @@ public class Music implements Parcelable {
     private int mRankingCode;
     private int mMusicType;
 
+    public Music() {
+
+    }
+
     public Music(Cursor cursor) {
         mName = cursor.getString(cursor.getColumnIndex(MusicContract._NAME));
         mCode = cursor.getInt(cursor.getColumnIndex(MusicContract._CODE));

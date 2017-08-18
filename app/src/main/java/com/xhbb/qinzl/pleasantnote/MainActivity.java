@@ -3,6 +3,7 @@ package com.xhbb.qinzl.pleasantnote;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -65,6 +66,10 @@ public class MainActivity extends AppCompatActivity implements
     private TextView mCurrentLocationText;
     private ImageView mMyIconImage;
     private AMapLocationClient mAMapLocationClient;
+
+    public static Intent newIntent(Context context) {
+        return new Intent(context, MainActivity.class);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

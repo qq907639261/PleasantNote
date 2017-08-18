@@ -3,10 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.xhbb.qinzl.pleasantnote">
 
+    <permission
+        android:name="com.xhbb.qinzl.pleasantnote.permission_private"
+        android:protectionLevel="signature"/>
+
     <uses-feature
         android:name="android.hardware.camera2"
         android:required="false"/>
 
+    <uses-permission android:name="com.xhbb.qinzl.pleasantnote.permission_private"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -24,6 +29,7 @@
         <meta-data
             android:name="com.amap.api.v2.apikey"
             android:value="1ea32b655e3bf01e77f236be345e3e66"/>
+
         <service android:name="com.amap.api.location.APSService"/>
 
         <activity
@@ -75,6 +81,21 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"/>
         </provider>
+
+        <receiver
+            android:name=".PlayWidget"
+            android:permission="@string/permission_private">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="com.xhbb.qinzl.pleasantnote.ACTION_MUSIC_INITED"/>
+                <action android:name="com.xhbb.qinzl.pleasantnote.ACTION_MUSIC_PLAYED"/>
+                <action android:name="com.xhbb.qinzl.pleasantnote.ACTION_MUSIC_STOPPED"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/play_widget_info"/>
+        </receiver>
     </application>
 
 </manifest>
