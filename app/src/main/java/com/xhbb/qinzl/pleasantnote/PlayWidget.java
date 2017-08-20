@@ -50,14 +50,19 @@ public class PlayWidget extends AppWidgetProvider {
                         MusicService.ACTION_PLAY_NEXT_MUSIC);
 
                 if (music.getName() != null) {
-                    views.setOnClickPendingIntent(R.id.playButton, getServicePendingIntent(playService));
-                    views.setOnClickPendingIntent(R.id.nextButton, getServicePendingIntent(nextService));
+                    views.setOnClickPendingIntent(R.id.playButton,
+                            getServicePendingIntent(applicationContext, playService));
+                    views.setOnClickPendingIntent(R.id.nextButton,
+                            getServicePendingIntent(applicationContext, nextService));
                 } else {
-                    views.setOnClickPendingIntent(R.id.playButton, getActivityPendingIntent(mainActivityIntent));
-                    views.setOnClickPendingIntent(R.id.nextButton, getActivityPendingIntent(mainActivityIntent));
+                    views.setOnClickPendingIntent(R.id.playButton,
+                            getActivityPendingIntent(applicationContext, mainActivityIntent));
+                    views.setOnClickPendingIntent(R.id.nextButton,
+                            getActivityPendingIntent(applicationContext, mainActivityIntent));
                 }
 
-                views.setOnClickPendingIntent(R.id.root, getActivityPendingIntent(mainActivityIntent));
+                views.setOnClickPendingIntent(R.id.root,
+                        getActivityPendingIntent(applicationContext, mainActivityIntent));
 
                 views.setTextViewText(R.id.musicNameText, music.getName());
                 views.setTextViewText(R.id.singerNameText, music.getSingerName());
@@ -78,15 +83,15 @@ public class PlayWidget extends AppWidgetProvider {
                 return views;
             }
 
-            private PendingIntent getActivityPendingIntent(Intent intent) {
-                return TaskStackBuilder.create(applicationContext)
+            private PendingIntent getActivityPendingIntent(Context context, Intent intent) {
+                return TaskStackBuilder.create(context)
                         .addNextIntent(intent)
                         .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
             }
 
-            private PendingIntent getServicePendingIntent(Intent service) {
+            private PendingIntent getServicePendingIntent(Context context, Intent service) {
                 return PendingIntent.getService(
-                        applicationContext,
+                        context,
                         0,
                         service,
                         PendingIntent.FLAG_UPDATE_CURRENT
@@ -116,9 +121,11 @@ public class PlayWidget extends AppWidgetProvider {
                 return;
         }
 
-        ComponentName componentName = new ComponentName(context, PlayWidget.class);
+        Context applicationContext = context.getApplicationContext();
 
-        AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
+        ComponentName componentName = new ComponentName(applicationContext, PlayWidget.class);
+
+        AppWidgetManager widgetManager = AppWidgetManager.getInstance(applicationContext);
         int[] widgetIds = widgetManager.getAppWidgetIds(componentName);
         Music music = intent.getParcelableExtra(Contracts.EXTRA_MUSIC);
 
@@ -126,7 +133,6 @@ public class PlayWidget extends AppWidgetProvider {
             music = new Music();
         }
 
-        Context applicationContext = context.getApplicationContext();
         for (int widgetId : widgetIds) {
             executeUpdateAppWidgetTask(applicationContext, widgetManager, widgetId, music,
                     musicPlayed);

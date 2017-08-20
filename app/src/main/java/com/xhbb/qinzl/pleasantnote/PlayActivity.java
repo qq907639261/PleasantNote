@@ -118,18 +118,6 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         mBinding.setActivityPlay(mActivityPlay);
     }
 
-    private ActivityPlay getActivityPlay() {
-        return mActivityPlay;
-    }
-
-    private ActivityPlayBinding getBinding() {
-        return mBinding;
-    }
-
-    private MusicService getMusicService() {
-        return mMusicService;
-    }
-
     private boolean isPortraitOrientation() {
         int orientation = getResources().getConfiguration().orientation;
         return orientation == Configuration.ORIENTATION_PORTRAIT;
@@ -195,17 +183,14 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         outState.putString(ARG_LYRICS, mActivityPlay.getLyrics());
     }
 
-    private void executeDisplayLyricsTask(String response) {
+    private void executeDisplayLyricsTask(final String response) {
         if (mDisplayLyricsTask != null) {
             mDisplayLyricsTask.cancel(false);
         }
-        mDisplayLyricsTask = getDisplayLyricsTask(response, this).execute();
-    }
 
-    @NonNull
-    private AsyncTask<Void, Void, String> getDisplayLyricsTask(final String response,
-                                                               final PlayActivity playActivity) {
-        return new AsyncTask<Void, Void, String>() {
+        final ActivityPlay activityPlay = mActivityPlay;
+
+        mDisplayLyricsTask = new AsyncTask<Void, Void, String>() {
             @Override
             protected String doInBackground(Void... voids) {
                 return JsonUtils.getLyrics(response);
@@ -214,9 +199,9 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             @Override
             protected void onPostExecute(String lyrics) {
                 super.onPostExecute(lyrics);
-                playActivity.getActivityPlay().setLyrics(lyrics);
+                activityPlay.setLyrics(lyrics);
             }
-        };
+        }.execute();
     }
 
     @Override
@@ -391,30 +376,18 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         if (mInitFavoritedSwitcherChildTask != null) {
             mInitFavoritedSwitcherChildTask.cancel(false);
         }
-        mInitFavoritedSwitcherChildTask = getInitFavoritedSwitcherChildTask(this).execute();
-    }
 
-    @NonNull
-    private AsyncTask<Void, Void, Boolean> getInitFavoritedSwitcherChildTask(
-            final PlayActivity playActivity) {
+        final ContentResolver contentResolver = getApplicationContext().getContentResolver();
+        final int musicCode = mMusicService.getCurrentMusic().getCode();
+        final ActivityPlayBinding binding = mBinding;
 
-        return new AsyncTask<Void, Void, Boolean>() {
-            private ContentResolver mContentResolver;
-            private int mMusicCode;
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mContentResolver = playActivity.getApplicationContext().getContentResolver();
-                mMusicCode = playActivity.getMusicService().getCurrentMusic().getCode();
-            }
-
+        mInitFavoritedSwitcherChildTask = new AsyncTask<Void, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Void... voids) {
-                String selection = MusicContract._CODE + "=" + mMusicCode + " AND "
+                String selection = MusicContract._CODE + "=" + musicCode + " AND "
                         + MusicContract._TYPE + "=" + MusicType.FAVORITED;
 
-                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, null);
+                Cursor cursor = contentResolver.query(MusicContract.URI, null, selection, null, null);
                 boolean hasData = false;
 
                 if (cursor != null) {
@@ -428,9 +401,9 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             @Override
             protected void onPostExecute(Boolean favorited) {
                 super.onPostExecute(favorited);
-                playActivity.getBinding().favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
+                binding.favoritedSwitcher.setDisplayedChild(favorited ? 1 : 0);
             }
-        };
+        }.execute();
     }
 
     private void updateCurrentMusic() {
@@ -451,28 +424,17 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         if (mInitDownloadButtonEnabledTask != null) {
             mInitDownloadButtonEnabledTask.cancel(false);
         }
-        mInitDownloadButtonEnabledTask = getInitDownloadButtonEnabledTask(this).execute();
-    }
 
-    private AsyncTask<Void, Void, Boolean> getInitDownloadButtonEnabledTask(
-            final PlayActivity playActivity) {
+        final ContentResolver contentResolver = getApplicationContext().getContentResolver();
+        final int musicCode = mMusicService.getCurrentMusic().getCode();
+        final ActivityPlayBinding binding = mBinding;
 
-        return new AsyncTask<Void, Void, Boolean>() {
-            private ContentResolver mContentResolver;
-            private int mMusicCode;
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mContentResolver = playActivity.getApplicationContext().getContentResolver();
-                mMusicCode = playActivity.getMusicService().getCurrentMusic().getCode();
-            }
-
+        mInitDownloadButtonEnabledTask = new AsyncTask<Void, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Void... voids) {
-                String selection = DownloadContract._MUSIC_CODE + "=" + mMusicCode;
+                String selection = DownloadContract._MUSIC_CODE + "=" + musicCode;
 
-                Cursor cursor = mContentResolver.query(DownloadContract.URI, null, selection, null, null);
+                Cursor cursor = contentResolver.query(DownloadContract.URI, null, selection, null, null);
                 boolean downloadButtonEnabled = cursor == null || cursor.getCount() == 0;
 
                 if (cursor != null) {
@@ -491,13 +453,12 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             @Override
             protected void onPostExecute(Boolean enabled) {
                 super.onPostExecute(enabled);
-                ActivityPlayBinding binding = playActivity.getBinding();
 
                 binding.downloadButton.setEnabled(enabled);
                 binding.downloadButton.setImageResource(enabled ?
                         R.drawable.ic_file_download : R.drawable.ic_file_downloaded);
             }
-        };
+        }.execute();
     }
 
     private void executeDisplayBackgroundTask(final String pictureUrl) {
@@ -506,7 +467,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
         }
 
         final Context context = getApplicationContext();
-        final PlayActivity playActivity = this;
+        final ActivityPlay activityPlay = mActivityPlay;
 
         mDisplayBackgroundTask = new AsyncTask<Void, Void, Drawable>() {
             @Override
@@ -533,7 +494,7 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
             @Override
             protected void onPostExecute(Drawable drawable) {
                 super.onPostExecute(drawable);
-                playActivity.getActivityPlay().setBigPicture(drawable);
+                activityPlay.setBigPicture(drawable);
             }
         }.execute();
     }

@@ -11,7 +11,6 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.xhbb.qinzl.pleasantnote.R;
@@ -267,25 +266,15 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         executeQueryMoreMusicTask(newMusic);
     }
 
-    private void executeQueryMoreMusicTask(Music currentMusic) {
+    private void executeQueryMoreMusicTask(final Music currentMusic) {
         if (mQueryMoreMusicTask != null) {
             mQueryMoreMusicTask.cancel(false);
         }
-        mQueryMoreMusicTask = getQueryMoreMusicTask(this, currentMusic).execute();
-    }
 
-    @NonNull
-    private AsyncTask<Void, Void, List<Music>> getQueryMoreMusicTask(final MusicService musicService,
-                                                                     final Music currentMusic) {
-        return new AsyncTask<Void, Void, List<Music>>() {
-            private ContentResolver mContentResolver;
+        final ContentResolver contentResolver = getApplicationContext().getContentResolver();
+        final MusicService musicService = this;
 
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mContentResolver = musicService.getApplicationContext().getContentResolver();
-            }
-
+        mQueryMoreMusicTask = new AsyncTask<Void, Void, List<Music>>() {
             @Override
             protected List<Music> doInBackground(Void... voids) {
                 int musicType = currentMusic.getMusicType();
@@ -299,7 +288,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     sortOrder = MusicContract._ID + " DESC LIMIT " + LIMIT_VALUE_OF_HISTORY_MUSIC;
                 }
 
-                Cursor cursor = mContentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = contentResolver.query(MusicContract.URI, null, selection, null, sortOrder);
 
                 return getMusicsAndCloseCursor(cursor, currentMusic);
             }
@@ -314,7 +303,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     musicService.setMusics(musics);
                 }
             }
-        };
+        }.execute();
     }
 
     private void resetAndPlay() {

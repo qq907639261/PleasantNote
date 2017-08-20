@@ -130,16 +130,9 @@ public class DownloadMusicService extends Service {
         }
 
         final DownloadMusicService downloadMusicService = this;
+        final ContentResolver contentResolver = getApplicationContext().getContentResolver();
 
         mQueryDownloadDataTask = new AsyncTask<Void, Void, List<Download>>() {
-            private ContentResolver mContentResolver;
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mContentResolver = downloadMusicService.getApplicationContext().getContentResolver();
-            }
-
             @Override
             protected List<Download> doInBackground(Void... voids) {
                 int limit = DownloadMusicService.THREAD_COUNT_IN_POOL -
@@ -147,7 +140,7 @@ public class DownloadMusicService extends Service {
 
                 String selection = DownloadContract._STATE + "=" + DownloadState.WAITING;
                 String sortOrder = DownloadContract._ID + " LIMIT " + limit;
-                Cursor cursor = mContentResolver.query(DownloadContract.URI, null, selection, null, sortOrder);
+                Cursor cursor = contentResolver.query(DownloadContract.URI, null, selection, null, sortOrder);
 
                 List<Download> downloads = new ArrayList<>();
 
@@ -176,7 +169,7 @@ public class DownloadMusicService extends Service {
                 for (Download download : downloads) {
                     int musicCode = download.getMusicCode();
 
-                    mDownloadStates.put(musicCode, DownloadState.DOWNLOADING);
+                    downloadMusicService.getDownloadStates().put(musicCode, DownloadState.DOWNLOADING);
                     executeDownloadMusicExecutorService(download);
                 }
             }
