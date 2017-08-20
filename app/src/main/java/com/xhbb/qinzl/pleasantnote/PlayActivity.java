@@ -24,6 +24,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -365,6 +367,23 @@ public class PlayActivity extends AppCompatActivity implements Response.Listener
                 mBinding.playChrononmeter.start();
                 mBinding.playSwitcher.setDisplayedChild(1);
             }
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_local_song:
+                LocalSongActivity.start(this);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

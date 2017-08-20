@@ -62,15 +62,14 @@
         <service
             android:name=".async.DownloadMusicService"
             android:enabled="true"
-            android:exported="false">
-        </service>
+            android:exported="false"/>
         <service
             android:name=".async.UpdateQueryDataService"
-            android:exported="false">
-        </service>
+            android:exported="false"/>
 
-        <activity android:name=".LocalSongActivity">
-        </activity>
+        <activity
+            android:name=".LocalSongActivity"
+            android:parentActivityName=".MainActivity"/>
 
         <provider
             android:name="android.support.v4.content.FileProvider"

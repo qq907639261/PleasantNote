@@ -133,12 +133,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     private void sendMusicToPlayWidget() {
         Music music = getCurrentMusic();
-        if (music != null) {
-            if (mMusicPlaying) {
-                sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_PLAYED, music);
-            } else {
-                sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_INITED, music);
-            }
+        if (mMusicPlaying) {
+            sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_PLAYED, music);
+        } else {
+            sendPrivateMusicBroadcast(Contracts.ACTION_MUSIC_STOPPED, music);
         }
     }
 

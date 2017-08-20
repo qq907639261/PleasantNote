@@ -1,6 +1,7 @@
 package com.xhbb.qinzl.pleasantnote;
 
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -21,8 +22,9 @@ public class PlayWidget extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        Intent service = MusicService.newIntent(context, MusicService.ACTION_SEND_MUSIC_TO_PLAY_WIDGET);
-        context.getApplicationContext().startService(service);
+        Context applicationContext = context.getApplicationContext();
+        Intent service = MusicService.newIntent(applicationContext, MusicService.ACTION_SEND_MUSIC_TO_PLAY_WIDGET);
+        applicationContext.startService(service);
     }
 
     private void executeUpdateAppWidgetTask(
@@ -77,11 +79,9 @@ public class PlayWidget extends AppWidgetProvider {
             }
 
             private PendingIntent getActivityPendingIntent(Intent intent) {
-                return PendingIntent.getActivity(
-                        applicationContext,
-                        0,
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT);
+                return TaskStackBuilder.create(applicationContext)
+                        .addNextIntent(intent)
+                        .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
             }
 
             private PendingIntent getServicePendingIntent(Intent service) {
@@ -103,23 +103,24 @@ public class PlayWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        ComponentName componentName = new ComponentName(context, PlayWidget.class);
-
-        AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
-        int[] widgetIds = widgetManager.getAppWidgetIds(componentName);
-        Music music = intent.getParcelableExtra(Contracts.EXTRA_MUSIC);
-        boolean musicPlayed = false;
-
+        boolean musicPlayed;
         switch (intent.getAction()) {
-            case Contracts.ACTION_MUSIC_INITED:
             case Contracts.ACTION_MUSIC_STOPPED:
+                musicPlayed = false;
                 break;
             case Contracts.ACTION_MUSIC_PLAYED:
                 musicPlayed = true;
                 break;
             default:
                 super.onReceive(context, intent);
+                return;
         }
+
+        ComponentName componentName = new ComponentName(context, PlayWidget.class);
+
+        AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
+        int[] widgetIds = widgetManager.getAppWidgetIds(componentName);
+        Music music = intent.getParcelableExtra(Contracts.EXTRA_MUSIC);
 
         if (music == null) {
             music = new Music();
